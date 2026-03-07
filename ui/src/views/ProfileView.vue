@@ -2,14 +2,23 @@
   <div class="space-y-6">
     <!-- Profile header -->
     <div class="card p-5 flex items-center gap-4">
-      <div class="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-2xl font-bold text-primary">
+      <div class="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-2xl font-bold text-primary flex-shrink-0">
         {{ profile.name?.charAt(0) || '?' }}
       </div>
-      <div class="flex-1">
+      <div class="flex-1 min-w-0">
         <h2 class="text-xl font-bold text-gray-900">{{ profile.name }}</h2>
         <p class="text-sm text-gray-500">{{ profile.age }} лет</p>
       </div>
       <BaseButton variant="outline" size="sm" @click="showEditProfile = true">Изменить</BaseButton>
+    </div>
+
+    <!-- Account -->
+    <div class="card p-4 flex items-center justify-between gap-4">
+      <div>
+        <p class="text-sm font-medium text-gray-700">Аккаунт</p>
+        <p class="text-xs text-gray-400 mt-0.5">{{ userName }}</p>
+      </div>
+      <BaseButton variant="danger" size="sm" @click="logout">Выйти</BaseButton>
     </div>
 
     <!-- Stats -->
@@ -96,6 +105,7 @@
 <script setup>
 import { ref, computed, reactive } from 'vue'
 import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 import StatCard from '@/components/profile/StatCard.vue'
 import WeightChart from '@/components/profile/WeightChart.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
@@ -104,6 +114,14 @@ import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
 
 const store = useStore()
+const router = useRouter()
+
+const userName = computed(() => store.getters['auth/userName'])
+
+function logout() {
+  store.dispatch('auth/logout')
+  router.push('/login')
+}
 
 const profile = computed(() => store.state.user.profile)
 const currentWeight = computed(() => store.getters['user/currentWeight'])
