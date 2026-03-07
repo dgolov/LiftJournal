@@ -1,5 +1,19 @@
 import workoutService from '@/services/workoutService.js'
 
+// ── Session persistence ───────────────────────────────────────────────────────
+const SESSION_KEY = 'gym_workout_session'
+
+export function loadSession() {
+  try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null') } catch { return null }
+}
+export function saveSession(startedAt, draft) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ startedAt, draft }))
+}
+export function clearSession() {
+  localStorage.removeItem(SESSION_KEY)
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 function calcVolume(workout) {
   return workout.exercises.reduce((total, ex) => {
     return total + ex.sets.reduce((s, set) => s + set.weight * set.reps, 0)
@@ -16,7 +30,7 @@ function emptyWorkout() {
     date: new Date().toISOString().split('T')[0],
     type: 'Силовая',
     title: '',
-    durationMinutes: 60,
+    durationMinutes: 0,
     notes: '',
     exercises: []
   }
@@ -25,16 +39,20 @@ function emptyWorkout() {
 export default {
   namespaced: true,
 
-  state: () => ({
-    workouts: [],
-    activeWorkout: emptyWorkout(),
-    filters: {
-      dateFrom: null,
-      dateTo: null,
-      type: null,
-      search: ''
+  state: () => {
+    const session = loadSession()
+    return {
+      workouts: [],
+      activeWorkout: session?.draft || emptyWorkout(),
+      workoutStartedAt: session?.startedAt || null,
+      filters: {
+        dateFrom: null,
+        dateTo: null,
+        type: null,
+        search: ''
+      }
     }
-  }),
+  },
 
   getters: {
     allWorkouts: state => [...state.workouts].sort((a, b) => b.date.localeCompare(a.date)),
@@ -103,7 +121,13 @@ export default {
       state.workouts = state.workouts.filter(w => w.id !== id)
     },
 
-    RESET_ACTIVE_WORKOUT(state) { state.activeWorkout = emptyWorkout() },
+    SET_WORKOUT_STARTED_AT(state, ts) { state.workoutStartedAt = ts },
+
+    RESET_ACTIVE_WORKOUT(state) {
+      state.activeWorkout = emptyWorkout()
+      state.workoutStartedAt = null
+      clearSession()
+    },
     SET_ACTIVE_WORKOUT_FIELD(state, { field, value }) {
       state.activeWorkout[field] = value
     },
@@ -147,11 +171,36 @@ export default {
       commit('SET_WORKOUTS', workouts)
     },
 
+    startWorkout({ commit, state }) {
+      const ts = Date.now()
+      commit('SET_WORKOUT_STARTED_AT', ts)
+      saveSession(ts, state.activeWorkout)
+    },
+
     async saveWorkout({ commit, state }) {
-      const saved = await workoutService.saveWorkout({ ...state.activeWorkout })
+      const durationMinutes = state.workoutStartedAt
+        ? Math.max(1, Math.round((Date.now() - state.workoutStartedAt) / 60000))
+        : state.activeWorkout.durationMinutes
+      const saved = await workoutService.saveWorkout({ ...state.activeWorkout, durationMinutes })
       commit('ADD_WORKOUT', saved)
       commit('RESET_ACTIVE_WORKOUT')
       return saved
+    },
+
+    async autoSaveMidnight({ commit, dispatch }, { draft, startedAt }) {
+      const start = new Date(startedAt)
+      const midnight = new Date(start)
+      midnight.setDate(midnight.getDate() + 1)
+      midnight.setHours(0, 0, 0, 0)
+      const durationMinutes = Math.max(1, Math.round((midnight - start) / 60000))
+      try {
+        const saved = await workoutService.saveWorkout({ ...draft, durationMinutes })
+        commit('ADD_WORKOUT', saved)
+      } catch (e) {
+        console.error('Midnight auto-save failed', e)
+      }
+      commit('RESET_ACTIVE_WORKOUT')
+      dispatch('ui/showToast', { message: 'Тренировка автоматически завершена в 00:00', type: 'info' }, { root: true })
     },
 
     async updateWorkout({ commit }, workout) {

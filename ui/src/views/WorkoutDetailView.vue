@@ -14,7 +14,7 @@
         </div>
         <h2 class="text-2xl font-bold text-gray-900">{{ workout.title }}</h2>
         <p class="text-sm text-gray-500 mt-1">
-          {{ workout.durationMinutes }} мин · {{ workout.exercises.length }} упр. · объём {{ formatVolume(totalVolume) }} кг
+          {{ formatDuration(workout.durationMinutes) }} · {{ workout.exercises.length }} упр. · тоннаж {{ formatVolume(totalVolume) }} кг
         </p>
         <p v-if="workout.notes" class="text-sm text-gray-600 mt-2 italic">{{ workout.notes }}</p>
       </div>
@@ -80,5 +80,13 @@ const totalVolume = computed(() =>
 
 function formatVolume(v) {
   return v >= 1000 ? (v / 1000).toFixed(1) + ' т' : v
+}
+
+function formatDuration(minutes) {
+  if (!minutes) return '—'
+  const h = Math.floor(minutes / 60)
+  const m = minutes % 60
+  if (h > 0) return `${h} ч ${m > 0 ? m + ' мин' : ''}`
+  return `${m} мин`
 }
 </script>

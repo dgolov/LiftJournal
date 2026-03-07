@@ -11,10 +11,10 @@
         </div>
         <h3 class="font-semibold text-gray-900 truncate">{{ workout.title }}</h3>
         <p class="text-xs text-gray-500 mt-1">
-          {{ workout.exercises.length }} упр. · {{ totalSets }} подх. · {{ workout.durationMinutes }} мин
+          {{ workout.exercises.length }} упр. · {{ totalSets }} подх. · {{ formatDuration(workout.durationMinutes) }}
         </p>
         <p class="text-xs text-gray-400 mt-0.5">
-          Объём: {{ formatVolume(totalVolume) }} кг
+          Тоннаж: {{ formatVolume(totalVolume) }} кг
         </p>
       </div>
       <button
@@ -78,6 +78,14 @@ const totalVolume = computed(() =>
 
 function formatVolume(v) {
   return v >= 1000 ? (v / 1000).toFixed(1) + ' т' : v
+}
+
+function formatDuration(minutes) {
+  if (!minutes) return '—'
+  const h = Math.floor(minutes / 60)
+  const m = minutes % 60
+  if (h > 0) return `${h} ч ${m > 0 ? m + ' мин' : ''}`
+  return `${m} мин`
 }
 
 function confirmDelete() { showConfirm.value = true }
