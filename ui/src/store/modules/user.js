@@ -6,7 +6,8 @@ export default {
   state: () => ({
     profile: { name: '', age: 0, avatarUrl: null },
     weightLog: [],
-    goals: []
+    goals: [],
+    maxes: [],   // { exercise_name, weight_kg, recorded_at }
   }),
 
   getters: {
@@ -24,6 +25,15 @@ export default {
       state.profile = { name: user.name, age: user.age, avatarUrl: user.avatarUrl }
       state.weightLog = user.weightLog
       state.goals = user.goals
+      state.maxes = user.maxes || []
+    },
+    UPSERT_MAX(state, max) {
+      const idx = state.maxes.findIndex(m => m.exercise_name === max.exercise_name)
+      if (idx !== -1) state.maxes.splice(idx, 1, max)
+      else state.maxes.push(max)
+    },
+    DELETE_MAX(state, exerciseName) {
+      state.maxes = state.maxes.filter(m => m.exercise_name !== exerciseName)
     },
     UPDATE_PROFILE(state, profile) {
       state.profile = { ...state.profile, ...profile }
@@ -79,8 +89,17 @@ export default {
       commit('DELETE_GOAL', id)
     },
 
+    async saveUserMax({ commit }, data) {
+      const saved = await workoutService.saveUserMax(data)
+      commit('UPSERT_MAX', saved)
+    },
+    async deleteUserMax({ commit }, exerciseName) {
+      await workoutService.deleteUserMax(exerciseName)
+      commit('DELETE_MAX', exerciseName)
+    },
+
     reset({ commit }) {
-      commit('SET_USER', { name: '', age: 0, avatarUrl: null, weightLog: [], goals: [] })
+      commit('SET_USER', { name: '', age: 0, avatarUrl: null, weightLog: [], goals: [], maxes: [] })
     }
   }
 }

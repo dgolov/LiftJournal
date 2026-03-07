@@ -23,6 +23,7 @@
 const navItems = [
   { to: '/history', icon: '📋', label: 'История' },
   { to: '/exercises', icon: '🏋️', label: 'Упражнения' },
+  { to: '/cycles', icon: '📊', label: 'Циклы' },
   { to: '/profile', icon: '👤', label: 'Профиль' }
 ]
 </script>

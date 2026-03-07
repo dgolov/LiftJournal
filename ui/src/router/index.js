@@ -44,6 +44,26 @@ const routes = [
     path: '/profile',
     name: 'profile',
     component: () => import('@/views/ProfileView.vue')
+  },
+  {
+    path: '/cycles',
+    name: 'cycles',
+    component: () => import('@/views/CyclesView.vue')
+  },
+  {
+    path: '/cycles/new',
+    name: 'cycle-create',
+    component: () => import('@/views/CycleEditView.vue')
+  },
+  {
+    path: '/cycles/:id',
+    name: 'cycle-detail',
+    component: () => import('@/views/CycleDetailView.vue')
+  },
+  {
+    path: '/cycles/:id/edit',
+    name: 'cycle-edit',
+    component: () => import('@/views/CycleEditView.vue')
   }
 ]
 

@@ -143,9 +143,101 @@ class GoalOut(BaseModel):
     done: bool
 
 
+class UserMaxIn(BaseModel):
+    exercise_name: str
+    weight_kg: float
+
+
+class UserMaxOut(BaseModel):
+    exercise_name: str
+    weight_kg: float
+    recorded_at: date
+
+
 class UserOut(BaseModel):
     name: str
     age: int
     avatarUrl: Optional[str]
     weightLog: list[WeightEntryOut]
     goals: list[GoalOut]
+    maxes: list[UserMaxOut] = []
+
+
+# ---------------------------------------------------------------------------
+# Training cycles
+# ---------------------------------------------------------------------------
+
+class CycleSetIn(BaseModel):
+    percent_1rm: float
+    reps: int
+
+
+class CycleSetOut(BaseModel):
+    id: str
+    percent_1rm: float
+    reps: int
+    order: int
+
+
+class CycleExerciseIn(BaseModel):
+    exercise_name: str
+    sets: list[CycleSetIn] = []
+
+
+class CycleExerciseOut(BaseModel):
+    id: str
+    exercise_name: str
+    sets: list[CycleSetOut]
+
+
+class CycleWorkoutIn(BaseModel):
+    workout_number: int
+    title: str = ""
+    notes: str = ""
+    exercises: list[CycleExerciseIn] = []
+
+
+class CycleWorkoutOut(BaseModel):
+    id: str
+    workout_number: int
+    title: str
+    notes: str
+    exercises: list[CycleExerciseOut]
+
+
+class CycleCreate(BaseModel):
+    title: str
+    description: str = ""
+    author_name: str = ""
+    is_public: bool = False
+    workouts: list[CycleWorkoutIn] = []
+
+
+class CycleUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    author_name: Optional[str] = None
+    is_public: Optional[bool] = None
+    workouts: Optional[list[CycleWorkoutIn]] = None
+
+
+class CycleListOut(BaseModel):
+    id: str
+    title: str
+    description: str
+    author_name: str
+    created_by: int
+    is_public: bool
+    created_at: datetime
+    workout_count: int
+
+
+class CycleDetailOut(BaseModel):
+    id: str
+    title: str
+    description: str
+    author_name: str
+    created_by: int
+    is_public: bool
+    created_at: datetime
+    workouts: list[CycleWorkoutOut]

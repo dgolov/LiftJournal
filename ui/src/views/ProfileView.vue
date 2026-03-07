@@ -76,6 +76,29 @@
       </div>
     </div>
 
+    <!-- 1RM maxes -->
+    <div class="card p-4">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <h3 class="font-semibold text-gray-900">Личные максимумы (ПМ)</h3>
+          <p class="text-xs text-gray-400 mt-0.5">Используются для расчёта % в тренировочных циклах</p>
+        </div>
+        <BaseButton variant="outline" size="sm" @click="showAddMax = true">+ Добавить</BaseButton>
+      </div>
+
+      <div v-if="maxes.length" class="space-y-2">
+        <div v-for="max in maxes" :key="max.exercise_name" class="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-gray-900">{{ max.exercise_name }}</p>
+            <p class="text-xs text-gray-400">обновлён {{ formatDate(max.recorded_at) }}</p>
+          </div>
+          <span class="text-lg font-bold text-primary">{{ max.weight_kg }} кг</span>
+          <button class="text-gray-200 hover:text-red-400 transition-colors ml-1 text-xs" @click="deleteMax(max.exercise_name)">✕</button>
+        </div>
+      </div>
+      <BaseEmptyState v-else icon="🏋️" title="Нет ПМ" description="Укажите свои максимумы для расчёта циклов" />
+    </div>
+
     <!-- Edit profile modal -->
     <BaseModal v-model="showEditProfile" title="Редактировать профиль">
       <div class="space-y-4">
@@ -85,6 +108,30 @@
       <template #footer>
         <BaseButton variant="ghost" @click="showEditProfile = false">Отмена</BaseButton>
         <BaseButton @click="saveProfile">Сохранить</BaseButton>
+      </template>
+    </BaseModal>
+
+    <!-- Add max modal -->
+    <BaseModal v-model="showAddMax" title="Личный максимум (ПМ)">
+      <div class="space-y-4">
+        <div>
+          <label class="label">Упражнение</label>
+          <div class="flex flex-wrap gap-2 mb-2">
+            <button
+              v-for="ex in commonLifts"
+              :key="ex"
+              :class="['text-xs px-2.5 py-1 rounded-full border transition-colors',
+                maxForm.exercise_name === ex ? 'bg-primary text-white border-primary' : 'border-gray-200 text-gray-600 hover:border-primary']"
+              @click="maxForm.exercise_name = ex"
+            >{{ ex }}</button>
+          </div>
+          <input v-model="maxForm.exercise_name" class="input" placeholder="или введите своё упражнение" />
+        </div>
+        <BaseInput v-model.number="maxForm.weight_kg" type="number" step="0.5" min="0" label="Максимальный вес (кг)" placeholder="100" />
+      </div>
+      <template #footer>
+        <BaseButton variant="ghost" @click="showAddMax = false">Отмена</BaseButton>
+        <BaseButton :disabled="!maxForm.exercise_name || !maxForm.weight_kg" @click="saveMax">Сохранить</BaseButton>
       </template>
     </BaseModal>
 
@@ -124,6 +171,25 @@ function logout() {
 }
 
 const profile = computed(() => store.state.user.profile)
+const maxes = computed(() => store.state.user.maxes)
+
+const commonLifts = ['Приседания со штангой', 'Жим лёжа', 'Становая тяга']
+
+const showAddMax = ref(false)
+const maxForm = reactive({ exercise_name: '', weight_kg: null })
+
+async function saveMax() {
+  await store.dispatch('user/saveUserMax', { exercise_name: maxForm.exercise_name, weight_kg: maxForm.weight_kg })
+  store.dispatch('ui/showToast', { message: 'ПМ сохранён!', type: 'success' })
+  maxForm.exercise_name = ''
+  maxForm.weight_kg = null
+  showAddMax.value = false
+}
+
+async function deleteMax(exerciseName) {
+  await store.dispatch('user/deleteUserMax', exerciseName)
+  store.dispatch('ui/showToast', { message: 'ПМ удалён', type: 'success' })
+}
 const currentWeight = computed(() => store.getters['user/currentWeight'])
 const weightHistory = computed(() => store.getters['user/weightHistory'])
 const goals = computed(() => store.state.user.goals)

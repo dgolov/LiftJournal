@@ -1,14 +1,16 @@
 import workoutService from '@/services/workoutService.js'
 
 const TOKEN_KEY = 'gym_auth_token'
+const USER_ID_KEY = 'gym_auth_user_id'
+const USER_NAME_KEY = 'gym_auth_user_name'
 
 export default {
   namespaced: true,
 
   state: () => ({
     token: localStorage.getItem(TOKEN_KEY) || null,
-    userId: null,
-    userName: null,
+    userId: localStorage.getItem(USER_ID_KEY) ? Number(localStorage.getItem(USER_ID_KEY)) : null,
+    userName: localStorage.getItem(USER_NAME_KEY) || null,
   }),
 
   getters: {
@@ -23,12 +25,16 @@ export default {
       state.userId = userId
       state.userName = userName
       localStorage.setItem(TOKEN_KEY, token)
+      localStorage.setItem(USER_ID_KEY, userId)
+      localStorage.setItem(USER_NAME_KEY, userName)
     },
     CLEAR_AUTH(state) {
       state.token = null
       state.userId = null
       state.userName = null
       localStorage.removeItem(TOKEN_KEY)
+      localStorage.removeItem(USER_ID_KEY)
+      localStorage.removeItem(USER_NAME_KEY)
     },
   },
 

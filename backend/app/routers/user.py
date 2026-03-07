@@ -5,10 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import get_current_user
 from app.database import get_db
-from app.db.models import User, WeightEntry, Goal
+from app.db.models import User, WeightEntry, Goal, UserMax
 from app.schemas import (
     ProfileUpdate, WeightEntryIn, WeightEntryOut,
-    GoalCreate, GoalOut, UserOut,
+    GoalCreate, GoalOut, UserOut, UserMaxIn, UserMaxOut,
 )
 
 router = APIRouter()
@@ -18,6 +18,7 @@ def _user_with_relations():
     return (
         selectinload(User.weight_log),
         selectinload(User.goals),
+        selectinload(User.maxes),
     )
 
 
@@ -43,6 +44,10 @@ def _serialize_user(u: User) -> UserOut:
         goals=[
             GoalOut(id=g.id, text=g.text, targetDate=g.target_date, done=g.done)
             for g in u.goals
+        ],
+        maxes=[
+            UserMaxOut(exercise_name=m.exercise_name, weight_kg=m.weight_kg, recorded_at=m.recorded_at)
+            for m in u.maxes
         ],
     )
 
@@ -160,4 +165,50 @@ async def delete_goal(
     goal = result.scalar_one_or_none()
     if goal:
         await db.delete(goal)
+        await db.commit()
+
+
+# ── User 1RM maxes ────────────────────────────────────────────────────────────
+
+@router.post("/maxes", response_model=UserMaxOut)
+async def upsert_max(
+    payload: UserMaxIn,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    from datetime import date as date_type
+    result = await db.execute(
+        select(UserMax).where(
+            UserMax.user_id == current_user.id,
+            UserMax.exercise_name == payload.exercise_name,
+        )
+    )
+    entry = result.scalar_one_or_none()
+    if entry:
+        entry.weight_kg = payload.weight_kg
+        entry.recorded_at = date_type.today()
+    else:
+        entry = UserMax(
+            user_id=current_user.id,
+            exercise_name=payload.exercise_name,
+            weight_kg=payload.weight_kg,
+        )
+        db.add(entry)
+    await db.commit()
+    await db.refresh(entry)
+    return UserMaxOut(exercise_name=entry.exercise_name, weight_kg=entry.weight_kg, recorded_at=entry.recorded_at)
+
+
+@router.delete("/maxes/{exercise_name}", status_code=204)
+async def delete_max(
+    exercise_name: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(UserMax).where(UserMax.user_id == current_user.id, UserMax.exercise_name == exercise_name)
+    )
+    entry = result.scalar_one_or_none()
+    if entry:
+        await db.delete(entry)
         await db.commit()

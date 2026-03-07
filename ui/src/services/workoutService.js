@@ -119,6 +119,31 @@ const workoutService = {
   deleteGoal(id) {
     return request('DELETE', `/user/goals/${id}`)
   },
+
+  // User maxes (1RM)
+  saveUserMax(data) {
+    return request('POST', '/user/maxes', data)
+  },
+  deleteUserMax(exerciseName) {
+    return request('DELETE', `/user/maxes/${encodeURIComponent(exerciseName)}`)
+  },
+
+  // Training cycles
+  fetchCycles() {
+    return request('GET', '/cycles')
+  },
+  fetchCycle(id) {
+    return request('GET', `/cycles/${id}`)
+  },
+  createCycle(data) {
+    return request('POST', '/cycles', data)
+  },
+  updateCycle(id, data) {
+    return request('PATCH', `/cycles/${id}`, data)
+  },
+  deleteCycle(id) {
+    return request('DELETE', `/cycles/${id}`)
+  },
 }
 
 export default workoutService

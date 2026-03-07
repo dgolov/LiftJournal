@@ -99,6 +99,9 @@ class User(Base):
     goals: Mapped[list["Goal"]] = relationship(
         "Goal", back_populates="user", cascade="all, delete-orphan"
     )
+    maxes: Mapped[list["UserMax"]] = relationship(
+        "UserMax", back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class WeightEntry(Base):
@@ -126,3 +129,80 @@ class Goal(Base):
     done: Mapped[bool] = mapped_column(Boolean, default=False)
 
     user: Mapped["User"] = relationship("User", back_populates="goals")
+
+
+# ── Training cycles ───────────────────────────────────────────────────────────
+
+class TrainingCycle(Base):
+    __tablename__ = "training_cycles"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
+    created_by: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    title: Mapped[str] = mapped_column(String(300), nullable=False)
+    description: Mapped[str] = mapped_column(Text, default="")
+    author_name: Mapped[str] = mapped_column(String(200), default="")
+    is_public: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    workouts: Mapped[list["CycleWorkout"]] = relationship(
+        "CycleWorkout", back_populates="cycle",
+        cascade="all, delete-orphan", order_by="CycleWorkout.order",
+    )
+
+
+class CycleWorkout(Base):
+    __tablename__ = "cycle_workouts"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
+    cycle_id: Mapped[str] = mapped_column(String, ForeignKey("training_cycles.id", ondelete="CASCADE"), nullable=False)
+    workout_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    title: Mapped[str] = mapped_column(String(200), default="")
+    notes: Mapped[str] = mapped_column(Text, default="")
+    order: Mapped[int] = mapped_column(Integer, default=0)
+
+    cycle: Mapped["TrainingCycle"] = relationship("TrainingCycle", back_populates="workouts")
+    exercises: Mapped[list["CycleExercise"]] = relationship(
+        "CycleExercise", back_populates="workout",
+        cascade="all, delete-orphan", order_by="CycleExercise.order",
+    )
+
+
+class CycleExercise(Base):
+    __tablename__ = "cycle_exercises"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
+    cycle_workout_id: Mapped[str] = mapped_column(String, ForeignKey("cycle_workouts.id", ondelete="CASCADE"), nullable=False)
+    exercise_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    order: Mapped[int] = mapped_column(Integer, default=0)
+
+    workout: Mapped["CycleWorkout"] = relationship("CycleWorkout", back_populates="exercises")
+    sets: Mapped[list["CycleSet"]] = relationship(
+        "CycleSet", back_populates="exercise",
+        cascade="all, delete-orphan", order_by="CycleSet.order",
+    )
+
+
+class CycleSet(Base):
+    __tablename__ = "cycle_sets"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
+    cycle_exercise_id: Mapped[str] = mapped_column(String, ForeignKey("cycle_exercises.id", ondelete="CASCADE"), nullable=False)
+    percent_1rm: Mapped[float] = mapped_column(Float, nullable=False)
+    reps: Mapped[int] = mapped_column(Integer, nullable=False)
+    order: Mapped[int] = mapped_column(Integer, default=0)
+
+    exercise: Mapped["CycleExercise"] = relationship("CycleExercise", back_populates="sets")
+
+
+class UserMax(Base):
+
+    """User's manually entered 1RM values used for cycle % calculations."""
+    __tablename__ = "user_maxes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    exercise_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    weight_kg: Mapped[float] = mapped_column(Float, nullable=False)
+    recorded_at: Mapped[date] = mapped_column(Date, default=date.today)
+
+    user: Mapped["User"] = relationship("User", back_populates="maxes")
