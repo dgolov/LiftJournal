@@ -18,9 +18,21 @@
         <p v-if="cycle.description" class="text-sm text-gray-600 mt-1">{{ cycle.description }}</p>
         <p class="text-xs text-gray-400 mt-1">{{ cycle.workouts.length }} тренировок</p>
       </div>
-      <RouterLink v-if="isOwner" :to="`/cycles/${cycle.id}/edit`" class="btn btn-outline text-sm px-3 py-1.5 flex-shrink-0">
-        Редактировать
-      </RouterLink>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <div class="flex rounded-xl border border-gray-200 overflow-hidden text-xs font-medium">
+          <button
+            :class="['px-3 py-1.5 transition-colors', viewMode === 'list' ? 'bg-primary text-white' : 'text-gray-500 hover:bg-gray-50']"
+            @click="viewMode = 'list'"
+          >Список</button>
+          <button
+            :class="['px-3 py-1.5 transition-colors', viewMode === 'table' ? 'bg-primary text-white' : 'text-gray-500 hover:bg-gray-50']"
+            @click="viewMode = 'table'"
+          >Таблица</button>
+        </div>
+        <RouterLink v-if="isOwner" :to="`/cycles/${cycle.id}/edit`" class="btn btn-outline text-sm px-3 py-1.5">
+          Редактировать
+        </RouterLink>
+      </div>
     </div>
 
     <!-- 1RM notice -->
@@ -33,52 +45,98 @@
       </div>
     </div>
 
-    <!-- Table -->
-    <div class="card overflow-hidden">
+    <!-- List view -->
+    <div v-if="viewMode === 'list'" class="space-y-3">
+      <div
+        v-for="workout in cycle.workouts"
+        :key="workout.id"
+        class="card p-4"
+      >
+        <p class="text-xs font-bold text-gray-400 mb-2">Тренировка {{ workout.workout_number }}</p>
+        <div class="space-y-3">
+          <div v-for="exName in exerciseColumns" :key="exName">
+            <template v-if="getSets(workout, exName).length">
+              <p class="text-sm font-semibold text-gray-800 mb-1">{{ exName }}</p>
+              <div class="space-y-0.5 pl-2">
+                <div v-for="(set, i) in getSets(workout, exName)" :key="i" class="text-sm text-gray-700">
+                  <span class="text-gray-400 text-xs w-5 inline-block">{{ i + 1 }}.</span>
+                  <template v-if="getMax(exName)">
+                    <span class="font-bold text-primary">{{ calcWeight(getMax(exName), set.percent_1rm) }} кг</span>
+                    <span class="text-gray-400"> / </span>{{ set.reps }} повт.
+                    <span class="text-gray-400 text-xs ml-1">({{ set.percent_1rm }}%)</span>
+                  </template>
+                  <template v-else>
+                    <span class="font-bold text-gray-700">{{ set.percent_1rm }}%</span>
+                    <span class="text-gray-400"> / </span>{{ set.reps }} повт.
+                  </template>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table view -->
+    <div v-else class="card overflow-hidden">
       <div class="overflow-x-auto">
-        <table class="w-full text-sm">
+        <table class="w-full text-sm border-collapse">
           <thead>
-            <tr class="bg-gray-50 border-b border-gray-100">
-              <th class="text-left px-3 py-2.5 text-xs font-semibold text-gray-500 w-12 flex-shrink-0">#</th>
+            <!-- Row 1: exercise names -->
+            <tr class="bg-gray-50">
+              <th class="border border-gray-200 px-3 py-2 text-center text-xs font-semibold text-gray-500 w-10" rowspan="2">#</th>
               <th
                 v-for="exName in exerciseColumns"
                 :key="exName"
-                class="text-left px-3 py-2.5 text-xs font-semibold text-gray-700 min-w-44"
+                :colspan="maxSetsPerExercise[exName]"
+                class="border border-gray-200 px-3 py-2 text-center text-xs font-semibold text-gray-700"
               >
                 <div>{{ exName }}</div>
                 <div v-if="getMax(exName)" class="text-primary font-bold mt-0.5">ПМ: {{ getMax(exName) }} кг</div>
-                <div v-else class="text-gray-400 font-normal mt-0.5">ПМ не задан</div>
+                <div v-else class="text-amber-500 font-normal mt-0.5">ПМ не задан</div>
               </th>
             </tr>
+            <!-- Row 2: set numbers -->
+            <tr class="bg-gray-50">
+              <template v-for="exName in exerciseColumns" :key="exName">
+                <th
+                  v-for="n in maxSetsPerExercise[exName]"
+                  :key="n"
+                  class="border border-gray-200 px-2 py-1.5 text-center text-xs text-gray-400 font-medium w-28"
+                >
+                  подход {{ n }}
+                </th>
+              </template>
+            </tr>
           </thead>
-          <tbody class="divide-y divide-gray-50">
+          <tbody>
             <tr
               v-for="workout in cycle.workouts"
               :key="workout.id"
-              class="hover:bg-gray-50/50"
+              class="hover:bg-primary/5"
             >
-              <td class="px-3 py-2.5 font-bold text-gray-400 text-xs align-top">{{ workout.workout_number }}</td>
-              <td
-                v-for="exName in exerciseColumns"
-                :key="exName"
-                class="px-3 py-2.5 align-top"
-              >
-                <div v-if="getSets(workout, exName).length" class="space-y-0.5">
-                  <div
-                    v-for="(set, i) in getSets(workout, exName)"
-                    :key="i"
-                    class="flex items-baseline gap-1 flex-wrap"
-                  >
-                    <span class="font-semibold text-gray-800">{{ set.percent_1rm }}%</span>
-                    <span class="text-gray-400 text-xs">×</span>
-                    <span class="text-gray-700">{{ set.reps }} повт.</span>
-                    <span v-if="getMax(exName)" class="text-primary font-bold text-xs ml-1">
-                      = {{ calcWeight(getMax(exName), set.percent_1rm) }} кг
-                    </span>
-                  </div>
-                </div>
-                <span v-else class="text-gray-200">—</span>
-              </td>
+              <td class="border border-gray-200 px-3 py-2.5 font-bold text-gray-400 text-xs text-center">{{ workout.workout_number }}</td>
+              <template v-for="exName in exerciseColumns" :key="exName">
+                <td
+                  v-for="n in maxSetsPerExercise[exName]"
+                  :key="n"
+                  class="border border-gray-200 px-3 py-2.5 text-center whitespace-nowrap"
+                >
+                  <template v-if="getSets(workout, exName)[n - 1]">
+                    <template v-if="getMax(exName)">
+                      <span class="font-bold text-primary">{{ calcWeight(getMax(exName), getSets(workout, exName)[n - 1].percent_1rm) }} кг</span>
+                      <span class="text-gray-400"> / </span>
+                      <span class="text-gray-700">{{ getSets(workout, exName)[n - 1].reps }} повт.</span>
+                    </template>
+                    <template v-else>
+                      <span class="font-bold text-gray-700">{{ getSets(workout, exName)[n - 1].percent_1rm }}%</span>
+                      <span class="text-gray-400"> / </span>
+                      <span class="text-gray-700">{{ getSets(workout, exName)[n - 1].reps }} повт.</span>
+                    </template>
+                  </template>
+                  <span v-else class="text-gray-300">—</span>
+                </td>
+              </template>
             </tr>
           </tbody>
         </table>
@@ -99,6 +157,7 @@ const route = useRoute()
 const store = useStore()
 
 const loading = ref(false)
+const viewMode = ref('table')
 const cycle = computed(() => store.state.cycles.currentCycle)
 const currentUserId = computed(() => store.state.auth.userId)
 const isOwner = computed(() => cycle.value?.created_by === currentUserId.value)
@@ -124,6 +183,15 @@ const exerciseColumns = computed(() => {
     }
   }
   return cols
+})
+
+// Max sets count per exercise across all workouts (determines colspan)
+const maxSetsPerExercise = computed(() => {
+  const result = {}
+  for (const exName of exerciseColumns.value) {
+    result[exName] = Math.max(1, ...cycle.value.workouts.map(w => getSets(w, exName).length))
+  }
+  return result
 })
 
 const missingMaxes = computed(() =>
