@@ -5,8 +5,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.auth import get_current_user
 from app.database import get_db
-from app.db.models import Workout, WorkoutExercise, ExerciseSet
+from app.db.models import Workout, WorkoutExercise, ExerciseSet, User
 from app.schemas import WorkoutCreate, WorkoutUpdate, WorkoutOut, WorkoutExerciseOut, SetOut
 
 router = APIRouter()
@@ -66,10 +67,14 @@ def _build_exercises(data: WorkoutCreate | WorkoutUpdate) -> list[WorkoutExercis
 
 
 @router.get("", response_model=list[WorkoutOut])
-async def list_workouts(db: AsyncSession = Depends(get_db)):
+async def list_workouts(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     result = await db.execute(
         select(Workout)
         .options(_with_exercises())
+        .where(Workout.user_id == current_user.id)
         .order_by(Workout.created_at.desc())
     )
     workouts = result.scalars().all()
@@ -77,8 +82,13 @@ async def list_workouts(db: AsyncSession = Depends(get_db)):
 
 
 @router.post("", response_model=WorkoutOut, status_code=201)
-async def create_workout(payload: WorkoutCreate, db: AsyncSession = Depends(get_db)):
+async def create_workout(
+    payload: WorkoutCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     w = Workout(
+        user_id=current_user.id,
         date=payload.date,
         type=payload.type,
         title=payload.title,
@@ -97,15 +107,27 @@ async def create_workout(payload: WorkoutCreate, db: AsyncSession = Depends(get_
 
 
 @router.get("/{workout_id}", response_model=WorkoutOut)
-async def get_workout(workout_id: str, db: AsyncSession = Depends(get_db)):
-    return _serialize(await _get_or_404(db, workout_id))
+async def get_workout(
+    workout_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    w = await _get_or_404(db, workout_id)
+    if w.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Нет доступа")
+    return _serialize(w)
 
 
 @router.patch("/{workout_id}", response_model=WorkoutOut)
 async def update_workout(
-    workout_id: str, payload: WorkoutUpdate, db: AsyncSession = Depends(get_db)
+    workout_id: str,
+    payload: WorkoutUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     w = await _get_or_404(db, workout_id)
+    if w.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Нет доступа")
 
     if payload.date is not None:
         w.date = payload.date
@@ -128,7 +150,13 @@ async def update_workout(
 
 
 @router.delete("/{workout_id}", status_code=204)
-async def delete_workout(workout_id: str, db: AsyncSession = Depends(get_db)):
+async def delete_workout(
+    workout_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     w = await _get_or_404(db, workout_id)
+    if w.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Нет доступа")
     await db.delete(w)
     await db.commit()

@@ -3,6 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth import get_current_user
 from app.database import get_db
 from app.db.models import User, WeightEntry, Goal
 from app.schemas import (
@@ -12,8 +13,6 @@ from app.schemas import (
 
 router = APIRouter()
 
-USER_ID = 1
-
 
 def _user_with_relations():
     return (
@@ -22,11 +21,11 @@ def _user_with_relations():
     )
 
 
-async def _get_user(db: AsyncSession) -> User:
+async def _get_user(db: AsyncSession, user_id: int) -> User:
     result = await db.execute(
         select(User)
         .options(*_user_with_relations())
-        .where(User.id == USER_ID)
+        .where(User.id == user_id)
     )
     user = result.scalar_one_or_none()
     if not user:
@@ -49,13 +48,20 @@ def _serialize_user(u: User) -> UserOut:
 
 
 @router.get("", response_model=UserOut)
-async def get_user(db: AsyncSession = Depends(get_db)):
-    return _serialize_user(await _get_user(db))
+async def get_user(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return _serialize_user(await _get_user(db, current_user.id))
 
 
 @router.patch("/profile", response_model=UserOut)
-async def update_profile(payload: ProfileUpdate, db: AsyncSession = Depends(get_db)):
-    u = await _get_user(db)
+async def update_profile(
+    payload: ProfileUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    u = await _get_user(db, current_user.id)
     if payload.name is not None:
         u.name = payload.name
     if payload.age is not None:
@@ -63,36 +69,43 @@ async def update_profile(payload: ProfileUpdate, db: AsyncSession = Depends(get_
     if payload.avatarUrl is not None:
         u.avatar_url = payload.avatarUrl
     await db.commit()
-    return _serialize_user(await _get_user(db))
+    return _serialize_user(await _get_user(db, current_user.id))
 
 
 @router.post("/weight", response_model=WeightEntryOut)
-async def log_weight(payload: WeightEntryIn, db: AsyncSession = Depends(get_db)):
-    # upsert by date — replace existing entry for that day
+async def log_weight(
+    payload: WeightEntryIn,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     result = await db.execute(
         select(WeightEntry).where(
-            WeightEntry.user_id == USER_ID, WeightEntry.date == payload.date
+            WeightEntry.user_id == current_user.id, WeightEntry.date == payload.date
         )
     )
     entry = result.scalar_one_or_none()
     if entry:
         entry.kg = payload.kg
     else:
-        entry = WeightEntry(user_id=USER_ID, date=payload.date, kg=payload.kg)
+        entry = WeightEntry(user_id=current_user.id, date=payload.date, kg=payload.kg)
         db.add(entry)
     await db.commit()
     return WeightEntryOut(date=entry.date, kg=entry.kg)
 
 
 @router.delete("/weight/{entry_date}", status_code=204)
-async def delete_weight(entry_date: str, db: AsyncSession = Depends(get_db)):
+async def delete_weight(
+    entry_date: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     from datetime import date as date_type
     try:
         d = date_type.fromisoformat(entry_date)
     except ValueError:
         raise HTTPException(status_code=422, detail="Invalid date format")
     result = await db.execute(
-        select(WeightEntry).where(WeightEntry.user_id == USER_ID, WeightEntry.date == d)
+        select(WeightEntry).where(WeightEntry.user_id == current_user.id, WeightEntry.date == d)
     )
     entry = result.scalar_one_or_none()
     if entry:
@@ -101,9 +114,13 @@ async def delete_weight(entry_date: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/goals", response_model=GoalOut, status_code=201)
-async def create_goal(payload: GoalCreate, db: AsyncSession = Depends(get_db)):
+async def create_goal(
+    payload: GoalCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     goal = Goal(
-        user_id=USER_ID,
+        user_id=current_user.id,
         text=payload.text,
         target_date=payload.targetDate,
         done=payload.done,
@@ -115,9 +132,13 @@ async def create_goal(payload: GoalCreate, db: AsyncSession = Depends(get_db)):
 
 
 @router.patch("/goals/{goal_id}/toggle", response_model=GoalOut)
-async def toggle_goal(goal_id: str, db: AsyncSession = Depends(get_db)):
+async def toggle_goal(
+    goal_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     result = await db.execute(
-        select(Goal).where(Goal.id == goal_id, Goal.user_id == USER_ID)
+        select(Goal).where(Goal.id == goal_id, Goal.user_id == current_user.id)
     )
     goal = result.scalar_one_or_none()
     if not goal:
@@ -128,9 +149,13 @@ async def toggle_goal(goal_id: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.delete("/goals/{goal_id}", status_code=204)
-async def delete_goal(goal_id: str, db: AsyncSession = Depends(get_db)):
+async def delete_goal(
+    goal_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     result = await db.execute(
-        select(Goal).where(Goal.id == goal_id, Goal.user_id == USER_ID)
+        select(Goal).where(Goal.id == goal_id, Goal.user_id == current_user.id)
     )
     goal = result.scalar_one_or_none()
     if goal:

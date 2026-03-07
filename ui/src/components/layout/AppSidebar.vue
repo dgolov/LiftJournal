@@ -26,12 +26,18 @@
     </nav>
 
     <!-- New workout button -->
-    <div class="p-4 border-t border-gray-100">
+    <div class="p-4 border-t border-gray-100 space-y-2">
       <RouterLink to="/workouts/new" @click="closeSidebar"
         class="flex items-center justify-center gap-2 w-full btn-primary btn rounded-xl py-3 text-sm font-semibold">
         <span class="text-lg">+</span>
         Новая тренировка
       </RouterLink>
+      <div class="flex items-center justify-between px-1">
+        <span class="text-xs text-gray-400 truncate">{{ userName }}</span>
+        <button class="text-xs text-gray-400 hover:text-red-500 transition-colors ml-2 flex-shrink-0" @click="logout">
+          Выйти
+        </button>
+      </div>
     </div>
   </aside>
 
@@ -46,12 +52,21 @@
 <script setup>
 import { computed } from 'vue'
 import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 
 const store = useStore()
+const router = useRouter()
 const isOpen = computed(() => store.state.ui.sidebarOpen)
+const userName = computed(() => store.getters['auth/userName'])
 
 function closeSidebar() {
   store.commit('ui/SET_SIDEBAR', false)
+}
+
+function logout() {
+  store.dispatch('auth/logout')
+  closeSidebar()
+  router.push('/login')
 }
 
 const navItems = [

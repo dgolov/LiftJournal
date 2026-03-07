@@ -1,11 +1,25 @@
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+const TOKEN_KEY = 'gym_auth_token'
 
-async function request(method, path, body) {
+async function request(method, path, body, requiresAuth = true) {
+  const headers = {}
+  if (body) headers['Content-Type'] = 'application/json'
+  if (requiresAuth) {
+    const token = localStorage.getItem(TOKEN_KEY)
+    if (token) headers['Authorization'] = `Bearer ${token}`
+  }
+
   const res = await fetch(`${BASE}${path}`, {
     method,
-    headers: body ? { 'Content-Type': 'application/json' } : {},
+    headers,
     body: body ? JSON.stringify(body) : undefined,
   })
+
+  if (res.status === 401) {
+    localStorage.removeItem(TOKEN_KEY)
+    window.location.href = '/login'
+    return
+  }
   if (!res.ok) {
     const text = await res.text()
     throw new Error(`${method} ${path} → ${res.status}: ${text}`)
@@ -15,6 +29,14 @@ async function request(method, path, body) {
 }
 
 const workoutService = {
+  // Auth
+  login(credentials) {
+    return request('POST', '/auth/login', credentials, false)
+  },
+  register(data) {
+    return request('POST', '/auth/register', data, false)
+  },
+
   // Workouts
   fetchWorkouts() {
     return request('GET', '/workouts')

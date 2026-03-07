@@ -1,7 +1,20 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import store from '@/store/index.js'
 
 const routes = [
   { path: '/', redirect: '/history' },
+  {
+    path: '/login',
+    name: 'login',
+    component: () => import('@/views/LoginView.vue'),
+    meta: { public: true }
+  },
+  {
+    path: '/register',
+    name: 'register',
+    component: () => import('@/views/RegisterView.vue'),
+    meta: { public: true }
+  },
   {
     path: '/history',
     name: 'history',
@@ -34,8 +47,21 @@ const routes = [
   }
 ]
 
-export default createRouter({
+const router = createRouter({
   history: createWebHistory(),
   routes,
   scrollBehavior: () => ({ top: 0 })
 })
+
+router.beforeEach((to, _from, next) => {
+  const isAuthenticated = store.getters['auth/isAuthenticated']
+  if (!to.meta.public && !isAuthenticated) {
+    next({ name: 'login' })
+  } else if (to.meta.public && isAuthenticated) {
+    next({ name: 'history' })
+  } else {
+    next()
+  }
+})
+
+export default router

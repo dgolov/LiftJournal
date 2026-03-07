@@ -5,6 +5,28 @@ from pydantic import BaseModel
 
 
 # ---------------------------------------------------------------------------
+# Auth
+# ---------------------------------------------------------------------------
+
+class AuthRegister(BaseModel):
+    email: str
+    password: str
+    name: str
+
+
+class AuthLogin(BaseModel):
+    email: str
+    password: str
+
+
+class TokenOut(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user_id: int
+    name: str
+
+
+# ---------------------------------------------------------------------------
 # Exercise
 # ---------------------------------------------------------------------------
 

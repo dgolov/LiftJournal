@@ -77,6 +77,10 @@ export default {
     async deleteGoal({ commit }, id) {
       await workoutService.deleteGoal(id)
       commit('DELETE_GOAL', id)
+    },
+
+    reset({ commit }) {
+      commit('SET_USER', { name: '', age: 0, avatarUrl: null, weightLog: [], goals: [] })
     }
   }
 }

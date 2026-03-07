@@ -1,18 +1,24 @@
 <template>
-  <AppLayout>
+  <component :is="isPublicRoute ? 'div' : AppLayout">
     <RouterView v-slot="{ Component }">
       <Transition name="fade" mode="out-in">
         <component :is="Component" />
       </Transition>
     </RouterView>
-  </AppLayout>
+    <ToastContainer v-if="isPublicRoute" />
+  </component>
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
+import { useRoute } from 'vue-router'
 import AppLayout from '@/components/layout/AppLayout.vue'
+import ToastContainer from '@/components/ui/ToastContainer.vue'
 import { loadSession } from '@/store/modules/workouts.js'
+
+const route = useRoute()
+const isPublicRoute = computed(() => !!route.meta.public)
 
 const store = useStore()
 

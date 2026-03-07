@@ -12,7 +12,7 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-from app.models import Base  # noqa: E402
+from app.db.models import Base  # noqa: E402
 from app.config import settings  # noqa: E402
 
 target_metadata = Base.metadata

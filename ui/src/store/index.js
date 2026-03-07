@@ -3,9 +3,10 @@ import workouts, { saveSession } from './modules/workouts.js'
 import exercises from './modules/exercises.js'
 import user from './modules/user.js'
 import ui from './modules/ui.js'
+import auth from './modules/auth.js'
 
 const store = createStore({
-  modules: { workouts, exercises, user, ui }
+  modules: { workouts, exercises, user, ui, auth }
 })
 
 // Sync activeWorkout draft to localStorage whenever exercises/sets change during an active session

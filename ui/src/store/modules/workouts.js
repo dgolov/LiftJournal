@@ -211,6 +211,11 @@ export default {
     async deleteWorkout({ commit }, id) {
       await workoutService.deleteWorkout(id)
       commit('DELETE_WORKOUT', id)
+    },
+
+    reset({ commit }) {
+      commit('SET_WORKOUTS', [])
+      commit('RESET_ACTIVE_WORKOUT')
     }
   }
 }
