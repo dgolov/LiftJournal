@@ -17,7 +17,7 @@
       <StatCard label="Всего тренировок" :value="totalWorkouts" />
       <StatCard label="На этой неделе" :value="thisWeek" />
       <StatCard label="Серия (дней)" :value="streak" />
-      <StatCard label="Общий объём" :value="formattedVolume" sub="тонн" />
+      <StatCard label="Общий тоннаж" :value="formattedVolume" sub="тонн" />
     </div>
 
     <div class="grid lg:grid-cols-2 gap-6">

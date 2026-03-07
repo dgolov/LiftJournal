@@ -24,7 +24,7 @@ import {
 ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler)
 
 const props = defineProps({
-  data: { type: Array, default: () => [] } // [ { date, maxWeight, totalVolume } ]
+  data: { type: Array, default: () => [] } // [ { date, maxWeight, totalVolume, best1RM } ]
 })
 
 const labels = computed(() =>
@@ -38,17 +38,26 @@ const chartData = computed(() => ({
   labels: labels.value,
   datasets: [
     {
+      label: 'Расч. 1ПМ (кг)',
+      data: props.data.map(d => d.best1RM),
+      borderColor: '#f59e0b',
+      backgroundColor: 'rgba(245, 158, 11, 0.1)',
+      fill: true,
+      tension: 0.4,
+      pointRadius: 4,
+      pointBackgroundColor: '#f59e0b'
+    },
+    {
       label: 'Макс. вес (кг)',
       data: props.data.map(d => d.maxWeight),
       borderColor: '#6366f1',
-      backgroundColor: 'rgba(99, 102, 241, 0.1)',
-      fill: true,
+      backgroundColor: 'transparent',
       tension: 0.4,
       pointRadius: 4,
       pointBackgroundColor: '#6366f1'
     },
     {
-      label: 'Объём (кг)',
+      label: 'Тоннаж (кг)',
       data: props.data.map(d => d.totalVolume),
       borderColor: '#22c55e',
       backgroundColor: 'transparent',

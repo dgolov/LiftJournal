@@ -42,7 +42,11 @@ export default {
         const maxWeight = Math.max(...ex.sets.map(s => s.weight))
         const totalVolume = ex.sets.reduce((sum, s) => sum + s.weight * s.reps, 0)
         const maxReps = Math.max(...ex.sets.map(s => s.reps))
-        sessions.push({ date: workout.date, maxWeight, totalVolume, maxReps, workoutId: workout.id, workoutTitle: workout.title })
+        // Epley estimated 1RM: weight × (1 + reps / 30); for 1 rep = weight itself
+        const best1RM = Math.max(...ex.sets.map(s =>
+          s.reps === 1 ? s.weight : Math.round(s.weight * (1 + s.reps / 30))
+        ))
+        sessions.push({ date: workout.date, maxWeight, totalVolume, maxReps, best1RM, workoutId: workout.id, workoutTitle: workout.title })
       })
       return sessions.sort((a, b) => a.date.localeCompare(b.date))
     },
@@ -50,19 +54,24 @@ export default {
     personalRecord: (_state, getters) => exerciseId => {
       const progress = getters.progressForExercise(exerciseId)
       if (!progress.length) return null
-      const workouts = progress.flatMap(p => {
-        // Need to find best single set across all workouts
-        return p
-      })
-      // We need the actual sets — get them from rootState via getters
-      let best = null
+      let bestWeight = 0, bestWeightDate = null
+      let best1RM = 0, best1RMDate = null
+      let bestVolume = 0, bestVolumeDate = null
       progress.forEach(session => {
-        if (best === null || session.maxWeight > best.maxWeight ||
-          (session.maxWeight === best.maxWeight && session.maxReps > best.maxReps)) {
-          best = { weight: session.maxWeight, reps: session.maxReps, date: session.date }
+        if (session.maxWeight > bestWeight) {
+          bestWeight = session.maxWeight
+          bestWeightDate = session.date
+        }
+        if (session.best1RM > best1RM) {
+          best1RM = session.best1RM
+          best1RMDate = session.date
+        }
+        if (session.totalVolume > bestVolume) {
+          bestVolume = session.totalVolume
+          bestVolumeDate = session.date
         }
       })
-      return best
+      return { bestWeight, bestWeightDate, best1RM, best1RMDate, bestVolume, bestVolumeDate }
     }
   },
 

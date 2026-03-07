@@ -36,8 +36,9 @@
             </span>
           </div>
         </div>
-        <p class="mt-2 text-xs text-gray-400">
-          Объём: {{ ex.sets.reduce((s, set) => s + set.weight * set.reps, 0) }} кг
+        <p class="mt-2 text-xs text-gray-400 flex gap-3">
+          <span>Тоннаж: {{ ex.sets.reduce((s, set) => s + set.weight * set.reps, 0) }} кг</span>
+          <span>· Расч. 1ПМ: {{ Math.max(...ex.sets.map(s => s.reps === 1 ? s.weight : Math.round(s.weight * (1 + s.reps / 30)))) }} кг</span>
         </p>
       </div>
     </div>

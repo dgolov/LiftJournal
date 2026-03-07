@@ -19,14 +19,27 @@
     </div>
 
     <!-- PR Card -->
-    <div v-if="pr" class="card p-4 mb-6 flex items-center gap-4 border-l-4 border-yellow-400">
-      <span class="text-3xl">🏆</span>
-      <div>
-        <p class="text-xs text-gray-500 uppercase tracking-wide font-medium">Личный рекорд</p>
-        <p class="text-xl font-bold text-gray-900">
-          {{ pr.weight > 0 ? pr.weight + ' кг × ' + pr.reps + ' повт.' : pr.reps + ' повт.' }}
-        </p>
-        <p class="text-xs text-gray-400">{{ formatDate(pr.date) }}</p>
+    <div v-if="pr" class="card p-4 mb-6 border-l-4 border-yellow-400">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-2xl">🏆</span>
+        <p class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Личные рекорды</p>
+      </div>
+      <div class="grid grid-cols-3 gap-3">
+        <div class="text-center">
+          <p class="text-xs text-gray-400 mb-0.5">Расч. 1ПМ</p>
+          <p class="text-lg font-bold text-yellow-500">{{ pr.best1RM }} кг</p>
+          <p class="text-xs text-gray-400">{{ formatDate(pr.best1RMDate) }}</p>
+        </div>
+        <div class="text-center border-x border-gray-100">
+          <p class="text-xs text-gray-400 mb-0.5">Лучший вес</p>
+          <p class="text-lg font-bold text-primary">{{ pr.bestWeight }} кг</p>
+          <p class="text-xs text-gray-400">{{ formatDate(pr.bestWeightDate) }}</p>
+        </div>
+        <div class="text-center">
+          <p class="text-xs text-gray-400 mb-0.5">Лучший тоннаж</p>
+          <p class="text-lg font-bold text-green-500">{{ pr.bestVolume }} кг</p>
+          <p class="text-xs text-gray-400">{{ formatDate(pr.bestVolumeDate) }}</p>
+        </div>
       </div>
     </div>
 
@@ -43,10 +56,11 @@
         <div v-for="session in [...progress].reverse()" :key="session.date + session.workoutId"
           class="flex items-center gap-3 py-2.5 text-sm cursor-pointer hover:bg-gray-50 rounded-lg px-2 -mx-2"
           @click="$router.push(`/workouts/${session.workoutId}`)">
-          <span class="text-gray-400 text-xs w-24 flex-shrink-0">{{ formatDate(session.date) }}</span>
+          <span class="text-gray-400 text-xs w-20 flex-shrink-0">{{ formatDate(session.date) }}</span>
           <span class="flex-1 text-gray-600 truncate">{{ session.workoutTitle }}</span>
+          <span class="text-yellow-500 font-semibold text-xs">1ПМ {{ session.best1RM }} кг</span>
           <span class="text-gray-900 font-medium">{{ session.maxWeight > 0 ? session.maxWeight + ' кг' : 'Б/в' }}</span>
-          <span class="text-gray-400">{{ session.maxReps }} повт.</span>
+          <span class="text-gray-400 text-xs">{{ session.totalVolume }} кг</span>
         </div>
       </div>
       <BaseEmptyState v-else icon="📊" title="Нет данных" description="Добавьте это упражнение в тренировку, чтобы отслеживать прогресс" />
