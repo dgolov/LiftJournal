@@ -22,6 +22,7 @@ async function request(method, path, body, requiresAuth = true) {
   }
   if (!res.ok) {
     const text = await res.text()
+    console.error(`API error ${method} ${path} → ${res.status}:`, text)
     throw new Error(`${method} ${path} → ${res.status}: ${text}`)
   }
   if (res.status === 204) return undefined
@@ -143,6 +144,20 @@ const workoutService = {
   },
   deleteCycle(id) {
     return request('DELETE', `/cycles/${id}`)
+  },
+
+  // Cycle runs
+  fetchCycleRun(cycleId) {
+    return request('GET', `/cycles/${cycleId}/run`)
+  },
+  startCycleRun(cycleId) {
+    return request('POST', `/cycles/${cycleId}/start`)
+  },
+  startCycleWorkout(runId, cycleWorkoutId, notes = '') {
+    return request('POST', `/cycle-runs/${runId}/workouts/${cycleWorkoutId}/start`, { notes })
+  },
+  completeCycleWorkout(runId, cycleWorkoutId, workoutId = null) {
+    return request('POST', `/cycle-runs/${runId}/workouts/${cycleWorkoutId}/complete`, { workout_id: workoutId })
   },
 }
 

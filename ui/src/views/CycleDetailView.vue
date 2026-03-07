@@ -35,6 +35,30 @@
       </div>
     </div>
 
+    <!-- Run progress / Start button -->
+    <div class="card p-4 mb-4">
+      <div v-if="currentRun">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-semibold text-gray-700">Прогресс цикла</span>
+          <span class="text-sm font-bold text-primary">{{ completedCount }} / {{ totalCount }}</span>
+        </div>
+        <div class="w-full bg-gray-100 rounded-full h-2">
+          <div
+            class="bg-primary h-2 rounded-full transition-all"
+            :style="{ width: progressPct + '%' }"
+          />
+        </div>
+        <p v-if="completedCount === totalCount" class="text-xs text-green-600 font-medium mt-2">Цикл завершён!</p>
+      </div>
+      <div v-else class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-semibold text-gray-700">Цикл не начат</p>
+          <p class="text-xs text-gray-400 mt-0.5">Начните цикл чтобы отслеживать прогресс</p>
+        </div>
+        <BaseButton :loading="startingRun" @click="startRun">Начать цикл</BaseButton>
+      </div>
+    </div>
+
     <!-- 1RM notice -->
     <div v-if="missingMaxes.length" class="card p-3 mb-4 border-l-4 border-amber-400 flex items-start gap-2">
       <span class="text-lg flex-shrink-0">⚠️</span>
@@ -52,7 +76,17 @@
         :key="workout.id"
         class="card p-4"
       >
-        <p class="text-xs font-bold text-gray-400 mb-2">Тренировка {{ workout.workout_number }}</p>
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-xs font-bold text-gray-400">Тренировка {{ workout.workout_number }}</p>
+          <span v-if="currentRun && completedIds.has(workout.id)" class="text-xs text-green-600 font-semibold">✓ Выполнена</span>
+          <BaseButton
+            v-else-if="currentRun"
+            size="sm"
+            variant="outline"
+            :loading="startingWorkout === workout.id"
+            @click="openStartModal(workout.id)"
+          >Начать тренировку</BaseButton>
+        </div>
         <div class="space-y-3">
           <div v-for="exName in exerciseColumns" :key="exName">
             <template v-if="getSets(workout, exName).length">
@@ -115,7 +149,18 @@
               :key="workout.id"
               class="hover:bg-primary/5"
             >
-              <td class="border border-gray-200 px-3 py-2.5 font-bold text-gray-400 text-xs text-center">{{ workout.workout_number }}</td>
+              <td class="border border-gray-200 px-3 py-2.5 font-bold text-gray-400 text-xs text-center">
+                {{ workout.workout_number }}
+                <div v-if="currentRun" class="mt-1">
+                  <span v-if="completedIds.has(workout.id)" class="text-green-500 text-base">✓</span>
+                  <button
+                    v-else
+                    :disabled="startingWorkout === workout.id"
+                    class="text-primary text-xs font-semibold hover:underline disabled:opacity-50"
+                    @click="openStartModal(workout.id)"
+                  >▶ старт</button>
+                </div>
+              </td>
               <template v-for="exName in exerciseColumns" :key="exName">
                 <td
                   v-for="n in maxSetsPerExercise[exName]"
@@ -146,28 +191,87 @@
 
   <div v-else-if="loading" class="text-center py-16 text-gray-400">Загрузка...</div>
   <div v-else class="text-center py-16 text-gray-400">Цикл не найден</div>
+
+  <!-- Start workout modal -->
+  <BaseModal v-model="showStartModal" title="Начать тренировку">
+    <p class="text-sm text-gray-500 mb-3">Упражнения из цикла будут предзаполнены. Можно добавить подсобные упражнения прямо в тренировке.</p>
+    <div>
+      <label class="label">Заметки (необязательно)</label>
+      <textarea v-model="workoutNotes" rows="2" class="input resize-none" placeholder="Самочувствие, план..."/>
+    </div>
+    <template #footer>
+      <BaseButton variant="ghost" @click="showStartModal = false">Отмена</BaseButton>
+      <BaseButton @click="confirmStartWorkout">Начать</BaseButton>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
 
 const route = useRoute()
+const router = useRouter()
 const store = useStore()
 
 const loading = ref(false)
 const viewMode = ref('table')
+const startingRun = ref(false)
+const startingWorkout = ref(null) // cycle_workout_id being started
+const showStartModal = ref(false)
+const pendingWorkoutId = ref(null)
+const workoutNotes = ref('')
+
 const cycle = computed(() => store.state.cycles.currentCycle)
+const currentRun = computed(() => store.state.cycles.currentRun)
 const currentUserId = computed(() => store.state.auth.userId)
 const isOwner = computed(() => cycle.value?.created_by === currentUserId.value)
-const userMaxes = computed(() => store.state.user.maxes) // [{ exercise_name, weight_kg }]
+const userMaxes = computed(() => store.state.user.maxes)
+
+const completedIds = computed(() => store.getters['cycles/completedWorkoutIds'])
+const completedCount = computed(() => completedIds.value.size)
+const totalCount = computed(() => cycle.value?.workouts.length ?? 0)
+const progressPct = computed(() => totalCount.value ? Math.round(completedCount.value / totalCount.value * 100) : 0)
 
 onMounted(async () => {
   loading.value = true
-  try { await store.dispatch('cycles/fetchCycle', route.params.id) }
-  finally { loading.value = false }
+  try {
+    await store.dispatch('cycles/fetchCycle', route.params.id)
+    await store.dispatch('cycles/fetchCycleRun', route.params.id)
+  } finally {
+    loading.value = false
+  }
 })
+
+async function startRun() {
+  startingRun.value = true
+  try { await store.dispatch('cycles/startCycleRun', route.params.id) }
+  finally { startingRun.value = false }
+}
+
+function openStartModal(cycleWorkoutId) {
+  pendingWorkoutId.value = cycleWorkoutId
+  workoutNotes.value = ''
+  showStartModal.value = true
+}
+
+function confirmStartWorkout() {
+  const cycleWorkoutId = pendingWorkoutId.value
+  showStartModal.value = false
+  const cycleWorkout = cycle.value.workouts.find(w => w.id === cycleWorkoutId)
+  store.dispatch('workouts/startWorkoutFromCycle', {
+    cycleWorkout,
+    cycleTitle: cycle.value.title,
+    runId: currentRun.value.id,
+    cycleWorkoutId,
+    cycleId: route.params.id,
+  })
+  store.commit('workouts/SET_ACTIVE_WORKOUT_FIELD', { field: 'notes', value: workoutNotes.value })
+  router.push('/workouts/new')
+}
 
 // Collect unique exercise names across all workouts (preserving first-seen order)
 const exerciseColumns = computed(() => {

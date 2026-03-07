@@ -6,15 +6,22 @@ export default {
   state: () => ({
     cycles: [],
     currentCycle: null,
+    currentRun: null,
   }),
 
   getters: {
     cycleById: state => id => state.cycles.find(c => c.id === id),
+    completedWorkoutIds: state => {
+      if (!state.currentRun) return new Set()
+      return new Set(state.currentRun.logs.filter(l => l.completed_at).map(l => l.cycle_workout_id))
+    },
+    logByCycleWorkoutId: state => id => state.currentRun?.logs.find(l => l.cycle_workout_id === id) ?? null,
   },
 
   mutations: {
     SET_CYCLES(state, cycles) { state.cycles = cycles },
     SET_CURRENT(state, cycle) { state.currentCycle = cycle },
+    SET_RUN(state, run) { state.currentRun = run },
     ADD_CYCLE(state, cycle) { state.cycles.unshift(cycle) },
     UPDATE_CYCLE(state, cycle) {
       const i = state.cycles.findIndex(c => c.id === cycle.id)
@@ -25,7 +32,7 @@ export default {
       state.cycles = state.cycles.filter(c => c.id !== id)
       if (state.currentCycle?.id === id) state.currentCycle = null
     },
-    RESET(state) { state.cycles = []; state.currentCycle = null },
+    RESET(state) { state.cycles = []; state.currentCycle = null; state.currentRun = null },
   },
 
   actions: {
@@ -38,6 +45,28 @@ export default {
       const cycle = await workoutService.fetchCycle(id)
       commit('SET_CURRENT', cycle)
       return cycle
+    },
+
+    async fetchCycleRun({ commit }, cycleId) {
+      const run = await workoutService.fetchCycleRun(cycleId)
+      commit('SET_RUN', run)
+      return run
+    },
+
+    async startCycleRun({ commit }, cycleId) {
+      const run = await workoutService.startCycleRun(cycleId)
+      commit('SET_RUN', run)
+      return run
+    },
+
+    async startCycleWorkout(_, { runId, cycleWorkoutId, notes }) {
+      return workoutService.startCycleWorkout(runId, cycleWorkoutId, notes)
+    },
+
+    async completeCycleWorkout({ commit }, { runId, cycleWorkoutId, workoutId }) {
+      const run = await workoutService.completeCycleWorkout(runId, cycleWorkoutId, workoutId)
+      commit('SET_RUN', run)
+      return run
     },
 
     async createCycle({ commit }, data) {

@@ -64,6 +64,11 @@ const routes = [
     path: '/cycles/:id/edit',
     name: 'cycle-edit',
     component: () => import('@/views/CycleEditView.vue')
+  },
+  {
+    path: '/cycle-runs/:runId/workouts/:cycleWorkoutId',
+    name: 'cycle-workout-execute',
+    component: () => import('@/views/CycleWorkoutExecuteView.vue')
   }
 ]
 

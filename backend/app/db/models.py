@@ -194,6 +194,33 @@ class CycleSet(Base):
     exercise: Mapped["CycleExercise"] = relationship("CycleExercise", back_populates="sets")
 
 
+class UserCycleRun(Base):
+    """Tracks a user actively running a training cycle."""
+    __tablename__ = "user_cycle_runs"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    cycle_id: Mapped[str] = mapped_column(String, ForeignKey("training_cycles.id", ondelete="CASCADE"), nullable=False)
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    logs: Mapped[list["CycleWorkoutLog"]] = relationship(
+        "CycleWorkoutLog", back_populates="run", cascade="all, delete-orphan"
+    )
+
+
+class CycleWorkoutLog(Base):
+    """Records each workout executed within a cycle run."""
+    __tablename__ = "cycle_workout_logs"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
+    run_id: Mapped[str] = mapped_column(String, ForeignKey("user_cycle_runs.id", ondelete="CASCADE"), nullable=False)
+    cycle_workout_id: Mapped[str] = mapped_column(String, ForeignKey("cycle_workouts.id", ondelete="CASCADE"), nullable=False)
+    workout_id: Mapped[Optional[str]] = mapped_column(String, ForeignKey("workouts.id", ondelete="SET NULL"), nullable=True)
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    run: Mapped["UserCycleRun"] = relationship("UserCycleRun", back_populates="logs")
+
+
 class UserMax(Base):
 
     """User's manually entered 1RM values used for cycle % calculations."""

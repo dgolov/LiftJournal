@@ -218,9 +218,9 @@ function beginWorkout() {
 async function save() {
   saving.value = true
   try {
-    const saved = await store.dispatch('workouts/saveWorkout')
+    const { workout: saved, cycleId } = await store.dispatch('workouts/saveWorkout')
     store.dispatch('ui/showToast', { message: 'Тренировка завершена!', type: 'success' })
-    router.push(`/workouts/${saved.id}`)
+    router.push(cycleId ? `/cycles/${cycleId}` : `/workouts/${saved.id}`)
   } finally {
     saving.value = false
   }

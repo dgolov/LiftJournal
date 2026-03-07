@@ -6,8 +6,8 @@ const SESSION_KEY = 'gym_workout_session'
 export function loadSession() {
   try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null') } catch { return null }
 }
-export function saveSession(startedAt, draft) {
-  localStorage.setItem(SESSION_KEY, JSON.stringify({ startedAt, draft }))
+export function saveSession(startedAt, draft, cycleContext = null) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ startedAt, draft, cycleContext }))
 }
 export function clearSession() {
   localStorage.removeItem(SESSION_KEY)
@@ -45,6 +45,7 @@ export default {
       workouts: [],
       activeWorkout: session?.draft || emptyWorkout(),
       workoutStartedAt: session?.startedAt || null,
+      cycleContext: session?.cycleContext || null,
       filters: {
         dateFrom: null,
         dateTo: null,
@@ -126,8 +127,11 @@ export default {
     RESET_ACTIVE_WORKOUT(state) {
       state.activeWorkout = emptyWorkout()
       state.workoutStartedAt = null
+      state.cycleContext = null
       clearSession()
     },
+    SET_CYCLE_CONTEXT(state, ctx) { state.cycleContext = ctx },
+    SET_ACTIVE_WORKOUT_EXERCISES(state, exercises) { state.activeWorkout.exercises = exercises },
     SET_ACTIVE_WORKOUT_FIELD(state, { field, value }) {
       state.activeWorkout[field] = value
     },
@@ -174,17 +178,48 @@ export default {
     startWorkout({ commit, state }) {
       const ts = Date.now()
       commit('SET_WORKOUT_STARTED_AT', ts)
-      saveSession(ts, state.activeWorkout)
+      saveSession(ts, state.activeWorkout, state.cycleContext)
     },
 
-    async saveWorkout({ commit, state }) {
+    startWorkoutFromCycle({ commit, dispatch, rootState }, { cycleWorkout, cycleTitle, runId, cycleWorkoutId, cycleId }) {
+      const maxes = rootState.user.maxes
+      const exercises = cycleWorkout.exercises.map(ex => {
+        const maxKg = maxes.find(m => m.exercise_name === ex.exercise_name)?.weight_kg ?? null
+        return {
+          exerciseId: `cycle-${ex.id}`,
+          exerciseName: ex.exercise_name,
+          sets: ex.sets.map(s => ({
+            id: uid(),
+            weight: maxKg ? Math.round(maxKg * s.percent_1rm / 100 / 2.5) * 2.5 : 0,
+            reps: s.reps,
+            completed: false,
+          })),
+        }
+      })
+      commit('RESET_ACTIVE_WORKOUT')
+      commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'title', value: `Тренировка ${cycleWorkout.workout_number} — ${cycleTitle}` })
+      commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'type', value: 'Силовая' })
+      commit('SET_ACTIVE_WORKOUT_EXERCISES', exercises)
+      commit('SET_CYCLE_CONTEXT', { runId, cycleWorkoutId, cycleId })
+      dispatch('startWorkout')
+    },
+
+    async saveWorkout({ commit, state, dispatch }) {
       const durationMinutes = state.workoutStartedAt
         ? Math.max(1, Math.round((Date.now() - state.workoutStartedAt) / 60000))
         : state.activeWorkout.durationMinutes
       const saved = await workoutService.saveWorkout({ ...state.activeWorkout, durationMinutes })
       commit('ADD_WORKOUT', saved)
+      const cycleId = state.cycleContext?.cycleId ?? null
+      if (state.cycleContext) {
+        await dispatch('cycles/completeCycleWorkout', {
+          runId: state.cycleContext.runId,
+          cycleWorkoutId: state.cycleContext.cycleWorkoutId,
+          workoutId: saved.id,
+        }, { root: true })
+      }
       commit('RESET_ACTIVE_WORKOUT')
-      return saved
+      return { workout: saved, cycleId }
     },
 
     async autoSaveMidnight({ commit, dispatch }, { draft, startedAt }) {

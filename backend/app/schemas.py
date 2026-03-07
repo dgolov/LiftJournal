@@ -241,3 +241,29 @@ class CycleDetailOut(BaseModel):
     is_public: bool
     created_at: datetime
     workouts: list[CycleWorkoutOut]
+
+
+# ---------------------------------------------------------------------------
+# Cycle runs
+# ---------------------------------------------------------------------------
+
+class CycleWorkoutLogOut(BaseModel):
+    id: str
+    cycle_workout_id: str
+    workout_id: Optional[str]
+    completed_at: Optional[datetime]
+
+
+class CycleRunOut(BaseModel):
+    id: str
+    cycle_id: str
+    started_at: datetime
+    logs: list[CycleWorkoutLogOut]
+
+
+class StartCycleWorkoutIn(BaseModel):
+    notes: str = ""
+
+
+class CompleteWorkoutIn(BaseModel):
+    workout_id: Optional[str] = None
