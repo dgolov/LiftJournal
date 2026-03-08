@@ -1,8 +1,17 @@
+.env
+
+env/
+venv/
+
+.idea
+
+__pycache__
+
 node_modules
 dist
 .DS_Store
 *.local
 
 *.log
-сф
+
 CLAUDE.md
