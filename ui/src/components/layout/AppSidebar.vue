@@ -4,7 +4,7 @@
     <!-- Logo -->
     <div class="h-16 flex items-center gap-3 px-6 border-b border-gray-100">
       <span class="text-2xl">💪</span>
-      <span class="font-bold text-gray-900 text-lg">GymDiary</span>
+      <span class="font-bold text-gray-900 text-lg">LiftJournal</span>
     </div>
 
     <!-- Nav -->

@@ -40,7 +40,7 @@ const titleMap = {
   profile: 'Профиль'
 }
 
-const pageTitle = computed(() => titleMap[route.name] || 'GymDiary')
+const pageTitle = computed(() => titleMap[route.name] || 'LiftJournal')
 
 function toggleSidebar() {
   store.commit('ui/TOGGLE_SIDEBAR')
