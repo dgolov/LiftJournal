@@ -185,8 +185,9 @@ export default {
       const maxes = rootState.user.maxes
       const exercises = cycleWorkout.exercises.map(ex => {
         const maxKg = maxes.find(m => m.exercise_name === ex.exercise_name)?.weight_kg ?? null
+        const libraryEx = rootState.exercises.library.find(e => e.name === ex.exercise_name)
         return {
-          exerciseId: `cycle-${ex.id}`,
+          exerciseId: libraryEx?.id ?? `cycle-${ex.id}`,
           exerciseName: ex.exercise_name,
           sets: ex.sets.map(s => ({
             id: uid(),
