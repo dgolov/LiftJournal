@@ -1,8 +1,8 @@
 <template>
   <component :is="isPublicRoute ? 'div' : AppLayout">
     <RouterView v-slot="{ Component }">
-      <Transition name="fade" mode="out-in">
-        <component :is="Component" />
+      <Transition name="fade">
+        <component :is="Component" :key="route.path" />
       </Transition>
     </RouterView>
     <ToastContainer v-if="isPublicRoute" />

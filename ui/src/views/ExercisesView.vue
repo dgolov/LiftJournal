@@ -54,7 +54,7 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import ExerciseCard from '@/components/exercises/ExerciseCard.vue'
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
@@ -66,6 +66,12 @@ import { MUSCLE_GROUPS, EQUIPMENT_TYPES } from '@/services/mockData.js'
 
 const store = useStore()
 const showAddModal = ref(false)
+
+onMounted(() => {
+  if (!store.state.exercises.library.length) {
+    store.dispatch('exercises/initExercises')
+  }
+})
 
 const exercises = computed(() => store.getters['exercises/filteredExercises'])
 const muscleGroups = computed(() => store.getters['exercises/muscleGroups'])

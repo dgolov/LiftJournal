@@ -1,4 +1,5 @@
 <template>
+  <div>
   <div v-if="cycle">
     <!-- Header -->
     <div class="flex items-start gap-3 mb-6">
@@ -204,11 +205,12 @@
       <BaseButton @click="confirmStartWorkout">Начать</BaseButton>
     </template>
   </BaseModal>
+  </div>
 </template>
 
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useStore } from 'vuex'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
@@ -218,6 +220,8 @@ const router = useRouter()
 const store = useStore()
 
 const loading = ref(false)
+let leaving = false
+onBeforeRouteLeave(() => { leaving = true })
 const viewMode = ref('table')
 const startingRun = ref(false)
 const startingWorkout = ref(null) // cycle_workout_id being started
@@ -242,7 +246,7 @@ onMounted(async () => {
     await store.dispatch('cycles/fetchCycle', route.params.id)
     await store.dispatch('cycles/fetchCycleRun', route.params.id)
   } finally {
-    loading.value = false
+    if (!leaving) loading.value = false
   }
 })
 

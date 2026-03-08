@@ -56,7 +56,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import WorkoutCard from '@/components/workout/WorkoutCard.vue'
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
@@ -64,6 +64,12 @@ import { WORKOUT_TYPES } from '@/services/mockData.js'
 
 const store = useStore()
 const workoutTypes = WORKOUT_TYPES
+
+onMounted(() => {
+  if (!store.state.workouts.workouts.length) {
+    store.dispatch('workouts/initWorkouts')
+  }
+})
 const filtered = computed(() => store.getters['workouts/filteredWorkouts'])
 const filters = computed(() => store.state.workouts.filters)
 const activeType = computed(() => filters.value.type)

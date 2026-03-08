@@ -58,6 +58,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
+import { onBeforeRouteLeave } from 'vue-router'
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
@@ -66,13 +67,15 @@ const store = useStore()
 const loading = ref(false)
 const showConfirm = ref(false)
 const toDelete = ref(null)
+let leaving = false
+onBeforeRouteLeave(() => { leaving = true })
 
 const cycles = computed(() => store.state.cycles.cycles)
 const currentUserId = computed(() => store.state.auth.userId)
 
 onMounted(async () => {
   loading.value = true
-  try { await store.dispatch('cycles/fetchCycles') } finally { loading.value = false }
+  try { await store.dispatch('cycles/fetchCycles') } finally { if (!leaving) loading.value = false }
 })
 
 function confirmDelete(cycle) {
