@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import workouts, exercises, user, auth, cycles, cycle_runs
+from app.api.routers import auth, exercises, workouts, cycles, cycle_runs, users
 
 app = FastAPI(title="GymDiary API")
 
@@ -15,7 +15,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(workouts.router, prefix="/api/workouts", tags=["workouts"])
 app.include_router(exercises.router, prefix="/api/exercises", tags=["exercises"])
-app.include_router(user.router, prefix="/api/user", tags=["user"])
+app.include_router(users.router, prefix="/api/user", tags=["user"])
 app.include_router(cycles.router, prefix="/api/cycles", tags=["cycles"])
 app.include_router(cycle_runs.router, prefix="/api", tags=["cycle-runs"])
 
