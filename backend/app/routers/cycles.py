@@ -35,6 +35,7 @@ def _serialize_detail(c: TrainingCycle) -> CycleDetailOut:
                 exercises=[
                     CycleExerciseOut(
                         id=e.id,
+                        exercise_id=e.exercise_id,
                         exercise_name=e.exercise_name,
                         sets=[
                             CycleSetOut(id=s.id, percent_1rm=s.percent_1rm, reps=s.reps, order=s.order)
@@ -54,7 +55,7 @@ def _build_workouts(workouts_in) -> list[CycleWorkout]:
     for i, w_in in enumerate(workouts_in or []):
         w = CycleWorkout(workout_number=w_in.workout_number, title=w_in.title, notes=w_in.notes, order=i)
         for j, e_in in enumerate(w_in.exercises):
-            e = CycleExercise(exercise_name=e_in.exercise_name, order=j)
+            e = CycleExercise(exercise_id=e_in.exercise_id, exercise_name=e_in.exercise_name, order=j)
             e.sets = [
                 CycleSet(percent_1rm=s.percent_1rm, reps=s.reps, order=k)
                 for k, s in enumerate(e_in.sets)

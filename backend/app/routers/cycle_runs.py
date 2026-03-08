@@ -21,6 +21,7 @@ def _serialize_run(run: UserCycleRun) -> CycleRunOut:
         id=run.id,
         cycle_id=run.cycle_id,
         started_at=run.started_at,
+        completed_at=run.completed_at,
         logs=[
             CycleWorkoutLogOut(
                 id=log.id,
@@ -87,11 +88,15 @@ async def start_cycle(
     if not cycle.is_public and cycle.created_by != current_user.id:
         raise HTTPException(status_code=403, detail="Нет доступа")
 
-    # Return existing run if present
+    # Return existing active run if present
     existing = await db.execute(
         select(UserCycleRun)
         .options(selectinload(UserCycleRun.logs))
-        .where(UserCycleRun.user_id == current_user.id, UserCycleRun.cycle_id == cycle_id)
+        .where(
+            UserCycleRun.user_id == current_user.id,
+            UserCycleRun.cycle_id == cycle_id,
+            UserCycleRun.completed_at.is_(None),
+        )
     )
     run = existing.scalar_one_or_none()
     if run:
@@ -114,11 +119,15 @@ async def get_my_run(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get the current user's run for this cycle, or null if not started."""
+    """Get the current user's active (non-completed) run for this cycle, or null."""
     result = await db.execute(
         select(UserCycleRun)
         .options(selectinload(UserCycleRun.logs))
-        .where(UserCycleRun.user_id == current_user.id, UserCycleRun.cycle_id == cycle_id)
+        .where(
+            UserCycleRun.user_id == current_user.id,
+            UserCycleRun.cycle_id == cycle_id,
+            UserCycleRun.completed_at.is_(None),
+        )
     )
     run = result.scalar_one_or_none()
     return _serialize_run(run) if run else None
@@ -236,6 +245,22 @@ async def complete_cycle_workout(
     log.completed_at = datetime.utcnow()
     await db.commit()
 
+    result = await db.execute(
+        select(UserCycleRun).options(selectinload(UserCycleRun.logs)).where(UserCycleRun.id == run_id)
+    )
+    return _serialize_run(result.scalar_one())
+
+
+@router.post("/cycle-runs/{run_id}/finish", response_model=CycleRunOut)
+async def finish_cycle_run(
+    run_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Mark the cycle run as completed. User can start a fresh run after this."""
+    run = await _get_run(db, run_id, current_user.id)
+    run.completed_at = datetime.utcnow()
+    await db.commit()
     result = await db.execute(
         select(UserCycleRun).options(selectinload(UserCycleRun.logs)).where(UserCycleRun.id == run_id)
     )

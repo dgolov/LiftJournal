@@ -172,6 +172,7 @@ class CycleExercise(Base):
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
     cycle_workout_id: Mapped[str] = mapped_column(String, ForeignKey("cycle_workouts.id", ondelete="CASCADE"), nullable=False)
+    exercise_id: Mapped[Optional[str]] = mapped_column(String, ForeignKey("exercises.id", ondelete="SET NULL"), nullable=True)
     exercise_name: Mapped[str] = mapped_column(String(200), nullable=False)
     order: Mapped[int] = mapped_column(Integer, default=0)
 
@@ -202,6 +203,7 @@ class UserCycleRun(Base):
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     cycle_id: Mapped[str] = mapped_column(String, ForeignKey("training_cycles.id", ondelete="CASCADE"), nullable=False)
     started_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     logs: Mapped[list["CycleWorkoutLog"]] = relationship(
         "CycleWorkoutLog", back_populates="run", cascade="all, delete-orphan"
