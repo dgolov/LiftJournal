@@ -5,7 +5,7 @@ from typing import Optional
 from sqlalchemy import String, Integer, Float, Boolean, Text, Date, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database import Base
+from app.core.database import Base
 
 
 def gen_uuid() -> str:
