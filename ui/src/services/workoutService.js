@@ -159,6 +159,9 @@ const workoutService = {
   completeCycleWorkout(runId, cycleWorkoutId, workoutId = null) {
     return request('POST', `/cycle-runs/${runId}/workouts/${cycleWorkoutId}/complete`, { workout_id: workoutId })
   },
+  finishCycleRun(runId) {
+    return request('POST', `/cycle-runs/${runId}/finish`)
+  },
 }
 
 export default workoutService
