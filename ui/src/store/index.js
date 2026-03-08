@@ -18,12 +18,13 @@ const DRAFT_SYNC_MUTATIONS = [
   'workouts/UPDATE_SET',
   'workouts/REMOVE_SET',
   'workouts/SET_ACTIVE_WORKOUT_FIELD',
+  'workouts/SET_ACTIVE_WORKOUT_EXERCISES',
 ]
 store.subscribe((mutation) => {
   const ts = store.state.workouts.workoutStartedAt
   if (!ts) return
   if (DRAFT_SYNC_MUTATIONS.includes(mutation.type)) {
-    saveSession(ts, store.state.workouts.activeWorkout)
+    saveSession(ts, store.state.workouts.activeWorkout, store.state.workouts.cycleContext)
   }
 })
 
