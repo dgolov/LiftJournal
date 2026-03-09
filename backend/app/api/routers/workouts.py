@@ -7,6 +7,7 @@ from app.core.security import get_current_user
 from app.domain.models import User
 from app.services.workout import WorkoutService
 
+
 router = APIRouter()
 
 

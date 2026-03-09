@@ -14,6 +14,7 @@ from app.config import settings
 from app.core.database import get_db
 from app.domain.models import User
 
+
 ALGORITHM = "HS256"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
