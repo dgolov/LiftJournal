@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routers import auth, exercises, workouts, cycles, cycle_runs, users
 
+
 app = FastAPI(title="LiftJournal API")
 
 app.add_middleware(
