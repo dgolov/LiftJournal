@@ -1,8 +1,6 @@
-"""Tests for /api/user router."""
-from datetime import date, datetime
+from datetime import date
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from fastapi import HTTPException
 
 from app.api.schemas import UserOut, WeightEntryOut, GoalOut, UserMaxOut
@@ -21,7 +19,11 @@ def _goal_out():
 
 
 def _max_out():
-    return UserMaxOut(exercise_name="Bench Press", weight_kg=100.0, recorded_at=date(2026, 1, 1))
+    return UserMaxOut(
+        exercise_name="Bench Press",
+        weight_kg=100.0,
+        recorded_at=date(2026, 1, 1)
+    )
 
 
 async def test_get_user(client):

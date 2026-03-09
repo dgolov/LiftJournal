@@ -1,4 +1,3 @@
-"""Tests for /api/exercises router."""
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -27,7 +26,10 @@ async def test_list_exercises_empty(client):
 
 
 async def test_list_exercises_returns_list(client):
-    exercises = [_ex_out("ex-001", "Bench Press"), _ex_out("ex-002", "Squat")]
+    exercises = [
+        _ex_out("ex-001", "Bench Press"),
+        _ex_out("ex-002", "Squat")
+    ]
 
     with patch("app.api.routers.exercises.ExerciseService") as MockSvc:
         svc = AsyncMock()

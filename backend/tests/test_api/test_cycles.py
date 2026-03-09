@@ -1,4 +1,3 @@
-"""Tests for /api/cycles router."""
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
 

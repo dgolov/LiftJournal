@@ -1,4 +1,3 @@
-"""Tests for cycle run endpoints (/api/cycles/.../run, /api/cycle-runs/...)."""
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
