@@ -1,4 +1,3 @@
-"""Shared fixtures and model factories for the entire test suite."""
 from datetime import date, datetime
 from unittest.mock import AsyncMock, MagicMock
 
