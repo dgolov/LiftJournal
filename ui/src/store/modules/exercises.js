@@ -39,14 +39,16 @@ export default {
       workouts.forEach(workout => {
         const ex = workout.exercises.find(e => e.exerciseId === exerciseId)
         if (!ex || !ex.sets.length) return
-        const maxWeight = Math.max(...ex.sets.map(s => s.weight))
+        const bestSet = ex.sets.reduce((a, b) => b.weight > a.weight ? b : a, ex.sets[0])
+        const maxWeight = bestSet.weight
+        const maxWeightReps = bestSet.reps
         const totalVolume = ex.sets.reduce((sum, s) => sum + s.weight * s.reps, 0)
         const maxReps = Math.max(...ex.sets.map(s => s.reps))
         // Epley estimated 1RM: weight × (1 + reps / 30); for 1 rep = weight itself
         const best1RM = Math.max(...ex.sets.map(s =>
           s.reps === 1 ? s.weight : Math.round(s.weight * (1 + s.reps / 30))
         ))
-        sessions.push({ date: workout.date, maxWeight, totalVolume, maxReps, best1RM, workoutId: workout.id, workoutTitle: workout.title })
+        sessions.push({ date: workout.date, maxWeight, maxWeightReps, totalVolume, maxReps, best1RM, workoutId: workout.id, workoutTitle: workout.title })
       })
       return sessions.sort((a, b) => a.date.localeCompare(b.date))
     },
@@ -54,12 +56,13 @@ export default {
     personalRecord: (_state, getters) => exerciseId => {
       const progress = getters.progressForExercise(exerciseId)
       if (!progress.length) return null
-      let bestWeight = 0, bestWeightDate = null
+      let bestWeight = 0, bestWeightReps = 0, bestWeightDate = null
       let best1RM = 0, best1RMDate = null
       let bestVolume = 0, bestVolumeDate = null
       progress.forEach(session => {
         if (session.maxWeight > bestWeight) {
           bestWeight = session.maxWeight
+          bestWeightReps = session.maxWeightReps
           bestWeightDate = session.date
         }
         if (session.best1RM > best1RM) {
@@ -71,7 +74,7 @@ export default {
           bestVolumeDate = session.date
         }
       })
-      return { bestWeight, bestWeightDate, best1RM, best1RMDate, bestVolume, bestVolumeDate }
+      return { bestWeight, bestWeightReps, bestWeightDate, best1RM, best1RMDate, bestVolume, bestVolumeDate }
     }
   },
 
