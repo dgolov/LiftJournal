@@ -1,4 +1,3 @@
-"""Tests for CycleService."""
 from unittest.mock import AsyncMock, patch
 
 import pytest

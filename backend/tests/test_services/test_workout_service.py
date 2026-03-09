@@ -1,5 +1,4 @@
-"""Tests for WorkoutService."""
-from datetime import date, datetime
+from datetime import date
 from unittest.mock import AsyncMock, patch
 
 import pytest

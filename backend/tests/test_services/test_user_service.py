@@ -1,4 +1,3 @@
-"""Tests for UserService."""
 from datetime import date
 from unittest.mock import AsyncMock, patch
 

@@ -1,4 +1,3 @@
-"""Tests for CycleRunService."""
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -6,10 +5,7 @@ import pytest
 from fastapi import HTTPException
 
 from app.services.cycle_run import CycleRunService
-from tests.conftest import (
-    make_cycle, make_cycle_run, make_cycle_log,
-    make_cycle_workout, make_cycle_exercise, make_cycle_set,
-)
+from tests.conftest import make_cycle, make_cycle_run, make_cycle_log, make_cycle_workout
 
 
 @pytest.fixture
