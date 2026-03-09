@@ -13,7 +13,7 @@
     </div>
     <div v-if="pr" class="text-xs text-gray-500">
       <span class="font-medium text-yellow-600">PR: </span>
-      {{ pr.weight > 0 ? pr.weight + ' кг × ' + pr.reps + ' повт.' : pr.reps + ' повт.' }}
+      {{ pr.bestWeight > 0 ? pr.bestWeight + ' кг × ' + pr.bestWeightReps + ' повт.' : pr.bestWeightReps + ' повт.' }}
     </div>
     <div v-else class="text-xs text-gray-300">Нет записей</div>
   </div>
