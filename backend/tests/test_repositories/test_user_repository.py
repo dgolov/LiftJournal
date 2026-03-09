@@ -1,14 +1,10 @@
-"""Tests for UserRepository — verifies correct DB calls, no real DB."""
 from datetime import date
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from app.repositories.user import UserRepository
-from tests.conftest import (
-    make_user, make_weight_entry, make_goal, make_user_max,
-    scalar_result, scalars_result,
-)
+from tests.conftest import make_user, make_weight_entry, make_goal, make_user_max, scalar_result
 
 
 @pytest.fixture

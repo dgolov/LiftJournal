@@ -5,6 +5,7 @@ from app.api.schemas import AuthRegister, AuthLogin, TokenOut
 from app.core.database import get_db
 from app.services.auth import AuthService
 
+
 router = APIRouter()
 
 

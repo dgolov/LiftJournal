@@ -1,5 +1,4 @@
-"""Tests for CycleRunRepository."""
-from datetime import date, datetime
+from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -7,8 +6,7 @@ import pytest
 from app.repositories.cycle_run import CycleRunRepository
 from tests.conftest import (
     make_cycle_run, make_cycle_log, make_cycle_workout,
-    make_cycle_exercise, make_cycle_set, make_cycle,
-    scalar_result, scalars_result,
+    make_cycle_exercise, make_cycle_set, scalar_result, scalars_result,
 )
 
 

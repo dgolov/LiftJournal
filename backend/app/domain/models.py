@@ -224,7 +224,6 @@ class CycleWorkoutLog(Base):
 
 
 class UserMax(Base):
-
     """User's manually entered 1RM values used for cycle % calculations."""
     __tablename__ = "user_maxes"
 

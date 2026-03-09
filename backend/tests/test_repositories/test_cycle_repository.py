@@ -1,13 +1,9 @@
-"""Tests for CycleRepository."""
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from app.repositories.cycle import CycleRepository
-from tests.conftest import (
-    make_cycle, make_cycle_workout, make_cycle_exercise, make_cycle_set,
-    scalar_result, scalars_result,
-)
+from tests.conftest import  make_cycle, scalar_result, scalars_result
 
 
 @pytest.fixture

@@ -1,10 +1,9 @@
-"""Tests for ExerciseRepository."""
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from app.repositories.exercise import ExerciseRepository
-from tests.conftest import make_exercise, scalars_result, scalar_result
+from tests.conftest import make_exercise, scalars_result
 
 
 @pytest.fixture

@@ -1,11 +1,10 @@
-"""Tests for WorkoutRepository."""
 from datetime import date
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from app.repositories.workout import WorkoutRepository
-from tests.conftest import make_workout, make_workout_exercise, make_set_orm, scalar_result, scalars_result
+from tests.conftest import make_workout, scalar_result, scalars_result
 
 
 @pytest.fixture
