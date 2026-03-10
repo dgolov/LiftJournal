@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between mb-3">
       <div>
         <h4 class="font-semibold text-gray-900">{{ exercise.exerciseName }}</h4>
-        <p class="text-xs text-gray-400">{{ exercise.sets.length }} подход(ов)</p>
+        <p class="text-xs text-gray-400">{{ exercise.sets.length }} {{ isCardio ? 'сессий' : 'подход(ов)' }}</p>
       </div>
       <button
         class="p-1.5 text-gray-300 hover:text-red-400 transition-colors"
@@ -16,7 +16,11 @@
     </div>
 
     <!-- Header row -->
-    <div class="flex items-center gap-2 mb-2 text-xs text-gray-400 font-medium">
+    <div v-if="isCardio" class="flex items-center gap-2 mb-2 text-xs text-gray-400 font-medium">
+      <span class="w-6" />
+      <span class="w-20 text-center">Мин.</span>
+    </div>
+    <div v-else class="flex items-center gap-2 mb-2 text-xs text-gray-400 font-medium">
       <span class="w-6" />
       <span class="w-20 text-center">Вес (кг)</span>
       <span class="w-4" />
@@ -30,6 +34,7 @@
         :set="set"
         :exercise-id="exercise.exerciseId"
         :index="i"
+        :is-cardio="isCardio"
         @remove="removeSet(set.id)"
       />
     </div>
@@ -38,12 +43,13 @@
       class="mt-3 w-full py-2 text-sm text-primary hover:text-primary-dark font-medium border border-dashed border-primary/30 hover:border-primary/60 rounded-lg transition-colors"
       @click="addSet"
     >
-      + Добавить подход
+      {{ isCardio ? '+ Добавить сессию' : '+ Добавить подход' }}
     </button>
   </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useStore } from 'vuex'
 import ExerciseSetRow from './ExerciseSetRow.vue'
 
@@ -52,6 +58,8 @@ const props = defineProps({
 })
 
 const store = useStore()
+const exerciseData = computed(() => store.getters['exercises/exerciseById'](props.exercise.exerciseId))
+const isCardio = computed(() => exerciseData.value?.muscleGroup === 'Кардио')
 
 function addSet() {
   store.commit('workouts/ADD_SET_TO_EXERCISE', props.exercise.exerciseId)

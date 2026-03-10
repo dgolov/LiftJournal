@@ -1,24 +1,36 @@
 <template>
   <div class="flex items-center gap-2">
     <span class="text-xs text-gray-400 w-6 text-center flex-shrink-0">{{ index + 1 }}</span>
-    <input
-      type="number"
-      :value="set.weight"
-      min="0"
-      step="0.5"
-      placeholder="кг"
-      class="input w-20 text-center text-sm"
-      @input="update('weight', +$event.target.value)"
-    />
-    <span class="text-gray-300 text-sm">×</span>
-    <input
-      type="number"
-      :value="set.reps"
-      min="0"
-      placeholder="повт"
-      class="input w-20 text-center text-sm"
-      @input="update('reps', +$event.target.value)"
-    />
+    <template v-if="isCardio">
+      <input
+        type="number"
+        :value="set.reps"
+        min="0"
+        placeholder="мин"
+        class="input w-20 text-center text-sm"
+        @input="update('reps', +$event.target.value)"
+      />
+    </template>
+    <template v-else>
+      <input
+        type="number"
+        :value="set.weight"
+        min="0"
+        step="0.5"
+        placeholder="кг"
+        class="input w-20 text-center text-sm"
+        @input="update('weight', +$event.target.value)"
+      />
+      <span class="text-gray-300 text-sm">×</span>
+      <input
+        type="number"
+        :value="set.reps"
+        min="0"
+        placeholder="повт"
+        class="input w-20 text-center text-sm"
+        @input="update('reps', +$event.target.value)"
+      />
+    </template>
     <button
       :class="['w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0',
         set.completed ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 text-transparent hover:border-green-400']"
@@ -39,7 +51,8 @@
 const props = defineProps({
   set: { type: Object, required: true },
   exerciseId: { type: String, required: true },
-  index: { type: Number, required: true }
+  index: { type: Number, required: true },
+  isCardio: { type: Boolean, default: false }
 })
 const emit = defineEmits(['remove'])
 
