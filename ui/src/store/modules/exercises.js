@@ -33,29 +33,48 @@ export default {
     equipmentTypes: state => [...new Set(state.library.map(e => e.equipment))].sort((a, b) => a.localeCompare(b, 'ru')),
 
     // Cross-reference workouts state to compute progress
-    progressForExercise: (_state, _getters, rootState) => exerciseId => {
+    progressForExercise: (state, _getters, rootState) => exerciseId => {
+      const exercise = state.library.find(e => e.id === exerciseId)
+      const isCardio = exercise?.muscleGroup === 'Кардио'
       const sessions = []
       const workouts = rootState.workouts.workouts
       workouts.forEach(workout => {
         const ex = workout.exercises.find(e => e.exerciseId === exerciseId)
         if (!ex || !ex.sets.length) return
-        const bestSet = ex.sets.reduce((a, b) => b.weight > a.weight ? b : a, ex.sets[0])
-        const maxWeight = bestSet.weight
-        const maxWeightReps = bestSet.reps
-        const totalVolume = ex.sets.reduce((sum, s) => sum + s.weight * s.reps, 0)
-        const maxReps = Math.max(...ex.sets.map(s => s.reps))
-        // Epley estimated 1RM: weight × (1 + reps / 30); for 1 rep = weight itself
-        const best1RM = Math.max(...ex.sets.map(s =>
-          s.reps === 1 ? s.weight : Math.round(s.weight * (1 + s.reps / 30))
-        ))
-        sessions.push({ date: workout.date, maxWeight, maxWeightReps, totalVolume, maxReps, best1RM, workoutId: workout.id, workoutTitle: workout.title })
+        if (isCardio) {
+          const totalMinutes = ex.sets.reduce((sum, s) => sum + (s.reps || 0), 0)
+          sessions.push({ date: workout.date, totalMinutes, workoutId: workout.id, workoutTitle: workout.title })
+        } else {
+          const bestSet = ex.sets.reduce((a, b) => b.weight > a.weight ? b : a, ex.sets[0])
+          const maxWeight = bestSet.weight
+          const maxWeightReps = bestSet.reps
+          const totalVolume = ex.sets.reduce((sum, s) => sum + s.weight * s.reps, 0)
+          const maxReps = Math.max(...ex.sets.map(s => s.reps))
+          // Epley estimated 1RM: weight × (1 + reps / 30); for 1 rep = weight itself
+          const best1RM = Math.max(...ex.sets.map(s =>
+            s.reps === 1 ? s.weight : Math.round(s.weight * (1 + s.reps / 30))
+          ))
+          sessions.push({ date: workout.date, maxWeight, maxWeightReps, totalVolume, maxReps, best1RM, workoutId: workout.id, workoutTitle: workout.title })
+        }
       })
       return sessions.sort((a, b) => a.date.localeCompare(b.date))
     },
 
-    personalRecord: (_state, getters) => exerciseId => {
+    personalRecord: (state, getters) => exerciseId => {
+      const exercise = state.library.find(e => e.id === exerciseId)
+      const isCardio = exercise?.muscleGroup === 'Кардио'
       const progress = getters.progressForExercise(exerciseId)
       if (!progress.length) return null
+      if (isCardio) {
+        let bestDuration = 0, bestDurationDate = null
+        progress.forEach(session => {
+          if (session.totalMinutes > bestDuration) {
+            bestDuration = session.totalMinutes
+            bestDurationDate = session.date
+          }
+        })
+        return { bestDuration, bestDurationDate }
+      }
       let bestWeight = 0, bestWeightReps = 0, bestWeightDate = null
       let best1RM = 0, best1RMDate = null
       let bestVolume = 0, bestVolumeDate = null
