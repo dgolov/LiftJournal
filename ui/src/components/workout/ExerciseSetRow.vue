@@ -1,13 +1,14 @@
 <template>
   <div class="flex items-center gap-2">
-    <span class="text-xs text-gray-400 w-6 text-center flex-shrink-0">{{ index + 1 }}</span>
+    <span class="text-xs text-gray-400 w-5 text-center flex-shrink-0">{{ index + 1 }}</span>
     <template v-if="isCardio">
       <input
         type="number"
         :value="set.reps"
         min="0"
         placeholder="мин"
-        class="input w-20 text-center text-sm"
+        class="input flex-1 text-center text-base"
+        inputmode="decimal"
         @input="update('reps', +$event.target.value)"
       />
     </template>
@@ -18,29 +19,31 @@
         min="0"
         step="0.5"
         placeholder="кг"
-        class="input w-20 text-center text-sm"
+        class="input flex-1 text-center text-base"
+        inputmode="decimal"
         @input="update('weight', +$event.target.value)"
       />
-      <span class="text-gray-300 text-sm">×</span>
+      <span class="text-gray-300 text-sm flex-shrink-0">×</span>
       <input
         type="number"
         :value="set.reps"
         min="0"
         placeholder="повт"
-        class="input w-20 text-center text-sm"
+        class="input flex-1 text-center text-base"
+        inputmode="numeric"
         @input="update('reps', +$event.target.value)"
       />
     </template>
     <button
-      :class="['w-8 h-8 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0',
+      :class="['w-10 h-10 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0 text-sm font-bold',
         set.completed ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 text-transparent hover:border-green-400']"
       @click="update('completed', !set.completed)"
     >✓</button>
     <button
-      class="p-1 text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
+      class="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
       @click="$emit('remove')"
     >
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
       </svg>
     </button>

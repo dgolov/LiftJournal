@@ -18,7 +18,7 @@
         </p>
       </div>
       <button
-        class="p-1.5 text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
+        class="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
         @click.stop="confirmDelete"
         title="Удалить"
       >

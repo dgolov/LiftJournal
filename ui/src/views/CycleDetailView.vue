@@ -2,35 +2,37 @@
   <div>
   <div v-if="cycle">
     <!-- Header -->
-    <div class="flex items-start gap-3 mb-6">
-      <button class="p-2 rounded-xl hover:bg-gray-100 text-gray-500 mt-1 flex-shrink-0" @click="$router.back()">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-        </svg>
-      </button>
-      <div class="flex-1 min-w-0">
-        <div class="flex items-center gap-2 flex-wrap mb-1">
-          <span :class="['text-xs px-2 py-0.5 rounded-full font-medium', cycle.is_public ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500']">
-            {{ cycle.is_public ? 'Публичный' : 'Приватный' }}
-          </span>
-          <span v-if="cycle.author_name" class="text-xs text-gray-500">{{ cycle.author_name }}</span>
+    <div class="mb-6">
+      <div class="flex items-start gap-3 mb-3">
+        <button class="p-2 rounded-xl hover:bg-gray-100 text-gray-500 mt-0.5 flex-shrink-0" @click="$router.back()">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap mb-1">
+            <span :class="['text-xs px-2 py-0.5 rounded-full font-medium', cycle.is_public ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500']">
+              {{ cycle.is_public ? 'Публичный' : 'Приватный' }}
+            </span>
+            <span v-if="cycle.author_name" class="text-xs text-gray-500">{{ cycle.author_name }}</span>
+          </div>
+          <h2 class="text-xl font-bold text-gray-900">{{ cycle.title }}</h2>
+          <p v-if="cycle.description" class="text-sm text-gray-600 mt-1">{{ cycle.description }}</p>
+          <p class="text-xs text-gray-400 mt-1">{{ cycle.workouts.length }} тренировок</p>
         </div>
-        <h2 class="text-2xl font-bold text-gray-900">{{ cycle.title }}</h2>
-        <p v-if="cycle.description" class="text-sm text-gray-600 mt-1">{{ cycle.description }}</p>
-        <p class="text-xs text-gray-400 mt-1">{{ cycle.workouts.length }} тренировок</p>
       </div>
-      <div class="flex items-center gap-2 flex-shrink-0">
+      <div class="flex items-center gap-2 pl-10">
         <div class="flex rounded-xl border border-gray-200 overflow-hidden text-xs font-medium">
           <button
-            :class="['px-3 py-1.5 transition-colors', viewMode === 'list' ? 'bg-primary text-white' : 'text-gray-500 hover:bg-gray-50']"
+            :class="['px-3 py-2 transition-colors', viewMode === 'list' ? 'bg-primary text-white' : 'text-gray-500 hover:bg-gray-50']"
             @click="viewMode = 'list'"
           >Список</button>
           <button
-            :class="['px-3 py-1.5 transition-colors', viewMode === 'table' ? 'bg-primary text-white' : 'text-gray-500 hover:bg-gray-50']"
+            :class="['px-3 py-2 transition-colors', viewMode === 'table' ? 'bg-primary text-white' : 'text-gray-500 hover:bg-gray-50']"
             @click="viewMode = 'table'"
           >Таблица</button>
         </div>
-        <RouterLink v-if="isOwner" :to="`/cycles/${cycle.id}/edit`" class="btn btn-outline text-sm px-3 py-1.5">
+        <RouterLink v-if="isOwner" :to="`/cycles/${cycle.id}/edit`" class="btn btn-outline text-sm">
           Редактировать
         </RouterLink>
       </div>
@@ -49,18 +51,18 @@
             :style="{ width: progressPct + '%' }"
           />
         </div>
-        <div class="flex items-center justify-between">
+        <div class="flex flex-wrap items-center justify-between gap-2">
           <p v-if="completedCount === totalCount" class="text-sm text-green-600 font-semibold">Все тренировки выполнены!</p>
           <p v-else class="text-xs text-gray-400">Выполнено {{ completedCount }} из {{ totalCount }}</p>
           <BaseButton variant="outline" size="sm" :loading="finishingRun" @click="finishRun">Завершить цикл</BaseButton>
         </div>
       </div>
-      <div v-else class="flex items-center justify-between">
+      <div v-else class="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p class="text-sm font-semibold text-gray-700">Цикл не начат</p>
           <p class="text-xs text-gray-400 mt-0.5">Начните цикл чтобы отслеживать прогресс</p>
         </div>
-        <BaseButton :loading="startingRun" @click="startRun">Начать цикл</BaseButton>
+        <BaseButton class="w-full sm:w-auto" :loading="startingRun" @click="startRun">Начать цикл</BaseButton>
       </div>
     </div>
 
@@ -226,7 +228,7 @@ const store = useStore()
 const loading = ref(false)
 let leaving = false
 onBeforeRouteLeave(() => { leaving = true })
-const viewMode = ref('table')
+const viewMode = ref('list')
 const startingRun = ref(false)
 const finishingRun = ref(false)
 const startingWorkout = ref(null) // cycle_workout_id being started

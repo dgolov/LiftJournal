@@ -1,19 +1,19 @@
 <template>
-  <nav class="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-100 flex lg:hidden">
+  <nav class="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-100 flex lg:hidden pb-safe-nav">
     <RouterLink
       v-for="item in navItems"
       :key="item.to"
       :to="item.to"
-      :class="['flex-1 flex flex-col items-center py-2 text-xs font-medium transition-colors',
+      :class="['flex-1 flex flex-col items-center pt-2 pb-1 text-xs font-medium transition-colors',
         $route.path.startsWith(item.to) ? 'text-primary' : 'text-gray-400 hover:text-gray-600']"
     >
-      <span class="text-xl mb-0.5">{{ item.icon }}</span>
+      <span class="text-2xl mb-0.5">{{ item.icon }}</span>
       {{ item.label }}
     </RouterLink>
     <RouterLink to="/workouts/new"
-      class="flex-1 flex flex-col items-center py-2 text-xs font-medium transition-colors"
+      class="flex-1 flex flex-col items-center pt-2 pb-1 text-xs font-medium transition-colors"
       :class="$route.path === '/workouts/new' ? 'text-primary' : 'text-gray-400 hover:text-gray-600'">
-      <span class="text-xl mb-0.5">➕</span>
+      <span class="text-2xl mb-0.5">➕</span>
       Запись
     </RouterLink>
   </nav>

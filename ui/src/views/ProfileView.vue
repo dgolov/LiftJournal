@@ -39,10 +39,10 @@
         <WeightChart :data="weightHistory" />
         <div class="mt-4 border-t border-gray-100 pt-4">
           <p class="text-sm font-medium text-gray-700 mb-2">Записать вес</p>
-          <div class="flex gap-2">
+          <div class="flex flex-col sm:flex-row gap-2">
             <input type="date" v-model="weightForm.date" class="input flex-1" />
-            <input type="number" v-model.number="weightForm.kg" step="0.1" min="20" max="300" placeholder="кг" class="input w-24" />
-            <BaseButton :disabled="!weightForm.kg" @click="logWeight">Сохранить</BaseButton>
+            <input type="number" v-model.number="weightForm.kg" step="0.1" min="20" max="300" placeholder="кг" class="input sm:w-24" inputmode="decimal" />
+            <BaseButton :disabled="!weightForm.kg" @click="logWeight" class="w-full sm:w-auto">Сохранить</BaseButton>
           </div>
         </div>
       </div>
@@ -54,21 +54,25 @@
           <BaseButton variant="outline" size="sm" @click="showAddGoal = true">+ Цель</BaseButton>
         </div>
 
-        <div v-if="goals.length" class="space-y-2">
+        <div v-if="goals.length" class="space-y-1">
           <div v-for="goal in goals" :key="goal.id"
-            class="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50">
+            class="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50">
             <button
-              :class="['w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5 transition-colors flex items-center justify-center text-xs font-bold',
+              :class="['w-7 h-7 rounded-full border-2 flex-shrink-0 transition-colors flex items-center justify-center text-xs font-bold',
                 goal.done ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 hover:border-green-400']"
               @click="toggleGoal(goal.id)"
             >{{ goal.done ? '✓' : '' }}</button>
             <div class="flex-1 min-w-0">
-              <p :class="['text-sm font-medium', goal.done ? 'line-through text-gray-400' : 'text-gray-900']">
+              <p :class="['text-sm font-medium leading-snug', goal.done ? 'line-through text-gray-400' : 'text-gray-900']">
                 {{ goal.text }}
               </p>
               <p class="text-xs text-gray-400">до {{ formatDate(goal.targetDate) }}</p>
             </div>
-            <button class="text-gray-200 hover:text-red-400 transition-colors text-xs" @click="deleteGoal(goal.id)">✕</button>
+            <button class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0" @click="deleteGoal(goal.id)">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -78,22 +82,26 @@
 
     <!-- 1RM maxes -->
     <div class="card p-4">
-      <div class="flex items-center justify-between mb-3">
-        <div>
+      <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
+        <div class="min-w-0">
           <h3 class="font-semibold text-gray-900">Личные максимумы (ПМ)</h3>
           <p class="text-xs text-gray-400 mt-0.5">Используются для расчёта % в тренировочных циклах</p>
         </div>
-        <BaseButton variant="outline" size="sm" @click="showAddMax = true">+ Добавить</BaseButton>
+        <BaseButton variant="outline" size="sm" class="flex-shrink-0" @click="showAddMax = true">+ Добавить</BaseButton>
       </div>
 
-      <div v-if="maxes.length" class="space-y-2">
+      <div v-if="maxes.length" class="space-y-1">
         <div v-for="max in maxes" :key="max.exercise_name" class="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
           <div class="flex-1 min-w-0">
             <p class="text-sm font-medium text-gray-900">{{ max.exercise_name }}</p>
             <p class="text-xs text-gray-400">обновлён {{ formatDate(max.recorded_at) }}</p>
           </div>
-          <span class="text-lg font-bold text-primary">{{ max.weight_kg }} кг</span>
-          <button class="text-gray-200 hover:text-red-400 transition-colors ml-1 text-xs" @click="deleteMax(max.exercise_name)">✕</button>
+          <span class="text-lg font-bold text-primary flex-shrink-0">{{ max.weight_kg }} кг</span>
+          <button class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0" @click="deleteMax(max.exercise_name)">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
         </div>
       </div>
       <BaseEmptyState v-else icon="🏋️" title="Нет ПМ" description="Укажите свои максимумы для расчёта циклов" />
