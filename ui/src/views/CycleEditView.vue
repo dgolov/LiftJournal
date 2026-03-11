@@ -37,13 +37,18 @@
       </div>
       <div class="space-y-2">
         <div v-for="(col, ci) in exerciseCols" :key="ci" class="flex items-center gap-2">
-          <input
-            v-model="exerciseCols[ci]"
-            class="input flex-1"
-            :placeholder="`Упражнение ${ci + 1}`"
-            @blur="syncExerciseName(ci)"
-          />
-          <button class="text-gray-300 hover:text-red-400 transition-colors p-1" @click="removeExerciseCol(ci)" :disabled="exerciseCols.length <= 1">
+          <button
+            class="flex-1 input text-left truncate"
+            @click="openPicker(ci)"
+          >
+            <span v-if="col.name" class="text-gray-800">{{ col.name }}</span>
+            <span v-else class="text-gray-400 text-sm">Выбрать упражнение...</span>
+          </button>
+          <button
+            class="text-gray-300 hover:text-red-400 transition-colors p-1 flex-shrink-0"
+            :disabled="exerciseCols.length <= 1"
+            @click="removeExerciseCol(ci)"
+          >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
             </svg>
@@ -69,9 +74,9 @@
               <th class="text-left px-3 py-2 text-xs font-semibold text-gray-500 w-12">#</th>
               <th
                 v-for="col in exerciseCols"
-                :key="col"
+                :key="col.name || col.id"
                 class="text-left px-3 py-2 text-xs font-semibold text-gray-700 min-w-52"
-              >{{ col || '—' }}</th>
+              >{{ col.name || '—' }}</th>
               <th class="w-8"></th>
             </tr>
           </thead>
@@ -138,6 +143,33 @@
       </BaseButton>
     </div>
   </div>
+
+  <!-- Exercise picker modal -->
+  <BaseModal v-model="showExercisePicker" title="Выбрать упражнение">
+    <div class="space-y-3">
+      <input
+        v-model="exerciseSearch"
+        class="input"
+        placeholder="Поиск по названию или группе мышц..."
+        autofocus
+      />
+      <div class="space-y-1 max-h-72 overflow-y-auto">
+        <button
+          v-for="ex in filteredPickerExercises"
+          :key="ex.id"
+          class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-primary/5 transition-colors border border-transparent hover:border-primary/20"
+          @click="selectExercise(ex)"
+        >
+          <div class="font-medium text-gray-800 text-sm">{{ ex.name }}</div>
+          <div class="text-xs text-gray-400 mt-0.5">{{ ex.muscleGroup }} · {{ ex.equipment }}</div>
+        </button>
+        <p v-if="!filteredPickerExercises.length" class="text-center text-sm text-gray-400 py-6">Ничего не найдено</p>
+      </div>
+    </div>
+    <template #footer>
+      <BaseButton variant="ghost" @click="showExercisePicker = false">Отмена</BaseButton>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup>
@@ -146,6 +178,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -161,11 +194,36 @@ const form = reactive({
   description: '',
   author_name: '',
   is_public: false,
-  workouts: [],  // [{ exercises: [{ sets: [{ percent_1rm, reps }] }] }] — indexed by exerciseCols
+  workouts: [],
 })
 
-// Exercise column names (define the "columns" of the table)
-const exerciseCols = ref(['Основное упражнение'])
+// Exercise columns — each is { id: string|null, name: string }
+const exerciseCols = ref([{ id: null, name: '' }])
+
+// Exercise picker state
+const showExercisePicker = ref(false)
+const pickerColIndex = ref(null)
+const exerciseSearch = ref('')
+
+const allExercises = computed(() => store.state.exercises.library)
+const filteredPickerExercises = computed(() => {
+  const q = exerciseSearch.value.toLowerCase().trim()
+  if (!q) return allExercises.value
+  return allExercises.value.filter(e =>
+    e.name.toLowerCase().includes(q) || e.muscleGroup.toLowerCase().includes(q)
+  )
+})
+
+function openPicker(ci) {
+  pickerColIndex.value = ci
+  exerciseSearch.value = ''
+  showExercisePicker.value = true
+}
+
+function selectExercise(ex) {
+  exerciseCols.value[pickerColIndex.value] = { id: ex.id, name: ex.name }
+  showExercisePicker.value = false
+}
 
 // Initialize a workout row with empty sets for each exercise column
 function newWorkoutRow() {
@@ -185,8 +243,7 @@ function bulkAdd() {
 }
 
 function addExerciseCol() {
-  exerciseCols.value.push('')
-  // Add empty exercise slot to each existing workout row
+  exerciseCols.value.push({ id: null, name: '' })
   form.workouts.forEach(w => w.exercises.push({ sets: [] }))
 }
 
@@ -194,10 +251,6 @@ function removeExerciseCol(ci) {
   if (exerciseCols.value.length <= 1) return
   exerciseCols.value.splice(ci, 1)
   form.workouts.forEach(w => w.exercises.splice(ci, 1))
-}
-
-function syncExerciseName(_ci) {
-  // Nothing needed — exerciseCols is reactive and table headers re-render
 }
 
 function getWorkoutSets(wi, ci) {
@@ -230,8 +283,9 @@ function buildPayload() {
       title: '',
       notes: '',
       exercises: exerciseCols.value
-        .map((name, ci) => ({
-          exercise_name: name.trim() || `Упражнение ${ci + 1}`,
+        .map((col, ci) => ({
+          exercise_id: col.id ?? null,
+          exercise_name: col.name.trim() || `Упражнение ${ci + 1}`,
           sets: w.exercises[ci]?.sets.map(s => ({
             percent_1rm: Number(s.percent_1rm) || 0,
             reps: Number(s.reps) || 1,
@@ -249,33 +303,36 @@ function loadCycle(cycle) {
   form.author_name = cycle.author_name
   form.is_public = cycle.is_public
 
-  // Collect unique exercise names in order
+  // Collect unique exercise cols in order
   const seenCols = []
   const seenSet = new Set()
   for (const w of cycle.workouts) {
     for (const e of w.exercises) {
       if (!seenSet.has(e.exercise_name)) {
         seenSet.add(e.exercise_name)
-        seenCols.push(e.exercise_name)
+        seenCols.push({ id: e.exercise_id ?? null, name: e.exercise_name })
       }
     }
   }
-  exerciseCols.value = seenCols.length ? seenCols : ['Основное упражнение']
+  exerciseCols.value = seenCols.length ? seenCols : [{ id: null, name: '' }]
 
   form.workouts = cycle.workouts.map(w => ({
-    exercises: seenCols.map(colName => {
-      const ex = w.exercises.find(e => e.exercise_name === colName)
+    exercises: seenCols.map(col => {
+      const ex = w.exercises.find(e => e.exercise_name === col.name)
       return { sets: ex?.sets.map(s => ({ percent_1rm: s.percent_1rm, reps: s.reps })) ?? [] }
     }),
   }))
 }
 
 onMounted(async () => {
+  // Ensure exercises library is loaded
+  if (!store.state.exercises.library.length) {
+    await store.dispatch('exercises/initExercises')
+  }
   if (isEdit.value) {
     const cycle = await store.dispatch('cycles/fetchCycle', route.params.id)
     loadCycle(cycle)
   } else {
-    // Default: 1 exercise column, 1 empty workout row
     form.workouts.push(newWorkoutRow())
   }
 })

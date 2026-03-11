@@ -43,13 +43,17 @@
           <span class="text-sm font-semibold text-gray-700">Прогресс цикла</span>
           <span class="text-sm font-bold text-primary">{{ completedCount }} / {{ totalCount }}</span>
         </div>
-        <div class="w-full bg-gray-100 rounded-full h-2">
+        <div class="w-full bg-gray-100 rounded-full h-2 mb-3">
           <div
             class="bg-primary h-2 rounded-full transition-all"
             :style="{ width: progressPct + '%' }"
           />
         </div>
-        <p v-if="completedCount === totalCount" class="text-xs text-green-600 font-medium mt-2">Цикл завершён!</p>
+        <div class="flex items-center justify-between">
+          <p v-if="completedCount === totalCount" class="text-sm text-green-600 font-semibold">Все тренировки выполнены!</p>
+          <p v-else class="text-xs text-gray-400">Выполнено {{ completedCount }} из {{ totalCount }}</p>
+          <BaseButton variant="outline" size="sm" :loading="finishingRun" @click="finishRun">Завершить цикл</BaseButton>
+        </div>
       </div>
       <div v-else class="flex items-center justify-between">
         <div>
@@ -224,6 +228,7 @@ let leaving = false
 onBeforeRouteLeave(() => { leaving = true })
 const viewMode = ref('table')
 const startingRun = ref(false)
+const finishingRun = ref(false)
 const startingWorkout = ref(null) // cycle_workout_id being started
 const showStartModal = ref(false)
 const pendingWorkoutId = ref(null)
@@ -254,6 +259,12 @@ async function startRun() {
   startingRun.value = true
   try { await store.dispatch('cycles/startCycleRun', route.params.id) }
   finally { startingRun.value = false }
+}
+
+async function finishRun() {
+  finishingRun.value = true
+  try { await store.dispatch('cycles/finishCycleRun', currentRun.value.id) }
+  finally { finishingRun.value = false }
 }
 
 function openStartModal(cycleWorkoutId) {

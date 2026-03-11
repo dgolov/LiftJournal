@@ -24,7 +24,8 @@ import {
 ChartJS.register(LineElement, PointElement, LinearScale, CategoryScale, Tooltip, Legend, Filler)
 
 const props = defineProps({
-  data: { type: Array, default: () => [] } // [ { date, maxWeight, totalVolume, best1RM } ]
+  data: { type: Array, default: () => [] }, // strength: [ { date, maxWeight, totalVolume, best1RM } ]; cardio: [ { date, totalMinutes } ]
+  isCardio: { type: Boolean, default: false }
 })
 
 const labels = computed(() =>
@@ -34,42 +35,61 @@ const labels = computed(() =>
   })
 )
 
-const chartData = computed(() => ({
-  labels: labels.value,
-  datasets: [
-    {
-      label: 'Расч. 1ПМ (кг)',
-      data: props.data.map(d => d.best1RM),
-      borderColor: '#f59e0b',
-      backgroundColor: 'rgba(245, 158, 11, 0.1)',
-      fill: true,
-      tension: 0.4,
-      pointRadius: 4,
-      pointBackgroundColor: '#f59e0b'
-    },
-    {
-      label: 'Макс. вес (кг)',
-      data: props.data.map(d => d.maxWeight),
-      borderColor: '#6366f1',
-      backgroundColor: 'transparent',
-      tension: 0.4,
-      pointRadius: 4,
-      pointBackgroundColor: '#6366f1'
-    },
-    {
-      label: 'Тоннаж (кг)',
-      data: props.data.map(d => d.totalVolume),
-      borderColor: '#22c55e',
-      backgroundColor: 'transparent',
-      tension: 0.4,
-      pointRadius: 4,
-      pointBackgroundColor: '#22c55e',
-      yAxisID: 'y1'
+const chartData = computed(() => {
+  if (props.isCardio) {
+    return {
+      labels: labels.value,
+      datasets: [
+        {
+          label: 'Продолжительность (мин.)',
+          data: props.data.map(d => d.totalMinutes),
+          borderColor: '#6366f1',
+          backgroundColor: 'rgba(99, 102, 241, 0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+          pointBackgroundColor: '#6366f1'
+        }
+      ]
     }
-  ]
-}))
+  }
+  return {
+    labels: labels.value,
+    datasets: [
+      {
+        label: 'Расч. 1ПМ (кг)',
+        data: props.data.map(d => d.best1RM),
+        borderColor: '#f59e0b',
+        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: '#f59e0b'
+      },
+      {
+        label: 'Макс. вес (кг)',
+        data: props.data.map(d => d.maxWeight),
+        borderColor: '#6366f1',
+        backgroundColor: 'transparent',
+        tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: '#6366f1'
+      },
+      {
+        label: 'Тоннаж (кг)',
+        data: props.data.map(d => d.totalVolume),
+        borderColor: '#22c55e',
+        backgroundColor: 'transparent',
+        tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: '#22c55e',
+        yAxisID: 'y1'
+      }
+    ]
+  }
+})
 
-const chartOptions = {
+const chartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: true,
   interaction: { mode: 'index', intersect: false },
@@ -83,11 +103,13 @@ const chartOptions = {
       grid: { color: 'rgba(0,0,0,0.05)' },
       ticks: { font: { size: 11 } }
     },
-    y1: {
-      position: 'right',
-      grid: { display: false },
-      ticks: { font: { size: 11 } }
-    }
+    ...(props.isCardio ? {} : {
+      y1: {
+        position: 'right',
+        grid: { display: false },
+        ticks: { font: { size: 11 } }
+      }
+    })
   }
-}
+}))
 </script>

@@ -1,6 +1,9 @@
+import base64
+import hashlib
 from datetime import datetime, timedelta
 from typing import Optional
 
+import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
@@ -8,11 +11,24 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.database import get_db
-from app.db.models import User
+from app.core.database import get_db
+from app.domain.models import User
+
 
 ALGORITHM = "HS256"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+
+
+def _prehash(password: str) -> bytes:
+    return base64.b64encode(hashlib.sha256(password.encode("utf-8")).digest())
+
+
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(_prehash(password), bcrypt.gensalt()).decode("utf-8")
+
+
+def verify_password(password: str, hashed: str) -> bool:
+    return bcrypt.checkpw(_prehash(password), hashed.encode("utf-8"))
 
 
 def create_access_token(user_id: int, expires_delta: Optional[timedelta] = None) -> str:

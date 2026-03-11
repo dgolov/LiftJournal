@@ -180,12 +180,14 @@ class CycleSetOut(BaseModel):
 
 
 class CycleExerciseIn(BaseModel):
+    exercise_id: Optional[str] = None
     exercise_name: str
     sets: list[CycleSetIn] = []
 
 
 class CycleExerciseOut(BaseModel):
     id: str
+    exercise_id: Optional[str] = None
     exercise_name: str
     sets: list[CycleSetOut]
 
@@ -258,6 +260,7 @@ class CycleRunOut(BaseModel):
     id: str
     cycle_id: str
     started_at: datetime
+    completed_at: Optional[datetime] = None
     logs: list[CycleWorkoutLogOut]
 
 

@@ -18,8 +18,8 @@
       </div>
     </div>
 
-    <!-- PR Card -->
-    <div v-if="pr" class="card p-4 mb-6 border-l-4 border-yellow-400">
+    <!-- PR Card (strength) -->
+    <div v-if="pr && !isCardio" class="card p-4 mb-6 border-l-4 border-yellow-400">
       <div class="flex items-center gap-2 mb-3">
         <span class="text-2xl">🏆</span>
         <p class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Личные рекорды</p>
@@ -43,10 +43,23 @@
       </div>
     </div>
 
+    <!-- PR Card (cardio) -->
+    <div v-if="pr && isCardio" class="card p-4 mb-6 border-l-4 border-yellow-400">
+      <div class="flex items-center gap-2 mb-3">
+        <span class="text-2xl">🏆</span>
+        <p class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Личный рекорд</p>
+      </div>
+      <div class="text-center">
+        <p class="text-xs text-gray-400 mb-0.5">Лучшая сессия</p>
+        <p class="text-lg font-bold text-yellow-500">{{ pr.bestDuration }} мин.</p>
+        <p class="text-xs text-gray-400">{{ formatDate(pr.bestDurationDate) }}</p>
+      </div>
+    </div>
+
     <!-- Chart -->
     <div class="card p-4 mb-6">
       <h3 class="font-semibold text-gray-900 mb-4">Прогресс</h3>
-      <ProgressChart :data="progress" />
+      <ProgressChart :data="progress" :is-cardio="isCardio" />
     </div>
 
     <!-- Sessions table -->
@@ -58,9 +71,14 @@
           @click="$router.push(`/workouts/${session.workoutId}`)">
           <span class="text-gray-400 text-xs w-20 flex-shrink-0">{{ formatDate(session.date) }}</span>
           <span class="flex-1 text-gray-600 truncate">{{ session.workoutTitle }}</span>
-          <span class="text-yellow-500 font-semibold text-xs">1ПМ {{ session.best1RM }} кг</span>
-          <span class="text-gray-900 font-medium">{{ session.maxWeight > 0 ? session.maxWeight + ' кг' : 'Б/в' }}</span>
-          <span class="text-gray-400 text-xs">{{ session.totalVolume }} кг</span>
+          <template v-if="isCardio">
+            <span class="text-primary font-semibold">{{ session.totalMinutes }} мин.</span>
+          </template>
+          <template v-else>
+            <span class="text-yellow-500 font-semibold text-xs">1ПМ {{ session.best1RM }} кг</span>
+            <span class="text-gray-900 font-medium">{{ session.maxWeight > 0 ? session.maxWeight + ' кг' : 'Б/в' }}</span>
+            <span class="text-gray-400 text-xs">{{ session.totalVolume }} кг</span>
+          </template>
         </div>
       </div>
       <BaseEmptyState v-else icon="📊" title="Нет данных" description="Добавьте это упражнение в тренировку, чтобы отслеживать прогресс" />
@@ -82,6 +100,7 @@ const route = useRoute()
 const store = useStore()
 
 const exercise = computed(() => store.getters['exercises/exerciseById'](route.params.id))
+const isCardio = computed(() => exercise.value?.muscleGroup === 'Кардио')
 const progress = computed(() => store.getters['exercises/progressForExercise'](route.params.id))
 const pr = computed(() => store.getters['exercises/personalRecord'](route.params.id))
 

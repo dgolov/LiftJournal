@@ -14,7 +14,7 @@
         </div>
         <h2 class="text-2xl font-bold text-gray-900">{{ workout.title }}</h2>
         <p class="text-sm text-gray-500 mt-1">
-          {{ formatDuration(workout.durationMinutes) }} · {{ workout.exercises.length }} упр. · тоннаж {{ formatVolume(totalVolume) }} кг
+          {{ formatDuration(workout.durationMinutes) }} · {{ workout.exercises.length }} упр.<template v-if="totalVolume > 0"> · тоннаж {{ formatVolume(totalVolume) }} кг</template>
         </p>
         <p v-if="workout.notes" class="text-sm text-gray-600 mt-2 italic">{{ workout.notes }}</p>
       </div>
@@ -28,17 +28,27 @@
           <div v-for="(set, i) in ex.sets" :key="set.id"
             class="flex items-center gap-3 text-sm">
             <span class="text-gray-400 w-6">{{ i + 1 }}.</span>
-            <span class="font-medium">{{ set.weight > 0 ? set.weight + ' кг' : 'Б/в' }}</span>
-            <span class="text-gray-400">×</span>
-            <span class="font-medium">{{ set.reps }} повт.</span>
+            <template v-if="isCardio(ex.exerciseId)">
+              <span class="font-medium">{{ set.reps }} мин.</span>
+            </template>
+            <template v-else>
+              <span class="font-medium">{{ set.weight > 0 ? set.weight + ' кг' : 'Б/в' }}</span>
+              <span class="text-gray-400">×</span>
+              <span class="font-medium">{{ set.reps }} повт.</span>
+            </template>
             <span :class="['ml-auto text-xs font-medium', set.completed ? 'text-green-500' : 'text-gray-300']">
               {{ set.completed ? '✓' : '○' }}
             </span>
           </div>
         </div>
         <p class="mt-2 text-xs text-gray-400 flex gap-3">
-          <span>Тоннаж: {{ ex.sets.reduce((s, set) => s + set.weight * set.reps, 0) }} кг</span>
-          <span>· Расч. 1ПМ: {{ Math.max(...ex.sets.map(s => s.reps === 1 ? s.weight : Math.round(s.weight * (1 + s.reps / 30)))) }} кг</span>
+          <template v-if="isCardio(ex.exerciseId)">
+            <span>Итого: {{ ex.sets.reduce((s, set) => s + (set.reps || 0), 0) }} мин.</span>
+          </template>
+          <template v-else>
+            <span>Тоннаж: {{ ex.sets.reduce((s, set) => s + set.weight * set.reps, 0) }} кг</span>
+            <span>· Расч. 1ПМ: {{ Math.max(...ex.sets.map(s => s.reps === 1 ? s.weight : Math.round(s.weight * (1 + s.reps / 30)))) }} кг</span>
+          </template>
         </p>
       </div>
     </div>
@@ -64,6 +74,11 @@ const store = useStore()
 
 const workout = computed(() => store.getters['workouts/workoutById'](route.params.id))
 
+const exerciseLibrary = computed(() => store.state.exercises.library)
+function isCardio(exerciseId) {
+  return exerciseLibrary.value.find(e => e.id === exerciseId)?.muscleGroup === 'Кардио'
+}
+
 const typeColorMap = { 'Силовая': 'indigo', 'Кардио': 'green', 'Растяжка': 'purple', 'HIIT': 'orange', 'Другое': 'gray' }
 const typeColor = computed(() => typeColorMap[workout.value?.type] || 'gray')
 
@@ -75,7 +90,7 @@ const formattedDate = computed(() => {
 
 const totalVolume = computed(() =>
   workout.value?.exercises.reduce((total, ex) =>
-    total + ex.sets.reduce((s, set) => s + set.weight * set.reps, 0), 0) ?? 0
+    isCardio(ex.exerciseId) ? total : total + ex.sets.reduce((s, set) => s + set.weight * set.reps, 0), 0) ?? 0
 )
 
 function formatVolume(v) {

@@ -69,6 +69,11 @@ export default {
       return run
     },
 
+    async finishCycleRun({ commit }, runId) {
+      await workoutService.finishCycleRun(runId)
+      commit('SET_RUN', null)
+    },
+
     async createCycle({ commit }, data) {
       const cycle = await workoutService.createCycle(data)
       commit('ADD_CYCLE', { ...cycle, workout_count: cycle.workouts?.length ?? 0 })

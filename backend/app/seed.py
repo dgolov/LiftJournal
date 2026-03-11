@@ -7,8 +7,8 @@ from datetime import date, datetime
 
 from sqlalchemy import select, func
 
-from app.database import async_session
-from app.models import Exercise, Workout, WorkoutExercise, ExerciseSet, User, WeightEntry, Goal
+from app.core.database import async_session
+from app.domain.models import Exercise, Workout, WorkoutExercise, ExerciseSet, User, WeightEntry, Goal
 
 
 EXERCISES = [
