@@ -22,18 +22,18 @@
         >{{ type }}</button>
       </div>
 
-      <div class="flex flex-wrap gap-3">
-        <div class="flex-1 min-w-0">
-          <input
-            :value="filters.search"
-            placeholder="Поиск по названию или упражнению..."
-            class="input"
-            @input="setFilter('search', $event.target.value)"
-          />
+      <div class="flex flex-col gap-3">
+        <input
+          :value="filters.search"
+          placeholder="Поиск по названию или упражнению..."
+          class="input"
+          @input="setFilter('search', $event.target.value)"
+        />
+        <div class="flex gap-3">
+          <input type="date" :value="filters.dateFrom || ''" class="input flex-1" @input="setFilter('dateFrom', $event.target.value || null)" />
+          <input type="date" :value="filters.dateTo || ''" class="input flex-1" @input="setFilter('dateTo', $event.target.value || null)" />
         </div>
-        <input type="date" :value="filters.dateFrom || ''" class="input w-auto" placeholder="От" @input="setFilter('dateFrom', $event.target.value || null)" />
-        <input type="date" :value="filters.dateTo || ''" class="input w-auto" placeholder="До" @input="setFilter('dateTo', $event.target.value || null)" />
-        <button v-if="hasActiveFilters" class="btn-ghost btn text-sm" @click="resetFilters">Сбросить</button>
+        <button v-if="hasActiveFilters" class="btn-ghost btn text-sm self-start" @click="resetFilters">Сбросить фильтры</button>
       </div>
     </div>
 

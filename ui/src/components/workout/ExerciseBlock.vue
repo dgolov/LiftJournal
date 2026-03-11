@@ -6,7 +6,7 @@
         <p class="text-xs text-gray-400">{{ exercise.sets.length }} {{ isCardio ? 'сессий' : 'подход(ов)' }}</p>
       </div>
       <button
-        class="p-1.5 text-gray-300 hover:text-red-400 transition-colors"
+        class="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
         @click="removeExercise"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -17,14 +17,18 @@
 
     <!-- Header row -->
     <div v-if="isCardio" class="flex items-center gap-2 mb-2 text-xs text-gray-400 font-medium">
-      <span class="w-6" />
-      <span class="w-20 text-center">Мин.</span>
+      <span class="w-5" />
+      <span class="flex-1 text-center">Мин.</span>
+      <span class="w-10" />
+      <span class="w-10" />
     </div>
     <div v-else class="flex items-center gap-2 mb-2 text-xs text-gray-400 font-medium">
-      <span class="w-6" />
-      <span class="w-20 text-center">Вес (кг)</span>
-      <span class="w-4" />
-      <span class="w-20 text-center">Повт.</span>
+      <span class="w-5" />
+      <span class="flex-1 text-center">Вес (кг)</span>
+      <span class="flex-shrink-0 w-3" />
+      <span class="flex-1 text-center">Повт.</span>
+      <span class="w-10" />
+      <span class="w-10" />
     </div>
 
     <div class="space-y-2">

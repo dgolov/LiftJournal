@@ -1,20 +1,20 @@
 <template>
   <BaseModal v-model="show" title="Добавить упражнение" max-width="xl">
     <!-- Search -->
-    <div class="flex gap-2 mb-3">
+    <div class="flex flex-col sm:flex-row gap-2 mb-3">
       <input
         v-model="search"
         placeholder="Поиск упражнения..."
         class="input flex-1"
       />
-      <select v-model="selectedGroup" class="input w-40">
+      <select v-model="selectedGroup" class="input sm:w-40">
         <option value="">Все группы</option>
         <option v-for="g in muscleGroups" :key="g" :value="g">{{ g }}</option>
       </select>
     </div>
 
     <!-- List -->
-    <div class="space-y-1 max-h-80 overflow-y-auto -mx-2 px-2">
+    <div class="space-y-1 max-h-[50vh] overflow-y-auto -mx-2 px-2">
       <button
         v-for="ex in filtered"
         :key="ex.id"
