@@ -29,7 +29,7 @@
           </div>
           <button
             v-if="cycle.created_by === currentUserId"
-            class="p-1.5 text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
+            class="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
             @click.stop="confirmDelete(cycle)"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

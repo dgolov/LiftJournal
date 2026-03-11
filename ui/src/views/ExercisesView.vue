@@ -7,19 +7,19 @@
 
     <!-- Filters -->
     <div class="card p-4 mb-6">
-      <div class="flex flex-wrap gap-3">
+      <div class="flex flex-col sm:flex-row flex-wrap gap-3">
         <input
           :value="filter.search"
           placeholder="Поиск..."
-          class="input flex-1 min-w-[160px]"
+          class="input sm:flex-1"
           @input="setFilter('search', $event.target.value)"
         />
-        <select :value="filter.muscleGroup || ''" class="input w-44"
+        <select :value="filter.muscleGroup || ''" class="input sm:w-44"
           @change="setFilter('muscleGroup', $event.target.value || null)">
           <option value="">Все группы мышц</option>
           <option v-for="g in muscleGroups" :key="g" :value="g">{{ g }}</option>
         </select>
-        <select :value="filter.equipment || ''" class="input w-36"
+        <select :value="filter.equipment || ''" class="input sm:w-36"
           @change="setFilter('equipment', $event.target.value || null)">
           <option value="">Всё оборудование</option>
           <option v-for="e in equipmentTypes" :key="e" :value="e">{{ e }}</option>
