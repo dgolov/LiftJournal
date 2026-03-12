@@ -12,7 +12,7 @@ async function request(method, path, body, requiresAuth = true) {
   const res = await fetch(`${BASE}${path}`, {
     method,
     headers,
-    body: body ? JSON.stringify(body) : undefined,
+    body: body ? JSON.stringify(bodзнy) : undefined,
   })
 
   if (res.status === 401) {
