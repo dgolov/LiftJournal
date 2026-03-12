@@ -5,6 +5,10 @@
 @layer base {
   body {
     @apply bg-surface text-gray-900 antialiased;
+    overflow-x: hidden;
+  }
+  *, *::before, *::after {
+    min-width: 0;
   }
 }
 
@@ -33,6 +37,11 @@
   .card {
     @apply bg-white rounded-xl shadow-sm border border-gray-100;
   }
+}
+
+/* Chart.js canvas constraint */
+canvas {
+  max-width: 100%;
 }
 
 /* Scrollbar */

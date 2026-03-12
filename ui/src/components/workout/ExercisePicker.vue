@@ -1,5 +1,5 @@
 <template>
-  <BaseModal v-model="show" title="Добавить упражнение" max-width="xl">
+  <BaseModal v-model="show" title="Добавить упражнение" max-width="xl" :fullscreen="true">
     <!-- Search -->
     <div class="flex flex-col sm:flex-row gap-2 mb-3">
       <input
@@ -14,11 +14,11 @@
     </div>
 
     <!-- List -->
-    <div class="space-y-1 max-h-[50vh] overflow-y-auto -mx-2 px-2">
+    <div class="space-y-1 -mx-2 px-2">
       <button
         v-for="ex in filtered"
         :key="ex.id"
-        :class="['w-full text-left px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors flex items-center gap-3',
+        :class="['w-full text-left px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors flex items-center gap-3',
           isAdded(ex.id) ? 'opacity-50 cursor-not-allowed' : '']"
         :disabled="isAdded(ex.id)"
         @click="pick(ex)"
@@ -33,6 +33,12 @@
         Ничего не найдено
       </div>
     </div>
+    <template #footer>
+      <button
+        class="btn btn-danger w-full sm:w-auto"
+        @click="show = false"
+      >Отмена</button>
+    </template>
   </BaseModal>
 </template>
 

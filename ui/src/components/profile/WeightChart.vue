@@ -1,6 +1,6 @@
 <template>
-  <div v-if="data.length > 1">
-    <Line :data="chartData" :options="chartOptions" />
+  <div v-if="data.length > 1" style="position:relative;width:100%;max-width:100%;overflow:hidden;">
+    <Line :data="chartData" :options="chartOptions" style="max-width:100%;" />
   </div>
   <div v-else class="flex items-center justify-center h-24 text-sm text-gray-400">
     Нет данных о весе
@@ -45,6 +45,7 @@ const chartData = computed(() => ({
 
 const chartOptions = {
   responsive: true,
+  maintainAspectRatio: true,
   plugins: { legend: { display: false } },
   scales: {
     x: { grid: { display: false }, ticks: { font: { size: 11 } } },
