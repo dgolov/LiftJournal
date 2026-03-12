@@ -16,15 +16,19 @@
     </div>
 
     <!-- Header row -->
-    <div v-if="isCardio" class="flex items-center gap-2 mb-2 text-xs text-gray-400 font-medium">
-      <span class="w-6" />
-      <span class="w-20 text-center">Мин.</span>
+    <div v-if="isCardio" class="flex items-center gap-1 mb-2 text-xs text-gray-400 font-medium">
+      <span class="w-5" />
+      <span class="flex-1 text-center">Мин.</span>
+      <span class="w-10" />
+      <span class="w-8" />
     </div>
-    <div v-else class="flex items-center gap-2 mb-2 text-xs text-gray-400 font-medium">
-      <span class="w-6" />
-      <span class="w-20 text-center">Вес (кг)</span>
-      <span class="w-4" />
-      <span class="w-20 text-center">Повт.</span>
+    <div v-else class="flex items-center gap-1 mb-2 text-xs text-gray-400 font-medium">
+      <span class="w-5" />
+      <span class="flex-1 text-center">Вес (кг)</span>
+      <span class="w-3" />
+      <span class="flex-1 text-center">Повт.</span>
+      <span class="w-10" />
+      <span class="w-8" />
     </div>
 
     <div class="space-y-2">

@@ -33,7 +33,7 @@
           <h3 class="font-semibold text-gray-900">Упражнения в цикле</h3>
           <p class="text-xs text-gray-400 mt-0.5">Определите список упражнений — они станут столбцами таблицы</p>
         </div>
-        <BaseButton variant="outline" size="sm" @click="addExerciseCol">+ Добавить</BaseButton>
+        <BaseButton variant="outline" size="sm" @click="addExerciseCol">Добавить</BaseButton>
       </div>
       <div class="space-y-2">
         <div v-for="(col, ci) in exerciseCols" :key="ci" class="flex items-center gap-2">
@@ -45,7 +45,7 @@
             <span v-else class="text-gray-400 text-sm">Выбрать упражнение...</span>
           </button>
           <button
-            class="text-gray-300 hover:text-red-400 transition-colors p-1 flex-shrink-0"
+            class="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0 disabled:opacity-30"
             :disabled="exerciseCols.length <= 1"
             @click="removeExerciseCol(ci)"
           >
@@ -64,7 +64,7 @@
           <h3 class="font-semibold text-gray-900">Тренировки</h3>
           <p class="text-xs text-gray-400 mt-0.5">Каждая строка — одна тренировка в цикле</p>
         </div>
-        <BaseButton variant="outline" size="sm" @click="addWorkout">+ Добавить строку</BaseButton>
+        <BaseButton variant="outline" size="sm" @click="addWorkout">Добавить строку</BaseButton>
       </div>
 
       <div class="overflow-x-auto">
@@ -75,7 +75,7 @@
               <th
                 v-for="col in exerciseCols"
                 :key="col.name || col.id"
-                class="text-left px-3 py-2 text-xs font-semibold text-gray-700 min-w-52"
+                class="text-left px-3 py-2 text-xs font-semibold text-gray-700 min-w-[220px]"
               >{{ col.name || '—' }}</th>
               <th class="w-8"></th>
             </tr>
@@ -90,32 +90,41 @@
                     :key="si"
                     class="flex items-center gap-1"
                   >
-                    <input
-                      :value="set.percent_1rm"
-                      @input="updateSet(wi, ci, si, 'percent_1rm', +$event.target.value)"
-                      type="number"
-                      min="0"
-                      max="200"
-                      step="2.5"
-                      class="input text-xs px-2 py-1 w-16 text-center"
+                    <StepperInput
+                      class="flex-1"
+                      :model-value="set.percent_1rm"
+                      :step="2.5"
+                      :min="0"
                       placeholder="%"
+                      @update:model-value="updateSet(wi, ci, si, 'percent_1rm', $event)"
                     />
-                    <span class="text-gray-400 text-xs">×</span>
-                    <input
-                      :value="set.reps"
-                      @input="updateSet(wi, ci, si, 'reps', +$event.target.value)"
-                      type="number"
-                      min="1"
-                      class="input text-xs px-2 py-1 w-12 text-center"
+                    <span class="text-gray-400 text-xs flex-shrink-0">×</span>
+                    <StepperInput
+                      class="flex-1"
+                      :model-value="set.reps"
+                      :step="1"
+                      :min="1"
                       placeholder="повт"
+                      @update:model-value="updateSet(wi, ci, si, 'reps', $event)"
                     />
-                    <button class="text-gray-200 hover:text-red-400 transition-colors" @click="removeSet(wi, ci, si)">×</button>
+                    <button
+                      class="w-7 h-9 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
+                      @click="removeSet(wi, ci, si)"
+                    >
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                      </svg>
+                    </button>
                   </div>
-                  <button class="text-xs text-primary hover:text-primary/80 font-medium mt-0.5" @click="addSet(wi, ci)">+ подход</button>
+                  <button class="text-xs text-primary hover:text-primary/80 font-medium mt-3 py-1" @click="addSet(wi, ci)">+ подход</button>
                 </div>
               </td>
               <td class="px-2 py-2 pt-3">
-                <button class="text-gray-200 hover:text-red-400 transition-colors" @click="removeWorkout(wi)" :disabled="form.workouts.length <= 1">
+                <button
+                  class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors disabled:opacity-30"
+                  @click="removeWorkout(wi)"
+                  :disabled="form.workouts.length <= 1"
+                >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                   </svg>
@@ -127,17 +136,17 @@
       </div>
 
       <!-- Bulk add workouts -->
-      <div class="p-4 border-t border-gray-100 flex items-center gap-3">
+      <div class="p-4 border-t border-gray-100 flex flex-wrap items-center gap-3">
         <span class="text-sm text-gray-600">Добавить сразу</span>
-        <input v-model.number="bulkCount" type="number" min="1" max="50" class="input w-20 text-center text-sm" />
+        <input v-model.number="bulkCount" type="number" min="1" max="50" class="input w-20 text-center text-sm" inputmode="numeric" />
         <span class="text-sm text-gray-600">тренировок</span>
-        <BaseButton variant="ghost" size="sm" @click="bulkAdd">Добавить</BaseButton>
+        <BaseButton variant="outline" @click="bulkAdd">Добавить</BaseButton>
       </div>
     </div>
 
     <!-- Save -->
     <div class="flex gap-3">
-      <BaseButton variant="ghost" @click="$router.back()">Отмена</BaseButton>
+      <BaseButton variant="outline" @click="$router.back()">Отмена</BaseButton>
       <BaseButton class="flex-1" :loading="saving" :disabled="!form.title.trim()" @click="save">
         {{ isEdit ? 'Сохранить изменения' : 'Создать цикл' }}
       </BaseButton>
@@ -145,7 +154,7 @@
   </div>
 
   <!-- Exercise picker modal -->
-  <BaseModal v-model="showExercisePicker" title="Выбрать упражнение">
+  <BaseModal v-model="showExercisePicker" title="Выбрать упражнение" :fullscreen="true">
     <div class="space-y-3">
       <input
         v-model="exerciseSearch"
@@ -153,7 +162,7 @@
         placeholder="Поиск по названию или группе мышц..."
         autofocus
       />
-      <div class="space-y-1 max-h-72 overflow-y-auto">
+      <div class="space-y-1 max-h-[60vh] overflow-y-auto">
         <button
           v-for="ex in filteredPickerExercises"
           :key="ex.id"
@@ -167,7 +176,7 @@
       </div>
     </div>
     <template #footer>
-      <BaseButton variant="ghost" @click="showExercisePicker = false">Отмена</BaseButton>
+      <button class="btn btn-danger w-full sm:w-auto" @click="showExercisePicker = false">Отмена</button>
     </template>
   </BaseModal>
 </template>
@@ -179,6 +188,7 @@ import { useStore } from 'vuex'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
+import StepperInput from '@/components/ui/StepperInput.vue'
 
 const route = useRoute()
 const router = useRouter()
