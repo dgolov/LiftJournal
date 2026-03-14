@@ -1,5 +1,5 @@
 <template>
-  <BaseModal v-model="show" title="Добавить упражнение" max-width="xl">
+  <BaseModal v-model="show" title="Добавить упражнение" max-width="xl" :fullscreen="true">
     <!-- Search -->
     <div class="flex flex-col sm:flex-row gap-2 mb-3">
       <input
@@ -14,11 +14,11 @@
     </div>
 
     <!-- List -->
-    <div class="space-y-1 max-h-[50vh] overflow-y-auto -mx-2 px-2">
+    <div class="space-y-1 -mx-2 px-2">
       <button
         v-for="ex in filtered"
         :key="ex.id"
-        :class="['w-full text-left px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors flex items-center gap-3',
+        :class="['w-full text-left px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors flex items-center gap-3',
           isAdded(ex.id) ? 'opacity-50 cursor-not-allowed' : '']"
         :disabled="isAdded(ex.id)"
         @click="pick(ex)"
@@ -33,6 +33,12 @@
         Ничего не найдено
       </div>
     </div>
+    <template #footer>
+      <button
+        class="btn btn-danger w-full sm:w-auto"
+        @click="show = false"
+      >Отмена</button>
+    </template>
   </BaseModal>
 </template>
 
@@ -42,9 +48,10 @@ import { useStore } from 'vuex'
 import BaseModal from '@/components/ui/BaseModal.vue'
 
 const props = defineProps({
-  modelValue: Boolean
+  modelValue: Boolean,
+  addedIds: { type: Set, default: null }
 })
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'pick'])
 
 const store = useStore()
 const search = ref('')
@@ -57,9 +64,10 @@ const show = computed({
 
 const allExercises = computed(() => store.getters['exercises/allExercises'])
 const muscleGroups = computed(() => store.getters['exercises/muscleGroups'])
-const addedIds = computed(() =>
+const activeAddedIds = computed(() =>
   new Set(store.state.workouts.activeWorkout.exercises.map(e => e.exerciseId))
 )
+const resolvedAddedIds = computed(() => props.addedIds ?? activeAddedIds.value)
 
 const filtered = computed(() => {
   let list = allExercises.value
@@ -71,10 +79,14 @@ const filtered = computed(() => {
   return list
 })
 
-function isAdded(id) { return addedIds.value.has(id) }
+function isAdded(id) { return resolvedAddedIds.value.has(id) }
 
 function pick(exercise) {
   if (isAdded(exercise.id)) return
-  store.commit('workouts/ADD_EXERCISE_TO_ACTIVE', exercise)
+  if (props.addedIds !== null) {
+    emit('pick', exercise)
+  } else {
+    store.commit('workouts/ADD_EXERCISE_TO_ACTIVE', exercise)
+  }
 }
 </script>

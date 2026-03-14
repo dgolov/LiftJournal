@@ -1,46 +1,42 @@
 <template>
-  <div class="flex items-center gap-2">
+  <div class="flex items-center gap-1">
     <span class="text-xs text-gray-400 w-5 text-center flex-shrink-0">{{ index + 1 }}</span>
+
     <template v-if="isCardio">
-      <input
-        type="number"
-        :value="set.reps"
-        min="0"
+      <StepperInput
+        class="flex-1"
+        :model-value="set.reps"
+        :step="1"
         placeholder="мин"
-        class="input flex-1 text-center text-base"
-        inputmode="decimal"
-        @input="update('reps', +$event.target.value)"
+        @update:model-value="update('reps', $event)"
       />
     </template>
     <template v-else>
-      <input
-        type="number"
-        :value="set.weight"
-        min="0"
-        step="0.5"
+      <StepperInput
+        class="flex-1"
+        :model-value="set.weight"
+        :step="2.5"
+        :decimals="1"
         placeholder="кг"
-        class="input flex-1 text-center text-base"
-        inputmode="decimal"
-        @input="update('weight', +$event.target.value)"
+        @update:model-value="update('weight', $event)"
       />
       <span class="text-gray-300 text-sm flex-shrink-0">×</span>
-      <input
-        type="number"
-        :value="set.reps"
-        min="0"
+      <StepperInput
+        class="flex-1"
+        :model-value="set.reps"
+        :step="1"
         placeholder="повт"
-        class="input flex-1 text-center text-base"
-        inputmode="numeric"
-        @input="update('reps', +$event.target.value)"
+        @update:model-value="update('reps', $event)"
       />
     </template>
+
     <button
-      :class="['w-10 h-10 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0 text-sm font-bold',
+      :class="['w-9 h-9 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0 text-sm font-bold',
         set.completed ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 text-transparent hover:border-green-400']"
       @click="update('completed', !set.completed)"
     >✓</button>
     <button
-      class="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
+      class="w-7 h-9 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
       @click="$emit('remove')"
     >
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,6 +47,9 @@
 </template>
 
 <script setup>
+import StepperInput from '@/components/ui/StepperInput.vue'
+import { useStore } from 'vuex'
+
 const props = defineProps({
   set: { type: Object, required: true },
   exerciseId: { type: String, required: true },
@@ -59,7 +58,6 @@ const props = defineProps({
 })
 const emit = defineEmits(['remove'])
 
-import { useStore } from 'vuex'
 const store = useStore()
 
 function update(field, value) {

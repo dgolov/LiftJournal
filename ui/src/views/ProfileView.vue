@@ -51,7 +51,7 @@
       <div class="card p-4">
         <div class="flex items-center justify-between mb-3">
           <h3 class="font-semibold text-gray-900">Цели</h3>
-          <BaseButton variant="outline" size="sm" @click="showAddGoal = true">+ Цель</BaseButton>
+          <BaseButton variant="outline" size="sm" @click="showAddGoal = true">Цель</BaseButton>
         </div>
 
         <div v-if="goals.length" class="space-y-1">
@@ -87,7 +87,7 @@
           <h3 class="font-semibold text-gray-900">Личные максимумы (ПМ)</h3>
           <p class="text-xs text-gray-400 mt-0.5">Используются для расчёта % в тренировочных циклах</p>
         </div>
-        <BaseButton variant="outline" size="sm" class="flex-shrink-0" @click="showAddMax = true">+ Добавить</BaseButton>
+        <BaseButton variant="outline" size="sm" @click="showAddMax = true">Добавить</BaseButton>
       </div>
 
       <div v-if="maxes.length" class="space-y-1">
@@ -135,7 +135,10 @@
           </div>
           <input v-model="maxForm.exercise_name" class="input" placeholder="или введите своё упражнение" />
         </div>
-        <BaseInput v-model.number="maxForm.weight_kg" type="number" step="0.5" min="0" label="Максимальный вес (кг)" placeholder="100" />
+        <div>
+          <label class="label">Максимальный вес (кг)</label>
+          <StepperInput v-model="maxForm.weight_kg" :step="2.5" :min="0" placeholder="100" :decimals="1" />
+        </div>
       </div>
       <template #footer>
         <BaseButton variant="ghost" @click="showAddMax = false">Отмена</BaseButton>
@@ -167,6 +170,7 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
+import StepperInput from '@/components/ui/StepperInput.vue'
 
 const store = useStore()
 const router = useRouter()
