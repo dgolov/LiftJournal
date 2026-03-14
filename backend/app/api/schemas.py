@@ -1,6 +1,8 @@
 from datetime import date, datetime
 from typing import Optional
 
+_Date = date  # alias to avoid field-name shadowing in Pydantic models
+
 from pydantic import BaseModel
 
 
@@ -91,7 +93,7 @@ class WorkoutCreate(BaseModel):
 
 
 class WorkoutUpdate(BaseModel):
-    date: Optional[date] = None
+    date: Optional[_Date] = None
     type: Optional[str] = None
     title: Optional[str] = None
     durationMinutes: Optional[int] = None

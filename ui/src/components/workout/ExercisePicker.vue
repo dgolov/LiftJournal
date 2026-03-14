@@ -48,9 +48,10 @@ import { useStore } from 'vuex'
 import BaseModal from '@/components/ui/BaseModal.vue'
 
 const props = defineProps({
-  modelValue: Boolean
+  modelValue: Boolean,
+  addedIds: { type: Set, default: null }
 })
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'pick'])
 
 const store = useStore()
 const search = ref('')
@@ -63,9 +64,10 @@ const show = computed({
 
 const allExercises = computed(() => store.getters['exercises/allExercises'])
 const muscleGroups = computed(() => store.getters['exercises/muscleGroups'])
-const addedIds = computed(() =>
+const activeAddedIds = computed(() =>
   new Set(store.state.workouts.activeWorkout.exercises.map(e => e.exerciseId))
 )
+const resolvedAddedIds = computed(() => props.addedIds ?? activeAddedIds.value)
 
 const filtered = computed(() => {
   let list = allExercises.value
@@ -77,10 +79,14 @@ const filtered = computed(() => {
   return list
 })
 
-function isAdded(id) { return addedIds.value.has(id) }
+function isAdded(id) { return resolvedAddedIds.value.has(id) }
 
 function pick(exercise) {
   if (isAdded(exercise.id)) return
-  store.commit('workouts/ADD_EXERCISE_TO_ACTIVE', exercise)
+  if (props.addedIds !== null) {
+    emit('pick', exercise)
+  } else {
+    store.commit('workouts/ADD_EXERCISE_TO_ACTIVE', exercise)
+  }
 }
 </script>
