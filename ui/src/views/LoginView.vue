@@ -78,6 +78,7 @@ async function submit() {
     ])
     router.push('/')
   } catch (e) {
+    console.log(e);
     error.value = 'Неверный email или пароль'
   } finally {
     loading.value = false
