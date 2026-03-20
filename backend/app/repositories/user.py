@@ -51,6 +51,14 @@ class UserRepository:
         await self.db.commit()
         return await self.get_with_relations(user.id)  # type: ignore[return-value]
 
+    async def update_theme(self, user_id: int, theme: str) -> User:
+        result = await self.db.execute(select(User).where(User.id == user_id))
+        user = result.scalar_one_or_none()
+        if user:
+            user.theme = theme
+            await self.db.commit()
+        return await self.get_with_relations(user_id)  # type: ignore[return-value]
+
     async def upsert_weight(self, user_id: int, entry_date: date, kg: float) -> WeightEntry:
         result = await self.db.execute(
             select(WeightEntry).where(

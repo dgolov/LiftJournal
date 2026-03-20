@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas import (
     UserOut, WeightEntryOut, GoalOut, UserMaxOut,
-    ProfileUpdate, WeightEntryIn, GoalCreate, UserMaxIn,
+    ProfileUpdate, WeightEntryIn, GoalCreate, UserMaxIn, ThemeUpdate,
 )
 from app.repositories.user import UserRepository
 from app.domain.models import User
@@ -20,6 +20,7 @@ class UserService:
             name=u.name,
             age=u.age,
             avatarUrl=u.avatar_url,
+            theme=u.theme if u.theme else "light",
             weightLog=sorted(
                 [WeightEntryOut(date=e.date, kg=e.kg) for e in u.weight_log],
                 key=lambda x: x.date,
@@ -81,3 +82,9 @@ class UserService:
 
     async def delete_max(self, user_id: int, exercise_name: str) -> None:
         await self.repo.delete_max(user_id, exercise_name)
+
+    async def update_theme(self, user_id: int, data: ThemeUpdate) -> UserOut:
+        u = await self.repo.update_theme(user_id, data.theme)
+        if not u:
+            raise HTTPException(status_code=404, detail="User not found")
+        return self._to_dto(u)
