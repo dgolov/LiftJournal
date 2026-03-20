@@ -122,6 +122,10 @@ class ProfileUpdate(BaseModel):
     avatarUrl: Optional[str] = None
 
 
+class ThemeUpdate(BaseModel):
+    theme: str  # "light" | "dark"
+
+
 class WeightEntryIn(BaseModel):
     date: date
     kg: float
@@ -160,6 +164,7 @@ class UserOut(BaseModel):
     name: str
     age: int
     avatarUrl: Optional[str]
+    theme: str = "light"
     weightLog: list[WeightEntryOut]
     goals: list[GoalOut]
     maxes: list[UserMaxOut] = []
