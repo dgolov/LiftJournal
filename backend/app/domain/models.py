@@ -92,6 +92,7 @@ class User(Base):
     name: Mapped[str] = mapped_column(String(100), default="")
     age: Mapped[int] = mapped_column(Integer, default=0)
     avatar_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    theme: Mapped[str] = mapped_column(String(10), default="light")
 
     weight_log: Mapped[list["WeightEntry"]] = relationship(
         "WeightEntry", back_populates="user", cascade="all, delete-orphan"
