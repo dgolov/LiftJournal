@@ -7,6 +7,9 @@
     @apply bg-surface text-gray-900 antialiased;
     overflow-x: hidden;
   }
+  .dark body {
+    @apply bg-gray-950 text-gray-100;
+  }
   *, *::before, *::after {
     min-width: 0;
   }
@@ -14,28 +17,28 @@
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px];
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] active:scale-[0.97];
   }
   .btn-primary {
-    @apply btn bg-primary text-white hover:bg-primary-dark focus:ring-primary;
+    @apply btn bg-primary text-white hover:bg-primary-dark focus:ring-primary shadow-sm hover:shadow-md;
   }
   .btn-ghost {
-    @apply btn bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-gray-300;
+    @apply btn bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-gray-300 dark:text-gray-300 dark:hover:bg-gray-800;
   }
   .btn-danger {
-    @apply btn bg-danger text-white hover:bg-red-600 focus:ring-danger;
+    @apply btn bg-danger text-white hover:bg-red-600 focus:ring-danger shadow-sm hover:shadow-md;
   }
   .btn-outline {
-    @apply btn border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-300;
+    @apply btn border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-300 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800 dark:focus:ring-gray-600;
   }
   .input {
-    @apply w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm placeholder-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary min-h-[44px];
+    @apply w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm placeholder-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary min-h-[44px] dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-500;
   }
   .label {
-    @apply block text-sm font-medium text-gray-700 mb-1;
+    @apply block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300;
   }
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-100;
+    @apply bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-900 dark:border-gray-800;
   }
 }
 
