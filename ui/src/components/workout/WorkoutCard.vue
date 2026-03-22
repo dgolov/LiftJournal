@@ -9,11 +9,11 @@
           <BaseBadge :color="typeColor">{{ workout.type }}</BaseBadge>
           <span class="text-xs text-gray-400">{{ formattedDate }}</span>
         </div>
-        <h3 class="font-semibold text-gray-900 truncate">{{ workout.title }}</h3>
-        <p class="text-xs text-gray-500 mt-1">
+        <h3 class="font-semibold text-gray-900 dark:text-white truncate">{{ workout.title }}</h3>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
           {{ workout.exercises.length }} упр. · {{ totalSets }} подх. · {{ formatDuration(workout.durationMinutes) }}
         </p>
-        <p class="text-xs text-gray-400 mt-0.5">
+        <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
           Тоннаж: {{ formatVolume(totalVolume) }} кг
         </p>
       </div>
@@ -31,7 +31,7 @@
   </div>
 
   <BaseModal v-model="showConfirm" title="Удалить тренировку?" max-width="sm">
-    <p class="text-sm text-gray-600">Это действие нельзя отменить.</p>
+    <p class="text-sm text-gray-600 dark:text-gray-400">Это действие нельзя отменить.</p>
     <template #footer>
       <BaseButton variant="ghost" @click="showConfirm = false">Отмена</BaseButton>
       <BaseButton variant="danger" @click="deleteWorkout">Удалить</BaseButton>

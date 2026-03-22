@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-surface">
+  <div class="min-h-screen bg-surface dark:bg-gray-950">
     <AppSidebar />
     <AppTopbar />
     <main class="pt-16 lg:pl-64 pb-safe-content lg:pb-0">

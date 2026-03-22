@@ -4,14 +4,14 @@
       <div v-if="modelValue" :class="['fixed inset-0 z-50 flex', fullscreen ? 'items-end sm:items-center sm:p-4' : 'items-center justify-center p-4']">
         <div class="absolute inset-0 bg-black/50" @click="$emit('update:modelValue', false)" />
         <div :class="[
-          'relative bg-white shadow-xl w-full flex flex-col',
+          'relative bg-white dark:bg-gray-900 shadow-xl w-full flex flex-col',
           fullscreen
             ? 'h-full sm:h-auto sm:rounded-2xl sm:max-h-[90vh] ' + maxWidthClass
             : 'rounded-2xl max-h-[90vh] ' + maxWidthClass
         ]">
-          <div v-if="title" class="flex items-center justify-between px-6 pt-5 pb-3 border-b border-gray-100 flex-shrink-0">
-            <h3 class="text-lg font-semibold text-gray-900">{{ title }}</h3>
-            <button class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600" @click="$emit('update:modelValue', false)">
+          <div v-if="title" class="flex items-center justify-between px-6 pt-5 pb-3 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ title }}</h3>
+            <button class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors" @click="$emit('update:modelValue', false)">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
               </svg>
@@ -20,7 +20,7 @@
           <div class="p-6 overflow-y-auto flex-1">
             <slot />
           </div>
-          <div v-if="$slots.footer" class="px-6 pb-5 pt-3 flex justify-end gap-3 flex-shrink-0 border-t border-gray-100">
+          <div v-if="$slots.footer" class="px-6 pb-5 pt-3 flex justify-end gap-3 flex-shrink-0 border-t border-gray-100 dark:border-gray-800">
             <slot name="footer" />
           </div>
         </div>

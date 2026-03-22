@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="flex items-center justify-between mb-6">
-      <h2 class="text-xl font-bold text-gray-900">Циклы</h2>
+      <h2 class="text-xl font-bold text-gray-900 dark:text-white">Циклы</h2>
       <RouterLink to="/cycles/new" class="btn btn-primary text-sm px-4 py-2">+ Новый цикл</RouterLink>
     </div>
 
@@ -17,13 +17,13 @@
         <div class="flex items-start justify-between gap-3">
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2 mb-1 flex-wrap">
-              <span :class="['text-xs px-2 py-0.5 rounded-full font-medium', cycle.is_public ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500']">
+              <span :class="['text-xs px-2 py-0.5 rounded-full font-medium', cycle.is_public ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400']">
                 {{ cycle.is_public ? 'Публичный' : 'Приватный' }}
               </span>
               <span v-if="cycle.author_name" class="text-xs text-gray-400">{{ cycle.author_name }}</span>
               <span v-if="cycle.created_by === currentUserId" class="text-xs text-primary font-medium">Мой</span>
             </div>
-            <h3 class="font-semibold text-gray-900">{{ cycle.title }}</h3>
+            <h3 class="font-semibold text-gray-900 dark:text-white">{{ cycle.title }}</h3>
             <p v-if="cycle.description" class="text-sm text-gray-500 mt-0.5 line-clamp-1">{{ cycle.description }}</p>
             <p class="text-xs text-gray-400 mt-1">{{ cycle.workout_count }} тренировок</p>
           </div>

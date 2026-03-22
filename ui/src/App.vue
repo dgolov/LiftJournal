@@ -10,7 +10,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useStore } from 'vuex'
 import { useRoute } from 'vue-router'
 import AppLayout from '@/components/layout/AppLayout.vue'
@@ -21,6 +21,12 @@ const route = useRoute()
 const isPublicRoute = computed(() => !!route.meta.public)
 
 const store = useStore()
+
+watch(
+  () => store.state.user.theme,
+  (theme) => document.documentElement.classList.toggle('dark', theme === 'dark'),
+  { immediate: true }
+)
 
 onMounted(() => {
   const session = loadSession()

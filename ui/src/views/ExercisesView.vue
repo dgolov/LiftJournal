@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="flex items-center justify-between mb-6">
-      <h2 class="text-xl font-bold text-gray-900">Упражнения</h2>
+      <h2 class="text-xl font-bold text-gray-900 dark:text-white">Упражнения</h2>
       <BaseButton variant="outline" size="sm" @click="showAddModal = true">+ Своё упражнение</BaseButton>
     </div>
 
