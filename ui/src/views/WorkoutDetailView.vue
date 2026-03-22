@@ -2,7 +2,7 @@
   <div v-if="workout">
     <!-- Header -->
     <div class="flex items-start gap-4 mb-6">
-      <button class="p-2 rounded-xl hover:bg-gray-100 text-gray-500" @click="onBack">
+      <button class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors" @click="onBack">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
         </svg>
@@ -12,15 +12,15 @@
           <BaseBadge :color="typeColor">{{ workout.type }}</BaseBadge>
           <span class="text-sm text-gray-400">{{ formattedDate }}</span>
         </div>
-        <h2 class="text-2xl font-bold text-gray-900">{{ workout.title }}</h2>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ workout.title }}</h2>
         <p class="text-sm text-gray-500 mt-1">
           {{ formatDuration(workout.durationMinutes) }} · {{ workout.exercises.length }} упр.<template v-if="totalVolume > 0"> · тоннаж {{ formatVolume(totalVolume) }} кг</template>
         </p>
-        <p v-if="workout.notes" class="text-sm text-gray-600 mt-2 italic">{{ workout.notes }}</p>
+        <p v-if="workout.notes" class="text-sm text-gray-600 dark:text-gray-400 mt-2 italic">{{ workout.notes }}</p>
       </div>
       <button
         v-if="!isEditing"
-        class="p-2 rounded-xl hover:bg-gray-100 text-gray-500"
+        class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
         title="Редактировать"
         @click="startEdit"
       >
@@ -33,7 +33,7 @@
 
     <!-- Edit form -->
     <div v-if="isEditing" class="card p-4 mb-4 space-y-4">
-      <h3 class="font-semibold text-gray-900">Редактирование тренировки</h3>
+      <h3 class="font-semibold text-gray-900 dark:text-white">Редактирование тренировки</h3>
 
       <div class="grid grid-cols-2 gap-3">
         <div>
@@ -62,7 +62,7 @@
       </div>
 
       <div class="flex gap-2 justify-end">
-        <button class="btn" @click="cancelEdit">Отмена</button>
+        <button class="btn btn-ghost" @click="cancelEdit">Отмена</button>
         <button class="btn btn-primary" :disabled="saving" @click="saveEdit">
           {{ saving ? 'Сохранение...' : 'Сохранить' }}
         </button>
@@ -72,7 +72,7 @@
     <!-- Exercises -->
     <div class="space-y-4">
       <div v-for="ex in displayExercises" :key="ex.exerciseId" class="card p-4">
-        <h3 class="font-semibold text-gray-900 mb-3">{{ ex.exerciseName }}</h3>
+        <h3 class="font-semibold text-gray-900 dark:text-white mb-3">{{ ex.exerciseName }}</h3>
         <div class="space-y-2">
           <div v-for="(set, i) in ex.sets" :key="set.id"
             class="flex items-center gap-1 text-sm">
@@ -165,7 +165,7 @@
     <!-- Add exercise button in edit mode -->
     <button
       v-if="isEditing"
-      class="mt-2 w-full card p-3 flex items-center justify-center gap-2 text-sm text-primary hover:bg-gray-50 transition-colors"
+      class="mt-2 w-full card p-3 flex items-center justify-center gap-2 text-sm text-primary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
       @click="showPicker = true"
     >
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,10 +1,10 @@
 <template>
-  <aside :class="['fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-100 flex flex-col transition-transform duration-300',
+  <aside :class="['fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 flex flex-col transition-transform duration-300',
     isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0']">
     <!-- Logo -->
-    <div class="h-16 flex items-center gap-3 px-6 border-b border-gray-100">
+    <div class="h-16 flex items-center gap-3 px-6 border-b border-gray-100 dark:border-gray-800">
       <span class="text-2xl">💪</span>
-      <span class="font-bold text-gray-900 text-lg">LiftJournal</span>
+      <span class="font-bold text-gray-900 dark:text-gray-100 text-lg">LiftJournal</span>
     </div>
 
     <!-- Nav -->
@@ -14,10 +14,10 @@
         :key="item.to"
         :to="item.to"
         :class="['flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors',
-          'hover:bg-gray-50',
+          'hover:bg-gray-50 dark:hover:bg-gray-800',
           $route.path === item.to || $route.path.startsWith(item.to + '/') && item.to !== '/'
             ? 'bg-primary/10 text-primary'
-            : 'text-gray-600']"
+            : 'text-gray-600 dark:text-gray-400']"
         @click="closeSidebar"
       >
         <span class="text-lg">{{ item.icon }}</span>
@@ -26,7 +26,7 @@
     </nav>
 
     <!-- New workout button -->
-    <div class="p-4 border-t border-gray-100">
+    <div class="p-4 border-t border-gray-100 dark:border-gray-800">
       <RouterLink to="/workouts/new" @click="closeSidebar"
         class="flex items-center justify-center gap-2 w-full btn-primary btn rounded-xl py-3 text-sm font-semibold">
         <span class="text-lg">+</span>

@@ -5,6 +5,7 @@ export default {
 
   state: () => ({
     profile: { name: '', age: 0, avatarUrl: null },
+    theme: 'light',
     weightLog: [],
     goals: [],
     maxes: [],   // { exercise_name, weight_kg, recorded_at }
@@ -23,9 +24,13 @@ export default {
   mutations: {
     SET_USER(state, user) {
       state.profile = { name: user.name, age: user.age, avatarUrl: user.avatarUrl }
+      state.theme = user.theme || 'light'
       state.weightLog = user.weightLog
       state.goals = user.goals
       state.maxes = user.maxes || []
+    },
+    SET_THEME(state, theme) {
+      state.theme = theme
     },
     UPSERT_MAX(state, max) {
       const idx = state.maxes.findIndex(m => m.exercise_name === max.exercise_name)
@@ -62,6 +67,11 @@ export default {
     async updateProfile({ commit }, profile) {
       await workoutService.updateProfile(profile)
       commit('UPDATE_PROFILE', profile)
+    },
+
+    async setTheme({ commit }, theme) {
+      commit('SET_THEME', theme)
+      await workoutService.updateTheme(theme)
     },
 
     async logWeight({ commit }, entry) {

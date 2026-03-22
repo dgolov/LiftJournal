@@ -15,7 +15,7 @@
       <StepperInput
         class="flex-1"
         :model-value="set.weight"
-        :step="2.5"
+        :step="0.5"
         :decimals="1"
         placeholder="кг"
         @update:model-value="update('weight', $event)"

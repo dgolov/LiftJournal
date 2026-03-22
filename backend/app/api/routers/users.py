@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas import (
     ProfileUpdate, WeightEntryIn, WeightEntryOut,
-    GoalCreate, GoalOut, UserOut, UserMaxIn, UserMaxOut,
+    GoalCreate, GoalOut, UserOut, UserMaxIn, UserMaxOut, ThemeUpdate,
 )
 from app.core.database import get_db
 from app.core.security import get_current_user
@@ -92,3 +92,12 @@ async def delete_max(
     db: AsyncSession = Depends(get_db),
 ):
     await UserService(db).delete_max(current_user.id, exercise_name)
+
+
+@router.patch("/theme", response_model=UserOut)
+async def update_theme(
+    payload: ThemeUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await UserService(db).update_theme(current_user.id, payload)

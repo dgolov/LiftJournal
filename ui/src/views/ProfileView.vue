@@ -6,7 +6,7 @@
         {{ profile.name?.charAt(0) || '?' }}
       </div>
       <div class="flex-1 min-w-0">
-        <h2 class="text-xl font-bold text-gray-900">{{ profile.name }}</h2>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ profile.name }}</h2>
         <p class="text-sm text-gray-500">{{ profile.age }} лет</p>
       </div>
       <BaseButton variant="outline" size="sm" @click="showEditProfile = true">Изменить</BaseButton>
@@ -15,7 +15,7 @@
     <!-- Account -->
     <div class="card p-4 flex items-center justify-between gap-4">
       <div>
-        <p class="text-sm font-medium text-gray-700">Аккаунт</p>
+        <p class="text-sm font-medium text-gray-700 dark:text-gray-200">Аккаунт</p>
         <p class="text-xs text-gray-400 mt-0.5">{{ userName }}</p>
       </div>
       <BaseButton variant="danger" size="sm" @click="logout">Выйти</BaseButton>
@@ -33,12 +33,12 @@
       <!-- Weight -->
       <div class="card p-4">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="font-semibold text-gray-900">Вес</h3>
+          <h3 class="font-semibold text-gray-900 dark:text-white">Вес</h3>
           <span v-if="currentWeight" class="text-sm font-bold text-primary">{{ currentWeight.kg }} кг</span>
         </div>
         <WeightChart :data="weightHistory" />
-        <div class="mt-4 border-t border-gray-100 pt-4">
-          <p class="text-sm font-medium text-gray-700 mb-2">Записать вес</p>
+        <div class="mt-4 border-t border-gray-100 dark:border-gray-800 pt-4">
+          <p class="text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Записать вес</p>
           <div class="flex flex-col sm:flex-row gap-2">
             <input type="date" v-model="weightForm.date" class="input flex-1" />
             <input type="number" v-model.number="weightForm.kg" step="0.1" min="20" max="300" placeholder="кг" class="input sm:w-24" inputmode="decimal" />
@@ -50,20 +50,20 @@
       <!-- Goals -->
       <div class="card p-4">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="font-semibold text-gray-900">Цели</h3>
+          <h3 class="font-semibold text-gray-900 dark:text-white">Цели</h3>
           <BaseButton variant="outline" size="sm" @click="showAddGoal = true">Цель</BaseButton>
         </div>
 
         <div v-if="goals.length" class="space-y-1">
           <div v-for="goal in goals" :key="goal.id"
-            class="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50">
+            class="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
             <button
               :class="['w-7 h-7 rounded-full border-2 flex-shrink-0 transition-colors flex items-center justify-center text-xs font-bold',
                 goal.done ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 hover:border-green-400']"
               @click="toggleGoal(goal.id)"
             >{{ goal.done ? '✓' : '' }}</button>
             <div class="flex-1 min-w-0">
-              <p :class="['text-sm font-medium leading-snug', goal.done ? 'line-through text-gray-400' : 'text-gray-900']">
+              <p :class="['text-sm font-medium leading-snug', goal.done ? 'line-through text-gray-400' : 'text-gray-900 dark:text-white']">
                 {{ goal.text }}
               </p>
               <p class="text-xs text-gray-400">до {{ formatDate(goal.targetDate) }}</p>
@@ -84,16 +84,16 @@
     <div class="card p-4">
       <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
         <div class="min-w-0">
-          <h3 class="font-semibold text-gray-900">Личные максимумы (ПМ)</h3>
+          <h3 class="font-semibold text-gray-900 dark:text-white">Личные максимумы (ПМ)</h3>
           <p class="text-xs text-gray-400 mt-0.5">Используются для расчёта % в тренировочных циклах</p>
         </div>
         <BaseButton variant="outline" size="sm" @click="showAddMax = true">Добавить</BaseButton>
       </div>
 
       <div v-if="maxes.length" class="space-y-1">
-        <div v-for="max in maxes" :key="max.exercise_name" class="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
+        <div v-for="max in maxes" :key="max.exercise_name" class="flex items-center gap-3 py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-900">{{ max.exercise_name }}</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">{{ max.exercise_name }}</p>
             <p class="text-xs text-gray-400">обновлён {{ formatDate(max.recorded_at) }}</p>
           </div>
           <span class="text-lg font-bold text-primary flex-shrink-0">{{ max.weight_kg }} кг</span>

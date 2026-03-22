@@ -1,7 +1,7 @@
 <template>
   <div class="card p-4 flex flex-col gap-1">
-    <p class="text-xs text-gray-500 font-medium">{{ label }}</p>
-    <p class="text-2xl font-bold text-gray-900">{{ value }}</p>
+    <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">{{ label }}</p>
+    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ value }}</p>
     <p v-if="sub" class="text-xs text-gray-400">{{ sub }}</p>
   </div>
 </template>

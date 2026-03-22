@@ -1,12 +1,12 @@
 <template>
   <div class="max-w-2xl">
     <div class="flex items-center gap-3 mb-6">
-      <button class="p-2 rounded-xl hover:bg-gray-100 text-gray-500" @click="$router.back()">
+      <button class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors" @click="$router.back()">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
         </svg>
       </button>
-      <h2 class="text-xl font-bold text-gray-900">Новая тренировка</h2>
+      <h2 class="text-xl font-bold text-gray-900 dark:text-white">Новая тренировка</h2>
 
       <!-- Live timer (shown once workout started) -->
       <div v-if="workoutStartedAt" class="ml-auto flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full">
@@ -18,14 +18,14 @@
     <!-- Steps indicator -->
     <div class="flex gap-1 mb-6">
       <div v-for="(s, i) in steps" :key="i"
-        :class="['h-1 flex-1 rounded-full transition-colors', step > i ? 'bg-primary' : 'bg-gray-200']"
+        :class="['h-1 flex-1 rounded-full transition-colors', step > i ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-700']"
       />
     </div>
 
     <!-- Step 1: Info -->
     <div v-if="step === 0" class="space-y-4">
       <div class="card p-5">
-        <h3 class="font-semibold text-gray-900 mb-4">Основная информация</h3>
+        <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Основная информация</h3>
         <div class="space-y-4">
           <BaseInput
             :model-value="activeWorkout.title"
@@ -40,7 +40,7 @@
                 v-for="type in workoutTypes"
                 :key="type"
                 :class="['px-3 py-1.5 rounded-full text-sm font-medium border transition-colors',
-                  activeWorkout.type === type ? 'bg-primary text-white border-primary' : 'border-gray-200 text-gray-600 hover:border-primary']"
+                  activeWorkout.type === type ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-primary']"
                 @click="setField('type', type)"
               >{{ type }}</button>
             </div>
@@ -71,7 +71,7 @@
     <!-- Step 2: Exercises -->
     <div v-else-if="step === 1">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="font-semibold text-gray-900">Упражнения</h3>
+        <h3 class="font-semibold text-gray-900 dark:text-white">Упражнения</h3>
         <BaseButton variant="outline" size="sm" @click="showPicker = true">+ Добавить</BaseButton>
       </div>
 
@@ -95,14 +95,14 @@
 
     <!-- Step 3: Review & Finish -->
     <div v-else>
-      <h3 class="font-semibold text-gray-900 mb-4">Завершение тренировки</h3>
+      <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Завершение тренировки</h3>
 
       <div class="card p-4 mb-4">
         <div class="flex items-center gap-2 mb-2">
           <BaseBadge color="indigo">{{ activeWorkout.type }}</BaseBadge>
           <span class="text-sm text-gray-500">{{ formattedDate }}</span>
         </div>
-        <h4 class="font-bold text-gray-900 text-lg">{{ activeWorkout.title || 'Без названия' }}</h4>
+        <h4 class="font-bold text-gray-900 dark:text-white text-lg">{{ activeWorkout.title || 'Без названия' }}</h4>
         <p class="text-sm text-gray-500 mt-1">
           <span v-if="workoutStartedAt" class="font-mono font-semibold text-primary">{{ elapsedFormatted }}</span>
           <span v-else>—</span>
@@ -110,7 +110,7 @@
         </p>
         <p v-if="activeWorkout.notes" class="text-sm text-gray-600 mt-1 italic">{{ activeWorkout.notes }}</p>
         <div v-if="activeWorkout.exercises.length" class="mt-3 space-y-1">
-          <p v-for="ex in activeWorkout.exercises" :key="ex.exerciseId" class="text-sm text-gray-700">
+          <p v-for="ex in activeWorkout.exercises" :key="ex.exerciseId" class="text-sm text-gray-700 dark:text-gray-300">
             · {{ ex.exerciseName }} — {{ ex.sets.length }} подх.
           </p>
         </div>

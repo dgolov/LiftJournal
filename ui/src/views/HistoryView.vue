@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="flex items-center justify-between mb-6">
-      <h2 class="text-xl font-bold text-gray-900">История</h2>
+      <h2 class="text-xl font-bold text-gray-900 dark:text-white">История</h2>
       <span class="text-sm text-gray-500">{{ filtered.length }} тренировок</span>
     </div>
 
@@ -10,14 +10,14 @@
       <div class="flex flex-wrap gap-2">
         <button
           :class="['text-sm px-3 py-1.5 rounded-full font-medium border transition-colors',
-            !activeType ? 'bg-primary text-white border-primary' : 'border-gray-200 text-gray-600 hover:border-primary hover:text-primary']"
+            !activeType ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-primary hover:text-primary']"
           @click="setFilter('type', null)"
         >Все</button>
         <button
           v-for="type in workoutTypes"
           :key="type"
           :class="['text-sm px-3 py-1.5 rounded-full font-medium border transition-colors',
-            activeType === type ? 'bg-primary text-white border-primary' : 'border-gray-200 text-gray-600 hover:border-primary hover:text-primary']"
+            activeType === type ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-primary hover:text-primary']"
           @click="setFilter('type', type)"
         >{{ type }}</button>
       </div>

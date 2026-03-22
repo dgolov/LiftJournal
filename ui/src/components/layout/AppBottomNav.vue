@@ -1,5 +1,5 @@
 <template>
-  <nav class="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-100 flex lg:hidden pb-safe-nav">
+  <nav class="fixed bottom-0 left-0 right-0 z-30 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 flex lg:hidden pb-safe-nav">
     <RouterLink
       v-for="item in navItems"
       :key="item.to"

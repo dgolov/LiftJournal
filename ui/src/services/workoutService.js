@@ -97,6 +97,10 @@ const workoutService = {
     })
   },
 
+  updateTheme(theme) {
+    return request('PATCH', '/user/theme', { theme })
+  },
+
   logWeight(entry) {
     return request('POST', '/user/weight', { date: entry.date, kg: entry.kg })
   },
