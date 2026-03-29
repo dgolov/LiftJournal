@@ -2,9 +2,7 @@
   <div class="max-w-2xl">
     <div class="flex items-center gap-3 mb-6">
       <button class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors" @click="$router.back()">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-        </svg>
+        <ChevronLeft class="w-5 h-5" />
       </button>
       <h2 class="text-xl font-bold text-gray-900 dark:text-white">Новая тренировка</h2>
 
@@ -63,8 +61,8 @@
           </div>
         </div>
       </div>
-      <BaseButton class="w-full" :disabled="!canProceed" @click="beginWorkout">
-        Начать тренировку ▶
+      <BaseButton class="w-full flex items-center justify-center gap-2" :disabled="!canProceed" @click="beginWorkout">
+        Начать тренировку <Play class="w-4 h-4" />
       </BaseButton>
     </div>
 
@@ -81,11 +79,12 @@
 
       <BaseEmptyState
         v-else
-        icon="🏋️"
         title="Добавьте упражнения"
         description="Нажмите кнопку выше, чтобы выбрать упражнения из библиотеки"
         class="mb-4"
-      />
+      >
+        <template #icon><Dumbbell class="w-12 h-12" /></template>
+      </BaseEmptyState>
 
       <div class="flex gap-3">
         <BaseButton variant="ghost" @click="step--">← Назад</BaseButton>
@@ -142,6 +141,7 @@
 import { ref, computed, watch, onUnmounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+import { ChevronLeft, Dumbbell, Play } from 'lucide-vue-next'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'

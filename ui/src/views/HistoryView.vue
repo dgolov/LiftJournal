@@ -44,10 +44,10 @@
 
     <BaseEmptyState
       v-else
-      icon="🏃"
       title="Тренировок не найдено"
       :description="hasActiveFilters ? 'Попробуйте изменить фильтры' : 'Начни первую тренировку!'"
     >
+      <template #icon><Activity class="w-12 h-12" /></template>
       <RouterLink to="/workouts/new" class="mt-4 btn-primary btn">
         Добавить тренировку
       </RouterLink>
@@ -58,6 +58,7 @@
 <script setup>
 import { computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
+import { Activity } from 'lucide-vue-next'
 import WorkoutCard from '@/components/workout/WorkoutCard.vue'
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
 import { WORKOUT_TYPES } from '@/services/mockData.js'

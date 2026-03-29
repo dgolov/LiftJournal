@@ -7,23 +7,26 @@
       :class="['flex-1 flex flex-col items-center pt-2 pb-1 text-xs font-medium transition-colors',
         $route.path.startsWith(item.to) ? 'text-primary' : 'text-gray-400 hover:text-gray-600']"
     >
-      <span class="text-2xl mb-0.5">{{ item.icon }}</span>
+      <component :is="item.icon" class="w-6 h-6 mb-0.5" />
       {{ item.label }}
     </RouterLink>
     <RouterLink to="/workouts/new"
       class="flex-1 flex flex-col items-center pt-2 pb-1 text-xs font-medium transition-colors"
       :class="$route.path === '/workouts/new' ? 'text-primary' : 'text-gray-400 hover:text-gray-600'">
-      <span class="text-2xl mb-0.5">➕</span>
+      <Plus class="w-6 h-6 mb-0.5" />
       Запись
     </RouterLink>
   </nav>
 </template>
 
 <script setup>
+import { markRaw } from 'vue'
+import { ClipboardList, Dumbbell, BarChart3, User, Plus } from 'lucide-vue-next'
+
 const navItems = [
-  { to: '/history', icon: '📋', label: 'История' },
-  { to: '/exercises', icon: '🏋️', label: 'Упражнения' },
-  { to: '/cycles', icon: '📊', label: 'Циклы' },
-  { to: '/profile', icon: '👤', label: 'Профиль' }
+  { to: '/history', icon: markRaw(ClipboardList), label: 'История' },
+  { to: '/exercises', icon: markRaw(Dumbbell), label: 'Упражнения' },
+  { to: '/cycles', icon: markRaw(BarChart3), label: 'Циклы' },
+  { to: '/profile', icon: markRaw(User), label: 'Профиль' }
 ]
 </script>

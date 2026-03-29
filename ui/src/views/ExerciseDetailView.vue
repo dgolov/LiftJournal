@@ -3,9 +3,7 @@
     <!-- Header -->
     <div class="flex items-start gap-3 mb-6">
       <button class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 mt-1 transition-colors" @click="$router.back()">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-        </svg>
+        <ChevronLeft class="w-5 h-5" />
       </button>
       <div>
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ exercise.name }}</h2>
@@ -21,7 +19,7 @@
     <!-- PR Card (strength) -->
     <div v-if="pr && !isCardio" class="card p-4 mb-6 border-l-4 border-yellow-400">
       <div class="flex items-center gap-2 mb-3">
-        <span class="text-2xl">🏆</span>
+        <Trophy class="w-6 h-6 text-yellow-500" />
         <p class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Личные рекорды</p>
       </div>
       <div class="grid grid-cols-3 gap-3">
@@ -46,7 +44,7 @@
     <!-- PR Card (cardio) -->
     <div v-if="pr && isCardio" class="card p-4 mb-6 border-l-4 border-yellow-400">
       <div class="flex items-center gap-2 mb-3">
-        <span class="text-2xl">🏆</span>
+        <Trophy class="w-6 h-6 text-yellow-500" />
         <p class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Личный рекорд</p>
       </div>
       <div class="text-center">
@@ -81,7 +79,9 @@
           </template>
         </div>
       </div>
-      <BaseEmptyState v-else icon="📊" title="Нет данных" description="Добавьте это упражнение в тренировку, чтобы отслеживать прогресс" />
+      <BaseEmptyState v-else title="Нет данных" description="Добавьте это упражнение в тренировку, чтобы отслеживать прогресс">
+        <template #icon><BarChart3 class="w-12 h-12" /></template>
+      </BaseEmptyState>
     </div>
   </div>
 
@@ -92,6 +92,7 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useStore } from 'vuex'
+import { ChevronLeft, Trophy, BarChart3 } from 'lucide-vue-next'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
 import ProgressChart from '@/components/exercises/ProgressChart.vue'

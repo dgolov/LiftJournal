@@ -3,9 +3,7 @@
     <!-- Header -->
     <div class="flex items-start gap-4 mb-6">
       <button class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors" @click="onBack">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-        </svg>
+        <ChevronLeft class="w-5 h-5" />
       </button>
       <div class="flex-1">
         <div class="flex items-center gap-2 mb-1">
@@ -24,10 +22,7 @@
         title="Редактировать"
         @click="startEdit"
       >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 012.828 2.828L11.828 15.828a2 2 0 01-1.414.586H9v-1.414a2 2 0 01.586-1.414z"/>
-        </svg>
+        <Pencil class="w-5 h-5" />
       </button>
     </div>
 
@@ -131,9 +126,7 @@
                 class="w-7 h-9 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
                 @click="removeDraftSet(ex.exerciseId, set.id)"
               >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
+                <X class="w-5 h-5" />
               </button>
             </template>
           </div>
@@ -168,9 +161,7 @@
       class="mt-2 w-full card p-3 flex items-center justify-center gap-2 text-sm text-primary hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
       @click="showPicker = true"
     >
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-      </svg>
+      <Plus class="w-4 h-4" />
       Добавить упражнение
     </button>
 
@@ -190,6 +181,7 @@
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useStore } from 'vuex'
+import { ChevronLeft, Pencil, X, Plus } from 'lucide-vue-next'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import StepperInput from '@/components/ui/StepperInput.vue'
 import ExercisePicker from '@/components/workout/ExercisePicker.vue'

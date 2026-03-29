@@ -5,9 +5,7 @@
     <div class="mb-6">
       <div class="flex items-start gap-3 mb-3">
         <button class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 mt-0.5 flex-shrink-0 transition-colors" @click="$router.back()">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-          </svg>
+          <ChevronLeft class="w-5 h-5" />
         </button>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 flex-wrap mb-1">
@@ -68,7 +66,7 @@
 
     <!-- 1RM notice -->
     <div v-if="missingMaxes.length" class="card p-3 mb-4 border-l-4 border-amber-400 flex items-start gap-2">
-      <span class="text-lg flex-shrink-0">⚠️</span>
+      <AlertTriangle class="w-5 h-5 flex-shrink-0 text-amber-400" />
       <div class="text-sm text-gray-700 dark:text-gray-300">
         Укажите ваши ПМ в <RouterLink to="/profile" class="text-primary font-medium underline">Профиле</RouterLink>
         для расчёта весов:
@@ -165,7 +163,7 @@
                     :disabled="startingWorkout === workout.id"
                     class="text-primary text-xs font-semibold hover:underline disabled:opacity-50"
                     @click="openStartModal(workout.id)"
-                  >▶ старт</button>
+                  ><Play class="w-3 h-3 inline" /> старт</button>
                 </div>
               </td>
               <template v-for="exName in exerciseColumns" :key="exName">
@@ -218,6 +216,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useStore } from 'vuex'
+import { ChevronLeft, AlertTriangle, Play } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 

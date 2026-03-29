@@ -32,7 +32,9 @@
     <div v-if="exercises.length" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
       <ExerciseCard v-for="ex in exercises" :key="ex.id" :exercise="ex" />
     </div>
-    <BaseEmptyState v-else icon="🔍" title="Ничего не найдено" description="Попробуйте изменить фильтры" />
+    <BaseEmptyState v-else title="Ничего не найдено" description="Попробуйте изменить фильтры">
+      <template #icon><Search class="w-12 h-12" /></template>
+    </BaseEmptyState>
 
     <!-- Add custom exercise modal -->
     <BaseModal v-model="showAddModal" title="Добавить своё упражнение">
@@ -56,6 +58,7 @@
 <script setup>
 import { ref, computed, reactive, onMounted } from 'vue'
 import { useStore } from 'vuex'
+import { Search } from 'lucide-vue-next'
 import ExerciseCard from '@/components/exercises/ExerciseCard.vue'
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
