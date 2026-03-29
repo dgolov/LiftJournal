@@ -129,7 +129,7 @@
               v-for="ex in commonLifts"
               :key="ex"
               :class="['text-xs px-2.5 py-1 rounded-full border transition-colors',
-                maxForm.exercise_name === ex ? 'bg-primary text-white border-primary' : 'border-gray-200 text-gray-600 hover:border-primary']"
+                maxForm.exercise_name === ex ? 'bg-primary text-white border-primary' : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-primary dark:hover:border-primary']"
               @click="maxForm.exercise_name = ex"
             >{{ ex }}</button>
           </div>
