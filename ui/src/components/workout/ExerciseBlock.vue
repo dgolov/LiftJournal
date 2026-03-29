@@ -2,7 +2,7 @@
   <div class="card p-4">
     <div class="flex items-center justify-between mb-3">
       <div>
-        <h4 class="font-semibold text-gray-900">{{ exercise.exerciseName }}</h4>
+        <h4 class="font-semibold text-gray-900 dark:text-white">{{ exercise.exerciseName }}</h4>
         <p class="text-xs text-gray-400">{{ exercise.sets.length }} {{ isCardio ? 'сессий' : 'подход(ов)' }}</p>
       </div>
       <button
