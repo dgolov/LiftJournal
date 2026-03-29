@@ -3,9 +3,7 @@
     <!-- Header -->
     <div class="flex items-center gap-3 mb-6">
       <button class="p-2 rounded-xl hover:bg-gray-100 text-gray-500" @click="$router.back()">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-        </svg>
+        <ChevronLeft class="w-5 h-5" />
       </button>
       <h2 class="text-xl font-bold text-gray-900">{{ isEdit ? 'Редактировать цикл' : 'Новый цикл' }}</h2>
     </div>
@@ -49,9 +47,7 @@
             :disabled="exerciseCols.length <= 1"
             @click="removeExerciseCol(ci)"
           >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
+            <X class="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -111,9 +107,7 @@
                       class="w-7 h-9 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
                       @click="removeSet(wi, ci, si)"
                     >
-                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                      </svg>
+                      <X class="w-3.5 h-3.5" />
                     </button>
                   </div>
                   <button class="text-xs text-primary hover:text-primary/80 font-medium mt-3 py-1" @click="addSet(wi, ci)">+ подход</button>
@@ -125,9 +119,7 @@
                   @click="removeWorkout(wi)"
                   :disabled="form.workouts.length <= 1"
                 >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                  </svg>
+                  <X class="w-4 h-4" />
                 </button>
               </td>
             </tr>
@@ -185,6 +177,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
+import { ChevronLeft, X } from 'lucide-vue-next'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'

@@ -2,7 +2,7 @@
   <div class="min-h-screen flex items-center justify-center bg-gray-50 px-4">
     <div class="w-full max-w-sm">
       <div class="text-center mb-8">
-        <div class="text-4xl mb-3">🏋️</div>
+        <Dumbbell class="w-10 h-10 text-primary mx-auto mb-3" />
         <h1 class="text-2xl font-bold text-gray-900">LiftJournal</h1>
         <p class="text-sm text-gray-500 mt-1">Дневник пауэрлифтинга</p>
       </div>
@@ -70,6 +70,7 @@
 import { reactive, ref } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+import { Dumbbell } from 'lucide-vue-next'
 
 const store = useStore()
 const router = useRouter()

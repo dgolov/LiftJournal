@@ -69,14 +69,14 @@
               <p class="text-xs text-gray-400">до {{ formatDate(goal.targetDate) }}</p>
             </div>
             <button class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0" @click="deleteGoal(goal.id)">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
+              <X class="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        <BaseEmptyState v-else icon="🎯" title="Нет целей" description="Поставьте себе цель!" />
+        <BaseEmptyState v-else title="Нет целей" description="Поставьте себе цель!">
+          <template #icon><Target class="w-12 h-12" /></template>
+        </BaseEmptyState>
       </div>
     </div>
 
@@ -98,13 +98,13 @@
           </div>
           <span class="text-lg font-bold text-primary flex-shrink-0">{{ max.weight_kg }} кг</span>
           <button class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0" @click="deleteMax(max.exercise_name)">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
+            <X class="w-4 h-4" />
           </button>
         </div>
       </div>
-      <BaseEmptyState v-else icon="🏋️" title="Нет ПМ" description="Укажите свои максимумы для расчёта циклов" />
+      <BaseEmptyState v-else title="Нет ПМ" description="Укажите свои максимумы для расчёта циклов">
+        <template #icon><Dumbbell class="w-12 h-12" /></template>
+      </BaseEmptyState>
     </div>
 
     <!-- Edit profile modal -->
@@ -129,7 +129,7 @@
               v-for="ex in commonLifts"
               :key="ex"
               :class="['text-xs px-2.5 py-1 rounded-full border transition-colors',
-                maxForm.exercise_name === ex ? 'bg-primary text-white border-primary' : 'border-gray-200 text-gray-600 hover:border-primary']"
+                maxForm.exercise_name === ex ? 'bg-primary text-white border-primary' : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-primary dark:hover:border-primary']"
               @click="maxForm.exercise_name = ex"
             >{{ ex }}</button>
           </div>
@@ -164,6 +164,7 @@
 import { ref, computed, reactive } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
+import { Target, Dumbbell, X } from 'lucide-vue-next'
 import StatCard from '@/components/profile/StatCard.vue'
 import WeightChart from '@/components/profile/WeightChart.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
