@@ -31,22 +31,23 @@
     </template>
 
     <button
-      :class="['w-9 h-9 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0 text-sm font-bold',
+      :class="['w-9 h-9 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0',
         set.completed ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 text-transparent hover:border-green-400']"
       @click="update('completed', !set.completed)"
-    >✓</button>
+    >
+      <Check class="w-4 h-4" />
+    </button>
     <button
       class="w-7 h-9 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
       @click="$emit('remove')"
     >
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-      </svg>
+      <X class="w-5 h-5" />
     </button>
   </div>
 </template>
 
 <script setup>
+import { Check, X } from 'lucide-vue-next'
 import StepperInput from '@/components/ui/StepperInput.vue'
 import { useStore } from 'vuex'
 

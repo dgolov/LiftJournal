@@ -12,9 +12,7 @@
           <div v-if="title" class="flex items-center justify-between px-6 pt-5 pb-3 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ title }}</h3>
             <button class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors" @click="$emit('update:modelValue', false)">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
+              <X class="w-5 h-5" />
             </button>
           </div>
           <div class="p-6 overflow-y-auto flex-1">
@@ -30,6 +28,8 @@
 </template>
 
 <script setup>
+import { X } from 'lucide-vue-next'
+
 const props = defineProps({
   modelValue: Boolean,
   title: String,

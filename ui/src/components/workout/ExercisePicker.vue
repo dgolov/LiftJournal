@@ -18,13 +18,13 @@
       <button
         v-for="ex in filtered"
         :key="ex.id"
-        :class="['w-full text-left px-3 py-3 rounded-xl hover:bg-gray-50 transition-colors flex items-center gap-3',
+        :class="['w-full text-left px-3 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-3',
           isAdded(ex.id) ? 'opacity-50 cursor-not-allowed' : '']"
         :disabled="isAdded(ex.id)"
         @click="pick(ex)"
       >
         <div class="flex-1 min-w-0">
-          <p class="text-sm font-medium text-gray-900">{{ ex.name }}</p>
+          <p class="text-sm font-medium text-gray-900 dark:text-white">{{ ex.name }}</p>
           <p class="text-xs text-gray-400">{{ ex.muscleGroup }} · {{ ex.equipment }}</p>
         </div>
         <span v-if="isAdded(ex.id)" class="text-xs text-green-500 font-medium flex-shrink-0">Добавлено</span>

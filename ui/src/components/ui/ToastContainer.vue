@@ -7,7 +7,7 @@
           :key="toast.id"
           :class="['pointer-events-auto flex items-center gap-3 rounded-xl px-4 py-3 shadow-lg text-sm font-medium text-white', toastClass(toast.type)]"
         >
-          <span>{{ toastIcon(toast.type) }}</span>
+          <component :is="toastIcon(toast.type)" class="w-4 h-4 flex-shrink-0" />
           <span>{{ toast.message }}</span>
         </div>
       </TransitionGroup>
@@ -18,6 +18,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useStore } from 'vuex'
+import { CheckCircle, XCircle, AlertTriangle, Info } from 'lucide-vue-next'
 
 const store = useStore()
 const toasts = computed(() => store.state.ui.toasts)
@@ -26,7 +27,7 @@ function toastClass(type) {
   return { success: 'bg-green-600', error: 'bg-red-600', warning: 'bg-yellow-500' }[type] || 'bg-gray-700'
 }
 function toastIcon(type) {
-  return { success: '✓', error: '✕', warning: '⚠' }[type] || 'ℹ'
+  return { success: CheckCircle, error: XCircle, warning: AlertTriangle }[type] || Info
 }
 </script>
 
