@@ -166,6 +166,20 @@ const workoutService = {
   finishCycleRun(runId) {
     return request('POST', `/cycle-runs/${runId}/finish`)
   },
+
+  // Planned workouts
+  fetchPlannedWorkouts() {
+    return request('GET', '/planned-workouts')
+  },
+  createPlannedWorkout(data) {
+    return request('POST', '/planned-workouts', data)
+  },
+  updatePlannedWorkout(id, data) {
+    return request('PATCH', `/planned-workouts/${id}`, data)
+  },
+  deletePlannedWorkout(id) {
+    return request('DELETE', `/planned-workouts/${id}`)
+  },
 }
 
 export default workoutService

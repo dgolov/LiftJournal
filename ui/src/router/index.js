@@ -69,6 +69,21 @@ const routes = [
     path: '/cycle-runs/:runId/workouts/:cycleWorkoutId',
     name: 'cycle-workout-execute',
     component: () => import('@/views/CycleWorkoutExecuteView.vue')
+  },
+  {
+    path: '/planning',
+    name: 'planning',
+    component: () => import('@/views/PlanningView.vue')
+  },
+  {
+    path: '/planning/new',
+    name: 'plan-create',
+    component: () => import('@/views/PlanWorkoutView.vue')
+  },
+  {
+    path: '/planning/:id/edit',
+    name: 'plan-edit',
+    component: () => import('@/views/PlanWorkoutView.vue')
   }
 ]
 
