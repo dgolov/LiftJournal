@@ -19,7 +19,7 @@ def upgrade() -> None:
     op.create_table(
         "planned_workouts",
         sa.Column("id", sa.String(), primary_key=True),
-        sa.Column("user_id", sa.Integer(), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True),
+        sa.Column("user_id", sa.Integer(), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
         sa.Column("title", sa.String(200), nullable=False),
         sa.Column("type", sa.String(50), nullable=False, server_default="Силовая"),
         sa.Column("scheduled_date", sa.Date(), nullable=False),
