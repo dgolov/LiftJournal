@@ -224,6 +224,67 @@ class CycleWorkoutLog(Base):
     run: Mapped["UserCycleRun"] = relationship("UserCycleRun", back_populates="logs")
 
 
+# ── Planned workouts ─────────────────────────────────────────────────────────
+
+class PlannedWorkout(Base):
+    __tablename__ = "planned_workouts"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    type: Mapped[str] = mapped_column(String(50), nullable=False, default="Силовая")
+    scheduled_date: Mapped[date] = mapped_column(Date, nullable=False)
+    notes: Mapped[str] = mapped_column(Text, default="")
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="planned")
+    completed_workout_id: Mapped[Optional[str]] = mapped_column(
+        String, ForeignKey("workouts.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    exercises: Mapped[list["PlannedExercise"]] = relationship(
+        "PlannedExercise",
+        back_populates="planned_workout",
+        cascade="all, delete-orphan",
+        order_by="PlannedExercise.order",
+    )
+
+
+class PlannedExercise(Base):
+    __tablename__ = "planned_exercises"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
+    planned_workout_id: Mapped[str] = mapped_column(
+        String, ForeignKey("planned_workouts.id", ondelete="CASCADE"), nullable=False
+    )
+    exercise_id: Mapped[str] = mapped_column(String, nullable=False)
+    exercise_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    order: Mapped[int] = mapped_column(Integer, default=0)
+
+    planned_workout: Mapped["PlannedWorkout"] = relationship("PlannedWorkout", back_populates="exercises")
+    sets: Mapped[list["PlannedSet"]] = relationship(
+        "PlannedSet",
+        back_populates="planned_exercise",
+        cascade="all, delete-orphan",
+        order_by="PlannedSet.order",
+    )
+
+
+class PlannedSet(Base):
+    __tablename__ = "planned_sets"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
+    planned_exercise_id: Mapped[str] = mapped_column(
+        String, ForeignKey("planned_exercises.id", ondelete="CASCADE"), nullable=False
+    )
+    weight: Mapped[float] = mapped_column(Float, default=0.0)
+    reps: Mapped[int] = mapped_column(Integer, default=0)
+    order: Mapped[int] = mapped_column(Integer, default=0)
+
+    planned_exercise: Mapped["PlannedExercise"] = relationship("PlannedExercise", back_populates="sets")
+
+
 class UserMax(Base):
     """User's manually entered 1RM values used for cycle % calculations."""
     __tablename__ = "user_maxes"

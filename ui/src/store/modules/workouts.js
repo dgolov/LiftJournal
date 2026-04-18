@@ -6,8 +6,8 @@ const SESSION_KEY = 'gym_workout_session'
 export function loadSession() {
   try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null') } catch { return null }
 }
-export function saveSession(startedAt, draft, cycleContext = null) {
-  localStorage.setItem(SESSION_KEY, JSON.stringify({ startedAt, draft, cycleContext }))
+export function saveSession(startedAt, draft, cycleContext = null, planContext = null) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify({ startedAt, draft, cycleContext, planContext }))
 }
 export function clearSession() {
   localStorage.removeItem(SESSION_KEY)
@@ -46,6 +46,7 @@ export default {
       activeWorkout: session?.draft || emptyWorkout(),
       workoutStartedAt: session?.startedAt || null,
       cycleContext: session?.cycleContext || null,
+      planContext: session?.planContext || null,
       filters: {
         dateFrom: null,
         dateTo: null,
@@ -128,9 +129,11 @@ export default {
       state.activeWorkout = emptyWorkout()
       state.workoutStartedAt = null
       state.cycleContext = null
+      state.planContext = null
       clearSession()
     },
     SET_CYCLE_CONTEXT(state, ctx) { state.cycleContext = ctx },
+    SET_PLAN_CONTEXT(state, ctx) { state.planContext = ctx },
     SET_ACTIVE_WORKOUT_EXERCISES(state, exercises) { state.activeWorkout.exercises = exercises },
     SET_ACTIVE_WORKOUT_FIELD(state, { field, value }) {
       state.activeWorkout[field] = value
@@ -178,7 +181,22 @@ export default {
     startWorkout({ commit, state }) {
       const ts = Date.now()
       commit('SET_WORKOUT_STARTED_AT', ts)
-      saveSession(ts, state.activeWorkout, state.cycleContext)
+      saveSession(ts, state.activeWorkout, state.cycleContext, state.planContext)
+    },
+
+    startWorkoutFromPlan({ commit, dispatch }, plannedWorkout) {
+      commit('RESET_ACTIVE_WORKOUT')
+      commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'title', value: plannedWorkout.title })
+      commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'type', value: plannedWorkout.type })
+      commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'date', value: new Date().toISOString().split('T')[0] })
+      commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'notes', value: plannedWorkout.notes || '' })
+      commit('SET_ACTIVE_WORKOUT_EXERCISES', plannedWorkout.exercises.map(ex => ({
+        exerciseId: ex.exerciseId,
+        exerciseName: ex.exerciseName,
+        sets: ex.sets.map(s => ({ ...s, completed: false })),
+      })))
+      commit('SET_PLAN_CONTEXT', { planId: plannedWorkout.id })
+      dispatch('startWorkout')
     },
 
     startWorkoutFromCycle({ commit, dispatch, rootState }, { cycleWorkout, cycleTitle, runId, cycleWorkoutId, cycleId }) {
@@ -220,6 +238,16 @@ export default {
           cycleWorkoutId: state.cycleContext.cycleWorkoutId,
           workoutId: saved.id,
         }, { root: true })
+      }
+      if (state.planContext) {
+        try {
+          await dispatch('planned/completePlannedWorkout', {
+            id: state.planContext.planId,
+            completedWorkoutId: saved.id,
+          }, { root: true })
+        } catch (e) {
+          console.warn('Could not mark plan as completed:', e.message)
+        }
       }
       commit('RESET_ACTIVE_WORKOUT')
       return { workout: saved, cycleId }
