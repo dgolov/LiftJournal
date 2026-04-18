@@ -22,8 +22,11 @@
       <Moon v-else class="w-5 h-5" />
     </button>
 
-    <!-- Avatar -->
-    <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-semibold text-primary cursor-pointer">
+    <!-- Avatar → Profile (mobile only) -->
+    <RouterLink to="/profile" class="lg:hidden w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-semibold text-primary">
+      {{ initial }}
+    </RouterLink>
+    <div class="hidden lg:flex w-8 h-8 rounded-full bg-primary/20 items-center justify-center text-sm font-semibold text-primary">
       {{ initial }}
     </div>
   </header>
