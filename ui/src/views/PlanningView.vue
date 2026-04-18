@@ -59,8 +59,8 @@
                   </span>
                   <span class="text-xs text-gray-400">{{ plan.type }}</span>
                 </div>
-                <h3 class="font-semibold text-gray-900 dark:text-white truncate">{{ plan.title }}</h3>
-                <p v-if="plan.exercises.length" class="text-xs text-gray-400 mt-0.5">
+                <h3 class="font-semibold text-gray-900 dark:text-white line-clamp-2">{{ plan.title }}</h3>
+                <p v-if="plan.exercises.length" class="text-xs text-gray-400 mt-0.5 whitespace-nowrap">
                   {{ plan.exercises.length }} упр. · {{ totalSets(plan) }} подходов
                 </p>
                 <p v-if="plan.notes" class="text-xs text-gray-500 mt-1 italic line-clamp-1">{{ plan.notes }}</p>
