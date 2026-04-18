@@ -277,3 +277,60 @@ class StartCycleWorkoutIn(BaseModel):
 
 class CompleteWorkoutIn(BaseModel):
     workout_id: Optional[str] = None
+
+
+# ---------------------------------------------------------------------------
+# Planned workouts
+# ---------------------------------------------------------------------------
+
+class PlannedSetIn(BaseModel):
+    weight: float = 0.0
+    reps: int = 0
+
+
+class PlannedSetOut(BaseModel):
+    id: str
+    weight: float
+    reps: int
+
+
+class PlannedExerciseIn(BaseModel):
+    exerciseId: str
+    exerciseName: str
+    sets: list[PlannedSetIn] = []
+
+
+class PlannedExerciseOut(BaseModel):
+    exerciseId: str
+    exerciseName: str
+    sets: list[PlannedSetOut]
+
+
+class PlannedWorkoutCreate(BaseModel):
+    title: str
+    type: str = "Силовая"
+    scheduledDate: date
+    notes: str = ""
+    exercises: list[PlannedExerciseIn] = []
+
+
+class PlannedWorkoutUpdate(BaseModel):
+    title: Optional[str] = None
+    type: Optional[str] = None
+    scheduledDate: Optional[date] = None
+    notes: Optional[str] = None
+    status: Optional[str] = None
+    completedWorkoutId: Optional[str] = None
+    exercises: Optional[list[PlannedExerciseIn]] = None
+
+
+class PlannedWorkoutOut(BaseModel):
+    id: str
+    title: str
+    type: str
+    scheduledDate: date
+    notes: str
+    status: str
+    completedWorkoutId: Optional[str]
+    createdAt: datetime
+    exercises: list[PlannedExerciseOut]
