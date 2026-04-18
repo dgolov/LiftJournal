@@ -64,42 +64,42 @@
                   {{ plan.exercises.length }} упр. · {{ totalSets(plan) }} подходов
                 </p>
                 <p v-if="plan.notes" class="text-xs text-gray-500 mt-1 italic line-clamp-1">{{ plan.notes }}</p>
-              </div>
 
-              <!-- Actions -->
-              <div class="flex items-center gap-1 flex-shrink-0">
-                <template v-if="plan.status === 'planned'">
-                  <button
-                    class="px-3 py-1.5 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary/90 transition-colors"
-                    @click="startPlan(plan)"
-                  >Начать</button>
-                  <button
-                    class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-gray-500 transition-colors"
-                    title="Редактировать"
-                    @click="$router.push(`/planning/${plan.id}/edit`)"
-                  >
-                    <Pencil class="w-4 h-4" />
-                  </button>
+                <!-- Actions row -->
+                <div class="flex items-center gap-1 mt-2">
+                  <template v-if="plan.status === 'planned'">
+                    <button
+                      class="px-3 py-1.5 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+                      @click="startPlan(plan)"
+                    >Начать</button>
+                    <button
+                      class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-gray-500 transition-colors"
+                      title="Редактировать"
+                      @click="$router.push(`/planning/${plan.id}/edit`)"
+                    >
+                      <Pencil class="w-4 h-4" />
+                    </button>
+                    <button
+                      class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors"
+                      title="Пропустить"
+                      @click="skipPlan(plan)"
+                    >
+                      <Ban class="w-4 h-4" />
+                    </button>
+                  </template>
+                  <template v-else-if="plan.status === 'completed' && plan.completedWorkoutId">
+                    <RouterLink
+                      :to="`/workouts/${plan.completedWorkoutId}`"
+                      class="px-3 py-1.5 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 text-xs font-medium rounded-lg hover:border-primary hover:text-primary transition-colors"
+                    >Открыть</RouterLink>
+                  </template>
                   <button
                     class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors"
-                    title="Пропустить"
-                    @click="skipPlan(plan)"
+                    @click="deletePlan(plan)"
                   >
-                    <Ban class="w-4 h-4" />
+                    <Trash2 class="w-4 h-4" />
                   </button>
-                </template>
-                <template v-else-if="plan.status === 'completed' && plan.completedWorkoutId">
-                  <RouterLink
-                    :to="`/workouts/${plan.completedWorkoutId}`"
-                    class="px-3 py-1.5 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 text-xs font-medium rounded-lg hover:border-primary hover:text-primary transition-colors"
-                  >Открыть</RouterLink>
-                </template>
-                <button
-                  class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors"
-                  @click="deletePlan(plan)"
-                >
-                  <Trash2 class="w-4 h-4" />
-                </button>
+                </div>
               </div>
             </div>
 
