@@ -5,17 +5,16 @@
       <RouterLink to="/planning/new" class="btn btn-primary text-sm px-4 py-2">+ Запланировать</RouterLink>
     </div>
 
-    <!-- Filter tabs -->
-    <div class="flex gap-1 mb-6 bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
+    <!-- Filter chips -->
+    <div class="flex flex-wrap gap-2 mb-6">
       <button
         v-for="tab in tabs"
         :key="tab.value"
-        :class="['flex-1 py-1.5 px-2 rounded-lg text-sm font-medium transition-colors',
-          activeTab === tab.value
-            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700']"
+        :class="['inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-medium transition-all duration-200',
+          activeTab === tab.value ? tab.activeClass : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700']"
         @click="activeTab = tab.value"
       >
+        <component :is="tab.icon" :class="['w-3.5 h-3.5', activeTab === tab.value ? '' : 'opacity-60']" />
         {{ tab.label }}
       </button>
     </div>
@@ -146,10 +145,10 @@ const showDeleteConfirm = ref(false)
 const toDelete = ref(null)
 
 const tabs = [
-  { value: 'planned', label: 'Предстоящие' },
-  { value: 'completed', label: 'Выполненные' },
-  { value: 'skipped', label: 'Пропущенные' },
-  { value: 'all', label: 'Все' },
+  { value: 'planned', label: 'Предстоящие', icon: markRaw(Clock), activeClass: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300' },
+  { value: 'completed', label: 'Выполненные', icon: markRaw(CheckCircle2), activeClass: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' },
+  { value: 'skipped', label: 'Пропущенные', icon: markRaw(Ban), activeClass: 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300' },
+  { value: 'all', label: 'Все', icon: markRaw(CalendarDays), activeClass: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300' },
 ]
 
 const allPlanned = computed(() => store.getters['planned/all'])
