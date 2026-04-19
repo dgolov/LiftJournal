@@ -1,4 +1,18 @@
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+
+function serializeExercises(exercises) {
+  return (exercises || []).map(ex => ({
+    exerciseId: ex.exerciseId,
+    exerciseName: ex.exerciseName,
+    sets: (ex.sets || []).map(s => ({
+      id: s.id,
+      weight: s.weight ?? 0,
+      reps: s.reps ?? 0,
+      completed: s.completed ?? false,
+      failed: s.failed ?? false,
+    })),
+  }))
+}
 const TOKEN_KEY = 'gym_auth_token'
 
 async function request(method, path, body, requiresAuth = true) {
@@ -50,7 +64,7 @@ const workoutService = {
       title: workout.title,
       durationMinutes: workout.durationMinutes,
       notes: workout.notes,
-      exercises: workout.exercises,
+      exercises: serializeExercises(workout.exercises),
     })
   },
 
@@ -61,7 +75,7 @@ const workoutService = {
       title: workout.title,
       durationMinutes: workout.durationMinutes,
       notes: workout.notes,
-      exercises: workout.exercises,
+      exercises: serializeExercises(workout.exercises),
     })
   },
 

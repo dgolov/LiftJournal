@@ -86,7 +86,7 @@ function pick(exercise) {
   if (props.addedIds !== null) {
     emit('pick', exercise)
   } else {
-    store.commit('workouts/ADD_EXERCISE_TO_ACTIVE', exercise)
+    store.dispatch('workouts/addExerciseToActive', exercise)
   }
 }
 </script>

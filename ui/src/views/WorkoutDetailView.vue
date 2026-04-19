@@ -84,15 +84,16 @@
             <!-- View mode -->
             <template v-if="!isEditing">
               <template v-if="isCardio(ex.exerciseId)">
-                <span class="font-medium">{{ set.reps }} мин.</span>
+                <span :class="['font-medium', set.failed ? 'line-through text-gray-400' : '']">{{ set.reps }} мин.</span>
               </template>
               <template v-else>
-                <span class="font-medium">{{ set.weight > 0 ? set.weight + ' кг' : 'Б/в' }}</span>
+                <span :class="['font-medium', set.failed ? 'line-through text-gray-400' : '']">{{ set.weight > 0 ? set.weight + ' кг' : 'Б/в' }}</span>
                 <span class="text-gray-400">×</span>
-                <span class="font-medium">{{ set.reps }} повт.</span>
+                <span :class="['font-medium', set.failed ? 'line-through text-gray-400' : '']">{{ set.reps }} повт.</span>
               </template>
-              <span :class="['ml-auto text-xs font-medium', set.completed ? 'text-green-500' : 'text-gray-300']">
-                {{ set.completed ? '✓' : '○' }}
+              <span :class="['ml-auto text-xs font-medium',
+                set.completed ? 'text-green-500' : set.failed ? 'text-red-400' : 'text-gray-300']">
+                {{ set.completed ? '✓' : set.failed ? '✗' : '○' }}
               </span>
             </template>
 
@@ -109,7 +110,7 @@
               </template>
               <template v-else>
                 <StepperInput
-                  class="flex-1"
+                  :class="['flex-1', set.failed ? 'line-through opacity-50' : '']"
                   :model-value="set.weight"
                   :step="2.5"
                   :decimals="1"
@@ -118,7 +119,7 @@
                 />
                 <span class="text-gray-300 text-sm flex-shrink-0">×</span>
                 <StepperInput
-                  class="flex-1"
+                  :class="['flex-1', set.failed ? 'line-through opacity-50' : '']"
                   :model-value="set.reps"
                   :step="1"
                   placeholder="повт"
@@ -127,9 +128,12 @@
               </template>
               <button
                 :class="['w-9 h-9 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0 text-sm font-bold',
-                  set.completed ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 text-transparent hover:border-green-400']"
-                @click="updateDraftSet(ex.exerciseId, set.id, 'completed', !set.completed)"
-              >✓</button>
+                  set.completed ? 'bg-green-500 border-green-500 text-white' :
+                  set.failed    ? 'bg-red-500 border-red-500 text-white' :
+                                  'border-gray-300 text-gray-300 hover:border-green-400']"
+                :title="set.completed ? 'Выполнено → провал' : set.failed ? 'Провал → сбросить' : 'Отметить выполненным'"
+                @click="cycleDraftSetState(ex.exerciseId, set.id, set)"
+              >{{ set.completed ? '✓' : set.failed ? '✗' : '○' }}</button>
               <button
                 class="w-7 h-9 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
                 @click="removeDraftSet(ex.exerciseId, set.id)"
@@ -149,11 +153,11 @@
 
         <p class="mt-2 text-xs text-gray-400 flex gap-3">
           <template v-if="isCardio(ex.exerciseId)">
-            <span>Итого: {{ ex.sets.reduce((s, set) => s + (set.reps || 0), 0) }} мин.</span>
+            <span>Итого: {{ ex.sets.filter(s => !s.failed).reduce((s, set) => s + (set.reps || 0), 0) }} мин.</span>
           </template>
           <template v-else>
-            <span>Тоннаж: {{ ex.sets.reduce((s, set) => s + set.weight * set.reps, 0) }} кг</span>
-            <span>· Расч. 1ПМ: {{ Math.max(...ex.sets.map(s => s.reps === 1 ? s.weight : Math.round(s.weight * (1 + s.reps / 30)))) }} кг</span>
+            <span>Тоннаж: {{ ex.sets.filter(s => !s.failed).reduce((s, set) => s + set.weight * set.reps, 0) }} кг</span>
+            <span v-if="ex.sets.some(s => !s.failed)">· Расч. 1ПМ: {{ Math.max(...ex.sets.filter(s => !s.failed).map(s => s.reps === 1 ? s.weight : Math.round(s.weight * (1 + s.reps / 30)))) }} кг</span>
           </template>
         </p>
       </div>
@@ -217,7 +221,7 @@ const formattedDate = computed(() => {
 
 const totalVolume = computed(() =>
   workout.value?.exercises.reduce((total, ex) =>
-    isCardio(ex.exerciseId) ? total : total + ex.sets.reduce((s, set) => s + set.weight * set.reps, 0), 0) ?? 0
+    isCardio(ex.exerciseId) ? total : total + ex.sets.filter(s => !s.failed).reduce((s, set) => s + set.weight * set.reps, 0), 0) ?? 0
 )
 
 function formatVolume(v) {
@@ -281,6 +285,18 @@ function updateDraftSet(exerciseId, setId, field, value) {
   if (set) set[field] = value
 }
 
+function cycleDraftSetState(exerciseId, setId, set) {
+  if (!set.completed && !set.failed) {
+    updateDraftSet(exerciseId, setId, 'completed', true)
+    updateDraftSet(exerciseId, setId, 'failed', false)
+  } else if (set.completed) {
+    updateDraftSet(exerciseId, setId, 'completed', false)
+    updateDraftSet(exerciseId, setId, 'failed', true)
+  } else {
+    updateDraftSet(exerciseId, setId, 'failed', false)
+  }
+}
+
 function removeDraftSet(exerciseId, setId) {
   const ex = draft.value.exercises.find(e => e.exerciseId === exerciseId)
   if (!ex) return
@@ -292,7 +308,7 @@ function addDraftExercise(exercise) {
   draft.value.exercises.push({
     exerciseId: exercise.id,
     exerciseName: exercise.name,
-    sets: [{ id: uid(), weight: 0, reps: 0, completed: false }]
+    sets: [{ id: uid(), weight: 0, reps: 0, completed: false, failed: false }]
   })
 }
 
@@ -300,7 +316,7 @@ function addDraftSet(exerciseId) {
   const ex = draft.value.exercises.find(e => e.exerciseId === exerciseId)
   if (!ex) return
   const last = ex.sets[ex.sets.length - 1] || { weight: 0, reps: 0 }
-  ex.sets.push({ id: uid(), weight: last.weight, reps: last.reps, completed: false })
+  ex.sets.push({ id: uid(), weight: last.weight, reps: last.reps, completed: false, failed: false })
 }
 
 async function saveEdit() {
