@@ -185,7 +185,7 @@ export default {
       saveSession(ts, state.activeWorkout, state.cycleContext, state.planContext)
     },
 
-    startWorkoutFromHistory({ commit, dispatch }, workout) {
+    startWorkoutFromHistory({ commit }, workout) {
       commit('RESET_ACTIVE_WORKOUT')
       commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'title', value: workout.title })
       commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'type', value: workout.type })
@@ -196,7 +196,8 @@ export default {
         exerciseName: ex.exerciseName,
         sets: ex.sets.map(s => ({ id: s.id, weight: s.weight, reps: s.reps, completed: false })),
       })))
-      dispatch('startWorkout')
+      // startWorkout не вызываем — пользователь попадёт на шаг 0 и сможет
+      // отредактировать название и заметки перед началом
     },
 
     startWorkoutFromPlan({ commit, dispatch }, plannedWorkout) {

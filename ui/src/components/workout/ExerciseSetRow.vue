@@ -50,6 +50,7 @@
 import { Check, X } from 'lucide-vue-next'
 import StepperInput from '@/components/ui/StepperInput.vue'
 import { useStore } from 'vuex'
+import { useRestTimer } from '@/composables/useRestTimer.js'
 
 const props = defineProps({
   set: { type: Object, required: true },
@@ -60,8 +61,12 @@ const props = defineProps({
 const emit = defineEmits(['remove'])
 
 const store = useStore()
+const { start: startTimer } = useRestTimer()
 
 function update(field, value) {
   store.commit('workouts/UPDATE_SET', { exerciseId: props.exerciseId, setId: props.set.id, field, value })
+  if (field === 'completed' && value === true) {
+    startTimer()
+  }
 }
 </script>

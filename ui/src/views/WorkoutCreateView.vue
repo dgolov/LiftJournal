@@ -162,6 +162,7 @@
     </div>
 
     <ExercisePicker v-model="showPicker" />
+    <RestTimerBar />
   </div>
 </template>
 
@@ -178,6 +179,7 @@ import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import ExerciseBlock from '@/components/workout/ExerciseBlock.vue'
 import ExercisePicker from '@/components/workout/ExercisePicker.vue'
+import RestTimerBar from '@/components/workout/RestTimerBar.vue'
 import { WORKOUT_TYPES } from '@/services/mockData.js'
 
 const store = useStore()
