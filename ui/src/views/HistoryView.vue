@@ -102,7 +102,21 @@
         <div class="flex items-center gap-2 mb-3">
           <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 capitalize">{{ selectedDateLabel }}</span>
           <div class="flex-1 h-px bg-gray-100 dark:bg-gray-800" />
-          <button class="text-gray-300 hover:text-gray-500 transition-colors" @click="selectedDate = null"><X class="w-4 h-4" /></button>
+          <button
+            v-if="selectedDate >= todayStr"
+            class="text-xs px-2.5 py-1 rounded-lg bg-primary text-white font-medium hover:bg-primary/90 transition-colors flex items-center gap-1"
+            @click="planForDay(selectedDate)"
+          >
+            <Plus class="w-3 h-3" /> Запланировать
+          </button>
+          <button
+            v-else
+            class="text-xs px-2.5 py-1 rounded-lg bg-gray-700 text-white font-medium hover:bg-gray-600 transition-colors flex items-center gap-1"
+            @click="addWorkoutForDay(selectedDate)"
+          >
+            <Plus class="w-3 h-3" /> Добавить тренировку
+          </button>
+          <button class="text-gray-300 hover:text-gray-500 transition-colors ml-1" @click="selectedDate = null"><X class="w-4 h-4" /></button>
         </div>
 
         <div v-if="selectedDayWorkouts.length || selectedDayPlanned.length" class="space-y-3">
@@ -134,7 +148,7 @@
 import { ref, computed, onMounted, defineComponent, h } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { CalendarDays, List, ChevronLeft, ChevronRight, Activity, X, Clock, CheckCircle2, Ban } from 'lucide-vue-next'
+import { CalendarDays, List, ChevronLeft, ChevronRight, Activity, X, Clock, CheckCircle2, Ban, Plus, Pencil } from 'lucide-vue-next'
 import WorkoutCard from '@/components/workout/WorkoutCard.vue'
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
 import { WORKOUT_TYPES } from '@/services/mockData.js'
@@ -153,9 +167,9 @@ const PlanCard = defineComponent({
   props: { plan: { type: Object, required: true } },
   setup(props) {
     const statusMap = {
-      planned:   { label: 'Запланировано', cls: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300', icon: Clock },
-      completed: { label: 'Выполнено',     cls: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',   icon: CheckCircle2 },
-      skipped:   { label: 'Пропущено',     cls: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400',           icon: Ban },
+      planned:   { label: 'Запланировано', cls: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' },
+      completed: { label: 'Выполнено',     cls: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'   },
+      skipped:   { label: 'Пропущено',     cls: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'           },
     }
     const s = computed(() => statusMap[props.plan.status] || statusMap.planned)
     const exCount = computed(() => props.plan.exercises?.length || 0)
@@ -164,8 +178,18 @@ const PlanCard = defineComponent({
       const d = new Date(props.plan.scheduledDate + 'T00:00:00')
       return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
     })
+
+    async function startPlan() {
+      await store.dispatch('workouts/startWorkoutFromPlan', props.plan)
+      router.push('/workouts/new')
+    }
+
+    function editPlan() {
+      router.push(`/planning/${props.plan.id}/edit`)
+    }
+
     return () => h('div',
-      { class: 'card p-4 border-l-2 border-dashed border-primary/40 cursor-pointer hover:shadow-md transition-shadow', onClick: () => router.push(`/planning/${props.plan.id}/edit`) },
+      { class: 'card p-4 border-l-2 border-dashed border-primary/40' },
       [
         h('div', { class: 'flex items-start gap-2' }, [
           h('div', { class: 'flex-1 min-w-0' }, [
@@ -177,6 +201,19 @@ const PlanCard = defineComponent({
             h('p', { class: 'font-semibold text-gray-900 dark:text-white text-sm line-clamp-2' }, props.plan.title),
             exCount.value
               ? h('p', { class: 'text-xs text-gray-400 mt-0.5 whitespace-nowrap' }, `${exCount.value} упр. · ${setCount.value} подходов`)
+              : null,
+          ]),
+          h('div', { class: 'flex items-center gap-1 flex-shrink-0' }, [
+            h('button', {
+              class: 'w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors',
+              title: 'Редактировать',
+              onClick: editPlan,
+            }, h(Pencil, { class: 'w-3.5 h-3.5' })),
+            props.plan.status === 'planned'
+              ? h('button', {
+                  class: 'px-3 py-1.5 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary/90 transition-colors',
+                  onClick: startPlan,
+                }, 'Начать')
               : null,
           ]),
         ]),
@@ -380,4 +417,14 @@ const monthCombinedItems = computed(() => {
 
 function setFilter(key, value) { store.commit('workouts/SET_FILTER', { key, value }) }
 function resetFilters() { store.commit('workouts/RESET_FILTERS') }
+
+function planForDay(dateStr) {
+  router.push({ path: '/planning/new', query: { date: dateStr } })
+}
+
+function addWorkoutForDay(dateStr) {
+  store.commit('workouts/RESET_ACTIVE_WORKOUT')
+  store.commit('workouts/SET_ACTIVE_WORKOUT_FIELD', { field: 'date', value: dateStr })
+  router.push('/workouts/new')
+}
 </script>
