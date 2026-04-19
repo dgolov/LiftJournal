@@ -43,6 +43,33 @@
         label="Дата тренировки"
       />
 
+      <!-- Recurrence (only for new plans) -->
+      <div v-if="!isEdit">
+        <label class="label">Повторение</label>
+        <div class="flex gap-2">
+          <button
+            :class="['flex-1 py-2 rounded-lg text-sm font-medium border transition-colors',
+              !form.recurring ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400']"
+            @click="form.recurring = false"
+          >Не повторять</button>
+          <button
+            :class="['flex-1 py-2 rounded-lg text-sm font-medium border transition-colors',
+              form.recurring ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400']"
+            @click="form.recurring = true"
+          >Каждую неделю</button>
+        </div>
+        <div v-if="form.recurring" class="mt-3 flex items-center gap-3">
+          <span class="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">Повторять</span>
+          <select v-model="form.recurrenceWeeks" class="input flex-1">
+            <option :value="4">4 недели</option>
+            <option :value="8">8 недель</option>
+            <option :value="12">12 недель</option>
+            <option :value="24">24 недели</option>
+          </select>
+          <span class="text-xs text-gray-400 whitespace-nowrap">по {{ scheduledDayLabel }}</span>
+        </div>
+      </div>
+
       <div>
         <label class="label">Заметки / план</label>
         <textarea
@@ -191,6 +218,14 @@ const form = ref({
   scheduledDate: tomorrow(),
   notes: '',
   exercises: [],
+  recurring: false,
+  recurrenceWeeks: 12,
+})
+
+const weekDayNames = ['воскресенье', 'понедельник', 'вторник', 'среду', 'четверг', 'пятницу', 'субботу']
+const scheduledDayLabel = computed(() => {
+  const d = new Date(form.value.scheduledDate + 'T00:00:00')
+  return weekDayNames[d.getDay()]
 })
 
 const canSave = computed(() => form.value.title.trim().length > 0)
@@ -233,6 +268,9 @@ async function save() {
     if (isEdit.value) {
       await store.dispatch('planned/updatePlannedWorkout', { id: route.params.id, ...payload })
       store.dispatch('ui/showToast', { message: 'План обновлён', type: 'success' })
+    } else if (form.value.recurring) {
+      await store.dispatch('planned/createRecurringPlan', { payload, weeks: form.value.recurrenceWeeks })
+      store.dispatch('ui/showToast', { message: `Создано ${form.value.recurrenceWeeks} тренировок`, type: 'success' })
     } else {
       await store.dispatch('planned/createPlannedWorkout', payload)
       store.dispatch('ui/showToast', { message: 'Тренировка запланирована!', type: 'success' })
