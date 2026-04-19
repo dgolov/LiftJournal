@@ -215,7 +215,7 @@ function uid() {
 const form = ref({
   title: '',
   type: 'Силовая',
-  scheduledDate: tomorrow(),
+  scheduledDate: route.query.date || tomorrow(),
   notes: '',
   exercises: [],
   recurring: false,
