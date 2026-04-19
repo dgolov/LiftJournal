@@ -43,9 +43,11 @@ export default {
         if (!ex || !ex.sets.length) return
         const sets = ex.sets.filter(s => !s.failed)
         if (!sets.length) return
+        const setsCount = sets.length
+        const totalSetsCount = ex.sets.length
         if (isCardio) {
           const totalMinutes = sets.reduce((sum, s) => sum + (s.reps || 0), 0)
-          sessions.push({ date: workout.date, totalMinutes, workoutId: workout.id, workoutTitle: workout.title })
+          sessions.push({ date: workout.date, totalMinutes, setsCount, totalSetsCount, workoutId: workout.id, workoutTitle: workout.title })
         } else {
           const bestSet = sets.reduce((a, b) => b.weight > a.weight ? b : a, sets[0])
           const maxWeight = bestSet.weight
@@ -56,7 +58,7 @@ export default {
           const best1RM = Math.max(...sets.map(s =>
             s.reps === 1 ? s.weight : Math.round(s.weight * (1 + s.reps / 30))
           ))
-          sessions.push({ date: workout.date, maxWeight, maxWeightReps, totalVolume, maxReps, best1RM, workoutId: workout.id, workoutTitle: workout.title })
+          sessions.push({ date: workout.date, maxWeight, maxWeightReps, totalVolume, maxReps, best1RM, setsCount, totalSetsCount, workoutId: workout.id, workoutTitle: workout.title })
         }
       })
       return sessions.sort((a, b) => a.date.localeCompare(b.date))
