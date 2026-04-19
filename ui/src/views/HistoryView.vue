@@ -21,6 +21,45 @@
       </div>
     </div>
 
+    <!-- Month stats (shared) -->
+    <div class="grid grid-cols-3 gap-3 mb-5">
+      <div class="card p-3 text-center">
+        <div class="text-xl font-bold text-primary">{{ monthWorkouts.length }}</div>
+        <div class="text-xs text-gray-400 mt-0.5">тренировок</div>
+      </div>
+      <div class="card p-3 text-center">
+        <div class="text-xl font-bold text-gray-900 dark:text-white">{{ monthTotalVolume }}</div>
+        <div class="text-xs text-gray-400 mt-0.5">тоннаж</div>
+      </div>
+      <div class="card p-3 text-center">
+        <div class="text-xl font-bold text-gray-900 dark:text-white">{{ monthTotalDuration }}</div>
+        <div class="text-xs text-gray-400 mt-0.5">часов</div>
+      </div>
+    </div>
+
+    <!-- Filters (shared) -->
+    <div class="card p-4 mb-5 space-y-3">
+      <div class="flex flex-wrap gap-2">
+        <button
+          :class="['text-sm px-3 py-1.5 rounded-full font-medium border transition-colors',
+            !activeType ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-primary hover:text-primary']"
+          @click="setFilter('type', null)"
+        >Все</button>
+        <button
+          v-for="type in workoutTypes" :key="type"
+          :class="['text-sm px-3 py-1.5 rounded-full font-medium border transition-colors',
+            activeType === type ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-primary hover:text-primary']"
+          @click="setFilter('type', type)"
+        >{{ type }}</button>
+      </div>
+      <input :value="filters.search" placeholder="Поиск по названию или упражнению..." class="input" @input="setFilter('search', $event.target.value)" />
+      <div class="flex gap-3">
+        <input type="date" :value="filters.dateFrom || ''" class="input flex-1" @input="setFilter('dateFrom', $event.target.value || null)" />
+        <input type="date" :value="filters.dateTo || ''" class="input flex-1" @input="setFilter('dateTo', $event.target.value || null)" />
+      </div>
+      <button v-if="hasActiveFilters" class="btn btn-ghost text-sm self-start" @click="resetFilters">Сбросить фильтры</button>
+    </div>
+
     <!-- Month navigation -->
     <div class="flex items-center gap-2 mb-5">
       <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400" @click="prevMonth">
@@ -58,31 +97,8 @@
         </button>
       </div>
 
-      <!-- Filters -->
-      <div class="card p-4 mt-4 space-y-3">
-        <div class="flex flex-wrap gap-2">
-          <button
-            :class="['text-sm px-3 py-1.5 rounded-full font-medium border transition-colors',
-              !activeType ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-primary hover:text-primary']"
-            @click="setFilter('type', null)"
-          >Все</button>
-          <button
-            v-for="type in workoutTypes" :key="type"
-            :class="['text-sm px-3 py-1.5 rounded-full font-medium border transition-colors',
-              activeType === type ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-primary hover:text-primary']"
-            @click="setFilter('type', type)"
-          >{{ type }}</button>
-        </div>
-        <input :value="filters.search" placeholder="Поиск по названию или упражнению..." class="input" @input="setFilter('search', $event.target.value)" />
-        <div class="flex gap-3">
-          <input type="date" :value="filters.dateFrom || ''" class="input flex-1" @input="setFilter('dateFrom', $event.target.value || null)" />
-          <input type="date" :value="filters.dateTo || ''" class="input flex-1" @input="setFilter('dateTo', $event.target.value || null)" />
-        </div>
-        <button v-if="hasActiveFilters" class="btn btn-ghost text-sm self-start" @click="resetFilters">Сбросить фильтры</button>
-      </div>
-
       <!-- Selected day panel -->
-      <div v-if="selectedDate" class="mt-5">
+      <div v-if="selectedDate" class="mt-4">
         <div class="flex items-center gap-2 mb-3">
           <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 capitalize">{{ selectedDateLabel }}</span>
           <div class="flex-1 h-px bg-gray-100 dark:bg-gray-800" />
@@ -96,61 +112,10 @@
         <div v-else class="card p-6 text-center text-sm text-gray-400">В этот день ничего нет</div>
       </div>
 
-      <!-- Month summary -->
-      <div v-else class="mt-5 grid grid-cols-3 gap-3">
-        <div class="card p-3 text-center">
-          <div class="text-xl font-bold text-primary">{{ monthWorkouts.length }}</div>
-          <div class="text-xs text-gray-400 mt-0.5">тренировок</div>
-        </div>
-        <div class="card p-3 text-center">
-          <div class="text-xl font-bold text-gray-900 dark:text-white">{{ monthTotalVolume }}</div>
-          <div class="text-xs text-gray-400 mt-0.5">тоннаж</div>
-        </div>
-        <div class="card p-3 text-center">
-          <div class="text-xl font-bold text-gray-900 dark:text-white">{{ monthTotalDuration }}</div>
-          <div class="text-xs text-gray-400 mt-0.5">часов</div>
-        </div>
-      </div>
     </template>
 
     <!-- LIST VIEW -->
     <template v-else>
-      <div class="grid grid-cols-3 gap-3 mb-5">
-        <div class="card p-3 text-center">
-          <div class="text-xl font-bold text-primary">{{ monthWorkouts.length }}</div>
-          <div class="text-xs text-gray-400 mt-0.5">тренировок</div>
-        </div>
-        <div class="card p-3 text-center">
-          <div class="text-xl font-bold text-gray-900 dark:text-white">{{ monthTotalVolume }}</div>
-          <div class="text-xs text-gray-400 mt-0.5">тоннаж</div>
-        </div>
-        <div class="card p-3 text-center">
-          <div class="text-xl font-bold text-gray-900 dark:text-white">{{ monthTotalDuration }}</div>
-          <div class="text-xs text-gray-400 mt-0.5">часов</div>
-        </div>
-      </div>
-
-      <div class="card p-4 mb-4 space-y-3">
-        <div class="flex flex-wrap gap-2">
-          <button
-            :class="['text-sm px-3 py-1.5 rounded-full font-medium border transition-colors',
-              !activeType ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-primary hover:text-primary']"
-            @click="setFilter('type', null)"
-          >Все</button>
-          <button
-            v-for="type in workoutTypes" :key="type"
-            :class="['text-sm px-3 py-1.5 rounded-full font-medium border transition-colors',
-              activeType === type ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-primary hover:text-primary']"
-            @click="setFilter('type', type)"
-          >{{ type }}</button>
-        </div>
-        <input :value="filters.search" placeholder="Поиск по названию или упражнению..." class="input" @input="setFilter('search', $event.target.value)" />
-        <div class="flex gap-3">
-          <input type="date" :value="filters.dateFrom || ''" class="input flex-1" @input="setFilter('dateFrom', $event.target.value || null)" />
-          <input type="date" :value="filters.dateTo || ''" class="input flex-1" @input="setFilter('dateTo', $event.target.value || null)" />
-        </div>
-        <button v-if="hasActiveFilters" class="btn btn-ghost text-sm self-start" @click="resetFilters">Сбросить фильтры</button>
-      </div>
 
       <div v-if="monthCombinedItems.length" class="space-y-3">
         <template v-for="item in monthCombinedItems" :key="item.id">

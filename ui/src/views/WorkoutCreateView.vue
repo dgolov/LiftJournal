@@ -11,7 +11,25 @@
         <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0"></span>
         <span class="font-mono font-bold text-primary text-sm">{{ elapsedFormatted }}</span>
       </div>
+
+      <!-- Cancel button (only when workout is in progress) -->
+      <button
+        v-if="step > 0"
+        class="ml-auto p-2 rounded-lg text-gray-300 hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+        title="Отменить тренировку"
+        @click="showCancelConfirm = true"
+      >
+        <X class="w-5 h-5" />
+      </button>
     </div>
+
+    <BaseModal v-model="showCancelConfirm" title="Отменить тренировку?" max-width="sm">
+      <p class="text-sm text-gray-600 dark:text-gray-400">Весь прогресс будет потерян. Отменить тренировку?</p>
+      <template #footer>
+        <BaseButton variant="ghost" @click="showCancelConfirm = false">Продолжить</BaseButton>
+        <BaseButton variant="danger" @click="cancelWorkout">Отменить тренировку</BaseButton>
+      </template>
+    </BaseModal>
 
     <!-- Steps indicator -->
     <div class="flex gap-1 mb-6">
@@ -141,11 +159,12 @@
 import { ref, computed, watch, onUnmounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { ChevronLeft, Dumbbell, Play } from 'lucide-vue-next'
+import { ChevronLeft, Dumbbell, Play, X } from 'lucide-vue-next'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
 import ExerciseBlock from '@/components/workout/ExerciseBlock.vue'
 import ExercisePicker from '@/components/workout/ExercisePicker.vue'
 import { WORKOUT_TYPES } from '@/services/mockData.js'
@@ -160,6 +179,7 @@ const step = ref(workoutStartedAt.value ? 1 : 0)
 const steps = [1, 2, 3]
 const showPicker = ref(false)
 const saving = ref(false)
+const showCancelConfirm = ref(false)
 const workoutTypes = WORKOUT_TYPES
 
 const activeWorkout = computed(() => store.state.workouts.activeWorkout)
@@ -208,6 +228,12 @@ const elapsedFormatted = computed(() => {
 
 function setField(field, value) {
   store.commit('workouts/SET_ACTIVE_WORKOUT_FIELD', { field, value })
+}
+
+function cancelWorkout() {
+  store.commit('workouts/RESET_ACTIVE_WORKOUT')
+  showCancelConfirm.value = false
+  router.push('/history')
 }
 
 function beginWorkout() {
