@@ -16,14 +16,22 @@
         </p>
         <p v-if="workout.notes" class="text-sm text-gray-600 dark:text-gray-400 mt-2 italic">{{ workout.notes }}</p>
       </div>
-      <button
-        v-if="!isEditing"
-        class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
-        title="Редактировать"
-        @click="startEdit"
-      >
-        <Pencil class="w-5 h-5" />
-      </button>
+      <template v-if="!isEditing">
+        <button
+          class="p-2 rounded-xl hover:bg-primary/10 text-primary transition-colors"
+          title="Повторить тренировку"
+          @click="repeatWorkout"
+        >
+          <RefreshCw class="w-5 h-5" />
+        </button>
+        <button
+          class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+          title="Редактировать"
+          @click="startEdit"
+        >
+          <Pencil class="w-5 h-5" />
+        </button>
+      </template>
     </div>
 
     <!-- Edit form -->
@@ -179,15 +187,16 @@
 
 <script setup>
 import { computed, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
-import { ChevronLeft, Pencil, X, Plus } from 'lucide-vue-next'
+import { ChevronLeft, Pencil, X, Plus, RefreshCw } from 'lucide-vue-next'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import StepperInput from '@/components/ui/StepperInput.vue'
 import ExercisePicker from '@/components/workout/ExercisePicker.vue'
 import { WORKOUT_TYPES } from '@/services/mockData.js'
 
 const route = useRoute()
+const router = useRouter()
 const store = useStore()
 
 const workout = computed(() => store.getters['workouts/workoutById'](route.params.id))
@@ -253,6 +262,11 @@ function cancelEdit() {
 
 function onBack() {
   if (isEditing.value) { cancelEdit() } else { history.back() }
+}
+
+async function repeatWorkout() {
+  await store.dispatch('workouts/startWorkoutFromHistory', workout.value)
+  router.push('/workouts/new')
 }
 
 // Show draft exercises in edit mode, real workout exercises otherwise

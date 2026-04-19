@@ -91,9 +91,19 @@
         <BaseButton variant="outline" size="sm" @click="showPicker = true">+ Добавить</BaseButton>
       </div>
 
-      <div v-if="activeWorkout.exercises.length" class="space-y-3 mb-4">
-        <ExerciseBlock v-for="ex in activeWorkout.exercises" :key="ex.exerciseId" :exercise="ex" />
-      </div>
+      <draggable
+        v-if="activeWorkout.exercises.length"
+        :list="exercisesList"
+        item-key="exerciseId"
+        handle=".drag-handle"
+        animation="200"
+        class="space-y-3 mb-4"
+        @end="onReorder"
+      >
+        <template #item="{ element }">
+          <ExerciseBlock :exercise="element" />
+        </template>
+      </draggable>
 
       <BaseEmptyState
         v-else
@@ -160,6 +170,7 @@ import { ref, computed, watch, onUnmounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { ChevronLeft, Dumbbell, Play, X } from 'lucide-vue-next'
+import draggable from 'vuedraggable'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
@@ -225,6 +236,16 @@ const elapsedFormatted = computed(() => {
   return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
 })
 // ─────────────────────────────────────────────────────────────────────────────
+
+// Draggable needs a mutable local copy; sync back to store on drop
+const exercisesList = computed({
+  get: () => activeWorkout.value.exercises,
+  set: (val) => store.commit('workouts/REORDER_EXERCISES', val),
+})
+
+function onReorder() {
+  store.commit('workouts/REORDER_EXERCISES', [...activeWorkout.value.exercises])
+}
 
 function setField(field, value) {
   store.commit('workouts/SET_ACTIVE_WORKOUT_FIELD', { field, value })

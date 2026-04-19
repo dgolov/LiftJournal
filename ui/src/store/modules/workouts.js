@@ -135,6 +135,7 @@ export default {
     SET_CYCLE_CONTEXT(state, ctx) { state.cycleContext = ctx },
     SET_PLAN_CONTEXT(state, ctx) { state.planContext = ctx },
     SET_ACTIVE_WORKOUT_EXERCISES(state, exercises) { state.activeWorkout.exercises = exercises },
+    REORDER_EXERCISES(state, exercises) { state.activeWorkout.exercises = exercises },
     SET_ACTIVE_WORKOUT_FIELD(state, { field, value }) {
       state.activeWorkout[field] = value
     },
@@ -182,6 +183,20 @@ export default {
       const ts = Date.now()
       commit('SET_WORKOUT_STARTED_AT', ts)
       saveSession(ts, state.activeWorkout, state.cycleContext, state.planContext)
+    },
+
+    startWorkoutFromHistory({ commit, dispatch }, workout) {
+      commit('RESET_ACTIVE_WORKOUT')
+      commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'title', value: workout.title })
+      commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'type', value: workout.type })
+      commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'date', value: new Date().toISOString().split('T')[0] })
+      commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'notes', value: workout.notes || '' })
+      commit('SET_ACTIVE_WORKOUT_EXERCISES', workout.exercises.map(ex => ({
+        exerciseId: ex.exerciseId,
+        exerciseName: ex.exerciseName,
+        sets: ex.sets.map(s => ({ id: s.id, weight: s.weight, reps: s.reps, completed: false })),
+      })))
+      dispatch('startWorkout')
     },
 
     startWorkoutFromPlan({ commit, dispatch }, plannedWorkout) {
