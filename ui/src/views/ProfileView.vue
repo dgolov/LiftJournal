@@ -29,6 +29,12 @@
       <StatCard label="Общий тоннаж" :value="formattedVolume" sub="тонн" />
     </div>
 
+    <!-- Activity heatmap -->
+    <div class="card p-4">
+      <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Активность за год</h3>
+      <ActivityHeatmap />
+    </div>
+
     <div class="grid lg:grid-cols-2 gap-6">
       <!-- Weight -->
       <div class="card p-4">
@@ -167,6 +173,7 @@ import { useRouter } from 'vue-router'
 import { Target, Dumbbell, X } from 'lucide-vue-next'
 import StatCard from '@/components/profile/StatCard.vue'
 import WeightChart from '@/components/profile/WeightChart.vue'
+import ActivityHeatmap from '@/components/profile/ActivityHeatmap.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
