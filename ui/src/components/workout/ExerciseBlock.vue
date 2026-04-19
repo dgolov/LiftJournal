@@ -1,9 +1,14 @@
 <template>
   <div class="card p-4">
     <div class="flex items-center justify-between mb-3">
-      <div>
-        <h4 class="font-semibold text-gray-900 dark:text-white">{{ exercise.exerciseName }}</h4>
-        <p class="text-xs text-gray-400">{{ exercise.sets.length }} {{ isCardio ? 'сессий' : 'подход(ов)' }}</p>
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="drag-handle flex-shrink-0 text-gray-300 hover:text-gray-500 dark:hover:text-gray-400 cursor-grab active:cursor-grabbing touch-none p-1 -ml-1">
+          <GripVertical class="w-4 h-4" />
+        </span>
+        <div class="min-w-0">
+          <h4 class="font-semibold text-gray-900 dark:text-white">{{ exercise.exerciseName }}</h4>
+          <p class="text-xs text-gray-400">{{ exercise.sets.length }} {{ isCardio ? 'сессий' : 'подход(ов)' }}</p>
+        </div>
       </div>
       <button
         class="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
@@ -53,7 +58,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useStore } from 'vuex'
-import { Trash2 } from 'lucide-vue-next'
+import { Trash2, GripVertical } from 'lucide-vue-next'
 import ExerciseSetRow from './ExerciseSetRow.vue'
 
 const props = defineProps({
