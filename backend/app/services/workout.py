@@ -24,7 +24,7 @@ class WorkoutService:
                     exerciseId=ex.exercise_id,
                     exerciseName=ex.exercise_name,
                     sets=[
-                        SetOut(id=s.id, weight=s.weight, reps=s.reps, completed=s.completed)
+                        SetOut(id=s.id, weight=s.weight, reps=s.reps, completed=s.completed, failed=s.failed)
                         for s in ex.sets
                     ],
                 )
