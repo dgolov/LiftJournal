@@ -2,7 +2,12 @@ import { createRouter, createWebHistory } from 'vue-router'
 import store from '@/store/index.js'
 
 const routes = [
-  { path: '/', redirect: '/history' },
+  { path: '/', redirect: '/dashboard' },
+  {
+    path: '/dashboard',
+    name: 'dashboard',
+    component: () => import('@/views/DashboardView.vue')
+  },
   {
     path: '/login',
     name: 'login',
@@ -84,6 +89,11 @@ const routes = [
     path: '/planning/:id/edit',
     name: 'plan-edit',
     component: () => import('@/views/PlanWorkoutView.vue')
+  },
+  {
+    path: '/about',
+    name: 'about',
+    component: () => import('@/views/AboutView.vue')
   }
 ]
 
