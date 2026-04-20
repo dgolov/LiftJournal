@@ -37,29 +37,6 @@
       </div>
     </div>
 
-    <!-- Filters (shared) -->
-    <div class="card p-4 mb-5 space-y-3">
-      <div class="flex flex-wrap gap-2">
-        <button
-          :class="['text-sm px-3 py-1.5 rounded-full font-medium border transition-colors',
-            !activeType ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-primary hover:text-primary']"
-          @click="setFilter('type', null)"
-        >Все</button>
-        <button
-          v-for="type in workoutTypes" :key="type"
-          :class="['text-sm px-3 py-1.5 rounded-full font-medium border transition-colors',
-            activeType === type ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-primary hover:text-primary']"
-          @click="setFilter('type', type)"
-        >{{ type }}</button>
-      </div>
-      <input :value="filters.search" placeholder="Поиск по названию или упражнению..." class="input" @input="setFilter('search', $event.target.value)" />
-      <div class="flex gap-3">
-        <input type="date" :value="filters.dateFrom || ''" class="input flex-1" @input="setFilter('dateFrom', $event.target.value || null)" />
-        <input type="date" :value="filters.dateTo || ''" class="input flex-1" @input="setFilter('dateTo', $event.target.value || null)" />
-      </div>
-      <button v-if="hasActiveFilters" class="btn btn-ghost text-sm self-start" @click="resetFilters">Сбросить фильтры</button>
-    </div>
-
     <!-- Month navigation -->
     <div class="flex items-center gap-2 mb-5">
       <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400" @click="prevMonth">
@@ -131,6 +108,32 @@
     <!-- LIST VIEW -->
     <template v-else>
 
+      <!-- Filters (list only) -->
+      <div class="card p-4 mb-5 space-y-3">
+        <div class="flex flex-wrap gap-2">
+          <button
+            :class="['text-sm px-3 py-1.5 rounded-full font-medium border transition-colors',
+              !activeType ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-primary hover:text-primary']"
+            @click="setFilter('type', null)"
+          >Все</button>
+          <button
+            v-for="type in workoutTypes" :key="type"
+            :class="['text-sm px-3 py-1.5 rounded-full font-medium border transition-colors',
+              activeType === type ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-primary hover:text-primary']"
+            @click="setFilter('type', type)"
+          >{{ type }}</button>
+        </div>
+        <input :value="filters.search" placeholder="Поиск по всем записям..." class="input" @input="setFilter('search', $event.target.value)" />
+        <div class="flex gap-3">
+          <input type="date" :value="filters.dateFrom || ''" class="input flex-1" @input="setFilter('dateFrom', $event.target.value || null)" />
+          <input type="date" :value="filters.dateTo || ''" class="input flex-1" @input="setFilter('dateTo', $event.target.value || null)" />
+        </div>
+        <div class="flex items-center justify-between">
+          <span v-if="isSearching" class="text-xs text-gray-400">По всем записям · найдено <strong class="text-gray-600 dark:text-gray-300">{{ monthCombinedItems.length }}</strong></span>
+          <button v-if="hasActiveFilters" class="btn btn-ghost text-sm" @click="resetFilters">Сбросить фильтры</button>
+        </div>
+      </div>
+
       <div v-if="monthCombinedItems.length" class="space-y-3">
         <template v-for="item in monthCombinedItems" :key="item.id">
           <WorkoutCard v-if="item._kind === 'workout'" :workout="item" />
@@ -145,7 +148,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, defineComponent, h } from 'vue'
+import { ref, computed, watch, onMounted, defineComponent, h } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { CalendarDays, List, ChevronLeft, ChevronRight, Activity, X, Clock, CheckCircle2, Ban, Plus, Pencil } from 'lucide-vue-next'
@@ -408,10 +411,18 @@ const selectedDayPlanned = computed(() => {
   return applyPlanFilters([...(plannedByDate.value[selectedDate.value] || [])])
 })
 
-// List: combined sorted items
+const isSearching = computed(() => !!filters.value.search?.trim())
+
+watch(isSearching, (searching) => {
+  if (searching) switchView('list')
+})
+
+// List: when searching — all records; otherwise current month only
 const monthCombinedItems = computed(() => {
-  const workouts = applyWorkoutFilters([...monthWorkouts.value]).map(w => ({ ...w, _kind: 'workout', _sortDate: w.date }))
-  const plans = applyPlanFilters([...monthPlanned.value]).map(p => ({ ...p, _kind: 'plan', _sortDate: p.scheduledDate }))
+  const baseWorkouts = isSearching.value ? [...allWorkouts.value] : [...monthWorkouts.value]
+  const basePlans    = isSearching.value ? [...allPlanned.value]  : [...monthPlanned.value]
+  const workouts = applyWorkoutFilters(baseWorkouts).map(w => ({ ...w, _kind: 'workout', _sortDate: w.date }))
+  const plans    = applyPlanFilters(basePlans).map(p => ({ ...p, _kind: 'plan', _sortDate: p.scheduledDate }))
   return [...workouts, ...plans].sort((a, b) => b._sortDate.localeCompare(a._sortDate))
 })
 
