@@ -16,7 +16,7 @@ export function clearSession() {
 
 function calcVolume(workout) {
   return workout.exercises.reduce((total, ex) => {
-    return total + ex.sets.reduce((s, set) => s + set.weight * set.reps, 0)
+    return total + ex.sets.reduce((s, set) => s + (set.failed ? 0 : set.weight * set.reps), 0)
   }, 0)
 }
 
@@ -135,14 +135,15 @@ export default {
     SET_CYCLE_CONTEXT(state, ctx) { state.cycleContext = ctx },
     SET_PLAN_CONTEXT(state, ctx) { state.planContext = ctx },
     SET_ACTIVE_WORKOUT_EXERCISES(state, exercises) { state.activeWorkout.exercises = exercises },
+    REORDER_EXERCISES(state, exercises) { state.activeWorkout.exercises = exercises },
     SET_ACTIVE_WORKOUT_FIELD(state, { field, value }) {
       state.activeWorkout[field] = value
     },
-    ADD_EXERCISE_TO_ACTIVE(state, exercise) {
+    ADD_EXERCISE_TO_ACTIVE(state, { exercise, sets }) {
       state.activeWorkout.exercises.push({
         exerciseId: exercise.id,
         exerciseName: exercise.name,
-        sets: [{ id: uid(), weight: 0, reps: 0, completed: false }]
+        sets
       })
     },
     REMOVE_EXERCISE_FROM_ACTIVE(state, exerciseId) {
@@ -152,7 +153,7 @@ export default {
       const ex = state.activeWorkout.exercises.find(e => e.exerciseId === exerciseId)
       if (!ex) return
       const last = ex.sets[ex.sets.length - 1] || { weight: 0, reps: 0 }
-      ex.sets.push({ id: uid(), weight: last.weight, reps: last.reps, completed: false })
+      ex.sets.push({ id: uid(), weight: last.weight, reps: last.reps, completed: false, failed: false })
     },
     UPDATE_SET(state, { exerciseId, setId, field, value }) {
       const ex = state.activeWorkout.exercises.find(e => e.exerciseId === exerciseId)
@@ -173,6 +174,20 @@ export default {
   },
 
   actions: {
+    addExerciseToActive({ commit, state }, exercise) {
+      const sorted = [...state.workouts].sort((a, b) => b.date.localeCompare(a.date))
+      let lastSets = null
+      for (const w of sorted) {
+        const ex = w.exercises.find(e => e.exerciseId === exercise.id)
+        const validSets = ex?.sets?.filter(s => !s.failed)
+        if (validSets?.length) { lastSets = validSets; break }
+      }
+      const sets = lastSets
+        ? lastSets.map(s => ({ id: uid(), weight: s.weight, reps: s.reps, completed: false, failed: false }))
+        : [{ id: uid(), weight: 0, reps: 0, completed: false, failed: false }]
+      commit('ADD_EXERCISE_TO_ACTIVE', { exercise, sets })
+    },
+
     async initWorkouts({ commit }) {
       const workouts = await workoutService.fetchWorkouts()
       commit('SET_WORKOUTS', workouts)
@@ -182,6 +197,21 @@ export default {
       const ts = Date.now()
       commit('SET_WORKOUT_STARTED_AT', ts)
       saveSession(ts, state.activeWorkout, state.cycleContext, state.planContext)
+    },
+
+    startWorkoutFromHistory({ commit }, workout) {
+      commit('RESET_ACTIVE_WORKOUT')
+      commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'title', value: workout.title })
+      commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'type', value: workout.type })
+      commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'date', value: new Date().toISOString().split('T')[0] })
+      commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'notes', value: workout.notes || '' })
+      commit('SET_ACTIVE_WORKOUT_EXERCISES', workout.exercises.map(ex => ({
+        exerciseId: ex.exerciseId,
+        exerciseName: ex.exerciseName,
+        sets: ex.sets.map(s => ({ id: s.id, weight: s.weight, reps: s.reps, completed: false, failed: false })),
+      })))
+      // startWorkout не вызываем — пользователь попадёт на шаг 0 и сможет
+      // отредактировать название и заметки перед началом
     },
 
     startWorkoutFromPlan({ commit, dispatch }, plannedWorkout) {

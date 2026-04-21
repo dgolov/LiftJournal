@@ -76,6 +76,7 @@ class ExerciseSet(Base):
     weight: Mapped[float] = mapped_column(Float, default=0.0)
     reps: Mapped[int] = mapped_column(Integer, default=0)
     completed: Mapped[bool] = mapped_column(Boolean, default=False)
+    failed: Mapped[bool] = mapped_column(Boolean, default=False)
     order: Mapped[int] = mapped_column(Integer, default=0)
 
     workout_exercise: Mapped["WorkoutExercise"] = relationship(

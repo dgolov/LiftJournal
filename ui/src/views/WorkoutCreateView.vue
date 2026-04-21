@@ -11,7 +11,25 @@
         <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0"></span>
         <span class="font-mono font-bold text-primary text-sm">{{ elapsedFormatted }}</span>
       </div>
+
+      <!-- Cancel button (only when workout is in progress) -->
+      <button
+        v-if="step > 0"
+        class="ml-auto p-2 rounded-lg text-gray-300 hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+        title="Отменить тренировку"
+        @click="showCancelConfirm = true"
+      >
+        <X class="w-5 h-5" />
+      </button>
     </div>
+
+    <BaseModal v-model="showCancelConfirm" title="Отменить тренировку?" max-width="sm">
+      <p class="text-sm text-gray-600 dark:text-gray-400">Весь прогресс будет потерян. Отменить тренировку?</p>
+      <template #footer>
+        <BaseButton variant="ghost" @click="showCancelConfirm = false">Продолжить</BaseButton>
+        <BaseButton variant="danger" @click="cancelWorkout">Отменить тренировку</BaseButton>
+      </template>
+    </BaseModal>
 
     <!-- Steps indicator -->
     <div class="flex gap-1 mb-6">
@@ -73,9 +91,19 @@
         <BaseButton variant="outline" size="sm" @click="showPicker = true">+ Добавить</BaseButton>
       </div>
 
-      <div v-if="activeWorkout.exercises.length" class="space-y-3 mb-4">
-        <ExerciseBlock v-for="ex in activeWorkout.exercises" :key="ex.exerciseId" :exercise="ex" />
-      </div>
+      <draggable
+        v-if="activeWorkout.exercises.length"
+        :list="exercisesList"
+        item-key="exerciseId"
+        handle=".drag-handle"
+        animation="200"
+        class="space-y-3 mb-4"
+        @end="onReorder"
+      >
+        <template #item="{ element }">
+          <ExerciseBlock :exercise="element" />
+        </template>
+      </draggable>
 
       <BaseEmptyState
         v-else
@@ -134,6 +162,7 @@
     </div>
 
     <ExercisePicker v-model="showPicker" />
+    <RestTimerBar />
   </div>
 </template>
 
@@ -141,13 +170,16 @@
 import { ref, computed, watch, onUnmounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { ChevronLeft, Dumbbell, Play } from 'lucide-vue-next'
+import { ChevronLeft, Dumbbell, Play, X } from 'lucide-vue-next'
+import draggable from 'vuedraggable'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
 import ExerciseBlock from '@/components/workout/ExerciseBlock.vue'
 import ExercisePicker from '@/components/workout/ExercisePicker.vue'
+import RestTimerBar from '@/components/workout/RestTimerBar.vue'
 import { WORKOUT_TYPES } from '@/services/mockData.js'
 
 const store = useStore()
@@ -160,6 +192,7 @@ const step = ref(workoutStartedAt.value ? 1 : 0)
 const steps = [1, 2, 3]
 const showPicker = ref(false)
 const saving = ref(false)
+const showCancelConfirm = ref(false)
 const workoutTypes = WORKOUT_TYPES
 
 const activeWorkout = computed(() => store.state.workouts.activeWorkout)
@@ -206,8 +239,24 @@ const elapsedFormatted = computed(() => {
 })
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Draggable needs a mutable local copy; sync back to store on drop
+const exercisesList = computed({
+  get: () => activeWorkout.value.exercises,
+  set: (val) => store.commit('workouts/REORDER_EXERCISES', val),
+})
+
+function onReorder() {
+  store.commit('workouts/REORDER_EXERCISES', [...activeWorkout.value.exercises])
+}
+
 function setField(field, value) {
   store.commit('workouts/SET_ACTIVE_WORKOUT_FIELD', { field, value })
+}
+
+function cancelWorkout() {
+  store.commit('workouts/RESET_ACTIVE_WORKOUT')
+  showCancelConfirm.value = false
+  router.push('/history')
 }
 
 function beginWorkout() {

@@ -58,6 +58,7 @@ class SetIn(BaseModel):
     weight: float = 0.0
     reps: int = 0
     completed: bool = False
+    failed: bool = False
 
 
 class SetOut(BaseModel):
@@ -65,6 +66,7 @@ class SetOut(BaseModel):
     weight: float
     reps: int
     completed: bool
+    failed: bool = False
 
 
 class WorkoutExerciseIn(BaseModel):

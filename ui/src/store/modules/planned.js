@@ -11,6 +11,10 @@ export default {
     all: state => [...state.plannedWorkouts].sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate)),
     upcoming: (state, getters) => getters.all.filter(w => w.status === 'planned'),
     byId: state => id => state.plannedWorkouts.find(w => w.id === id),
+    upcomingByGroup: state => (groupId, fromDate) =>
+      state.plannedWorkouts.filter(
+        w => w.recurrenceGroupId === groupId && w.scheduledDate >= fromDate && w.status === 'planned'
+      ),
   },
 
   mutations: {
@@ -58,6 +62,36 @@ export default {
 
     async completePlannedWorkout({ dispatch }, { id, completedWorkoutId }) {
       return dispatch('updatePlannedWorkout', { id, status: 'completed', completedWorkoutId })
+    },
+
+    // Create a recurring series: generates `weeks` occurrences every 7 days
+    async createRecurringPlan({ dispatch }, { payload, weeks }) {
+      const groupId = `rg-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+      const base = new Date(payload.scheduledDate + 'T00:00:00')
+      const created = []
+      for (let i = 0; i < weeks; i++) {
+        const d = new Date(base)
+        d.setDate(base.getDate() + i * 7)
+        const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+        const item = await dispatch('createPlannedWorkout', {
+          ...payload,
+          scheduledDate: dateStr,
+          recurrenceGroupId: groupId,
+        })
+        created.push(item)
+      }
+      return created
+    },
+
+    // Cancel this occurrence and all future ones in the same group
+    async deleteUpcomingRecurring({ getters, dispatch }, plan) {
+      const toDelete = getters.upcomingByGroup(plan.recurrenceGroupId, plan.scheduledDate)
+      await Promise.all(toDelete.map(p => dispatch('deletePlannedWorkout', p.id)))
+    },
+
+    async skipUpcomingRecurring({ getters, dispatch }, plan) {
+      const toSkip = getters.upcomingByGroup(plan.recurrenceGroupId, plan.scheduledDate)
+      await Promise.all(toSkip.map(p => dispatch('skipPlannedWorkout', p.id)))
     },
   }
 }

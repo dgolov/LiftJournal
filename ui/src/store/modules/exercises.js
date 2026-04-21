@@ -41,20 +41,24 @@ export default {
       workouts.forEach(workout => {
         const ex = workout.exercises.find(e => e.exerciseId === exerciseId)
         if (!ex || !ex.sets.length) return
+        const sets = ex.sets.filter(s => !s.failed)
+        if (!sets.length) return
+        const setsCount = sets.length
+        const totalSetsCount = ex.sets.length
         if (isCardio) {
-          const totalMinutes = ex.sets.reduce((sum, s) => sum + (s.reps || 0), 0)
-          sessions.push({ date: workout.date, totalMinutes, workoutId: workout.id, workoutTitle: workout.title })
+          const totalMinutes = sets.reduce((sum, s) => sum + (s.reps || 0), 0)
+          sessions.push({ date: workout.date, totalMinutes, setsCount, totalSetsCount, workoutId: workout.id, workoutTitle: workout.title })
         } else {
-          const bestSet = ex.sets.reduce((a, b) => b.weight > a.weight ? b : a, ex.sets[0])
+          const bestSet = sets.reduce((a, b) => b.weight > a.weight ? b : a, sets[0])
           const maxWeight = bestSet.weight
           const maxWeightReps = bestSet.reps
-          const totalVolume = ex.sets.reduce((sum, s) => sum + s.weight * s.reps, 0)
-          const maxReps = Math.max(...ex.sets.map(s => s.reps))
+          const totalVolume = sets.reduce((sum, s) => sum + s.weight * s.reps, 0)
+          const maxReps = Math.max(...sets.map(s => s.reps))
           // Epley estimated 1RM: weight × (1 + reps / 30); for 1 rep = weight itself
-          const best1RM = Math.max(...ex.sets.map(s =>
+          const best1RM = Math.max(...sets.map(s =>
             s.reps === 1 ? s.weight : Math.round(s.weight * (1 + s.reps / 30))
           ))
-          sessions.push({ date: workout.date, maxWeight, maxWeightReps, totalVolume, maxReps, best1RM, workoutId: workout.id, workoutTitle: workout.title })
+          sessions.push({ date: workout.date, maxWeight, maxWeightReps, totalVolume, maxReps, best1RM, setsCount, totalSetsCount, workoutId: workout.id, workoutTitle: workout.title })
         }
       })
       return sessions.sort((a, b) => a.date.localeCompare(b.date))
