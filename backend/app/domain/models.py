@@ -286,6 +286,18 @@ class PlannedSet(Base):
     planned_exercise: Mapped["PlannedExercise"] = relationship("PlannedExercise", back_populates="sets")
 
 
+class UserAchievement(Base):
+    """Tracks which achievements a user has unlocked."""
+    __tablename__ = "user_achievements"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    achievement_id: Mapped[str] = mapped_column(String(100), nullable=False)
+    unlocked_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+
+
 class UserMax(Base):
     """User's manually entered 1RM values used for cycle % calculations."""
     __tablename__ = "user_maxes"
