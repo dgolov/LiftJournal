@@ -51,6 +51,62 @@
       </div>
     </div>
 
+    <!-- Month-to-month comparison -->
+    <div>
+      <h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-3">
+        <BarChart2 class="w-4 h-4 text-primary" />
+        Динамика по месяцам
+      </h3>
+
+      <div class="card p-4">
+        <!-- Metric tabs -->
+        <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 gap-0.5 mb-4">
+          <button
+            v-for="m in metrics" :key="m.key"
+            :class="['flex-1 py-1.5 text-xs font-medium rounded-md transition-colors',
+              activeMetric === m.key
+                ? 'bg-white dark:bg-gray-700 shadow-sm text-primary'
+                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300']"
+            @click="activeMetric = m.key"
+          >{{ m.label }}</button>
+        </div>
+
+        <!-- Bars -->
+        <div class="space-y-2.5">
+          <div v-for="(m, i) in monthlyStats" :key="m.prefix" class="flex items-center gap-3">
+            <span class="text-xs text-gray-400 w-12 flex-shrink-0 capitalize">{{ m.shortLabel }}</span>
+            <div class="flex-1 h-5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+              <div
+                :class="['h-full rounded-full transition-all duration-500', barColor(i)]"
+                :style="{ width: barWidth(m) + '%' }"
+              />
+            </div>
+            <div class="w-20 flex items-center justify-end gap-1 flex-shrink-0">
+              <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">{{ formatMetric(m) }}</span>
+              <span
+                v-if="i > 0"
+                :class="['text-xs font-medium', delta(i) > 0 ? 'text-green-400' : delta(i) < 0 ? 'text-red-400' : 'text-gray-300']"
+              >{{ delta(i) > 0 ? '↑' : delta(i) < 0 ? '↓' : '' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary: current vs prev -->
+        <div v-if="monthlyStats.length >= 2" class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 grid grid-cols-3 gap-2 text-center">
+          <div v-for="m in metrics" :key="m.key">
+            <p class="text-xs text-gray-400 mb-0.5">{{ m.label }}</p>
+            <p class="text-sm font-bold text-gray-900 dark:text-white">{{ formatMetricRaw(monthlyStats.at(-1), m.key) }}</p>
+            <p :class="['text-xs', deltaForMetric(m.key) > 0 ? 'text-green-400' : deltaForMetric(m.key) < 0 ? 'text-red-400' : 'text-gray-300']">
+              <template v-if="monthlyStats.at(-2)[m.key] > 0">
+                {{ deltaForMetric(m.key) >= 0 ? '+' : '' }}{{ Math.round(deltaForMetric(m.key)) }}%
+              </template>
+              <template v-else>—</template>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Personal records -->
     <div>
       <div class="flex items-center justify-between mb-3">
@@ -127,9 +183,9 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
-import { Flame, Dumbbell, TrendingUp, Trophy, ClipboardList, Plus, ChevronRight } from 'lucide-vue-next'
+import { Flame, Dumbbell, TrendingUp, Trophy, ClipboardList, Plus, ChevronRight, BarChart2 } from 'lucide-vue-next'
 
 const store = useStore()
 
@@ -212,6 +268,71 @@ const volumeDelta = computed(() => {
 function formatVolumeShort(v) {
   if (!v) return '0'
   return v >= 1000 ? (v / 1000).toFixed(1) + ' т' : v + ' кг'
+}
+
+// ── Month-to-month comparison ─────────────────────────────────────────────────
+const activeMetric = ref('volume')
+
+const metrics = [
+  { key: 'volume', label: 'Тоннаж' },
+  { key: 'count', label: 'Тренировки' },
+  { key: 'avgDuration', label: 'Ср. время' },
+]
+
+const monthlyStats = computed(() => {
+  const result = []
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(today.getFullYear(), today.getMonth() - i, 1)
+    const prefix = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    const shortLabel = d.toLocaleDateString('ru-RU', { month: 'short' }).replace('.', '')
+    const ws = allWorkouts.value.filter(w => w.date.startsWith(prefix))
+    const volume = calcVol(ws)
+    const count = ws.length
+    const totalDur = ws.reduce((s, w) => s + (w.durationMinutes || 0), 0)
+    const avgDuration = count > 0 ? Math.round(totalDur / count) : 0
+    result.push({ prefix, shortLabel, volume, count, avgDuration })
+  }
+  return result
+})
+
+const metricMax = computed(() =>
+  Math.max(...monthlyStats.value.map(m => m[activeMetric.value]), 1)
+)
+
+function barWidth(m) {
+  return Math.round((m[activeMetric.value] / metricMax.value) * 100)
+}
+
+const barColors = ['bg-indigo-200', 'bg-indigo-300', 'bg-indigo-400', 'bg-indigo-500', 'bg-indigo-500', 'bg-primary']
+function barColor(i) { return barColors[i] ?? 'bg-primary' }
+
+function delta(i) {
+  const prev = monthlyStats.value[i - 1]?.[activeMetric.value] ?? 0
+  const cur = monthlyStats.value[i][activeMetric.value]
+  if (!prev) return 0
+  return ((cur - prev) / prev) * 100
+}
+
+function deltaForMetric(key) {
+  const prev = monthlyStats.value.at(-2)?.[key] ?? 0
+  const cur = monthlyStats.value.at(-1)?.[key] ?? 0
+  if (!prev) return 0
+  return ((cur - prev) / prev) * 100
+}
+
+function formatMetric(m) {
+  const v = m[activeMetric.value]
+  if (activeMetric.value === 'volume') return formatVolumeShort(v)
+  if (activeMetric.value === 'count') return v + ' тр.'
+  return v ? v + ' мин' : '—'
+}
+
+function formatMetricRaw(m, key) {
+  if (!m) return '—'
+  const v = m[key]
+  if (key === 'volume') return formatVolumeShort(v)
+  if (key === 'count') return v + ' тр.'
+  return v ? v + ' мин' : '—'
 }
 
 // ── Personal records ──────────────────────────────────────────────────────────
