@@ -7,6 +7,20 @@ from pydantic import BaseModel
 
 
 # ---------------------------------------------------------------------------
+# Achievements
+# ---------------------------------------------------------------------------
+
+class AchievementOut(BaseModel):
+    id: str
+    title: str
+    description: str
+    icon: str
+    category: str
+    unlocked: bool
+    unlockedAt: Optional[datetime] = None
+
+
+# ---------------------------------------------------------------------------
 # Auth
 # ---------------------------------------------------------------------------
 
