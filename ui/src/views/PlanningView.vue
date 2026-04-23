@@ -41,11 +41,13 @@
         </div>
 
         <div class="space-y-3">
-          <div
+          <SwipeDeleteWrapper
             v-for="plan in group.items"
             :key="plan.id"
-            class="card p-4"
+            delete-label="Удалить план"
+            @delete="deletePlan(plan)"
           >
+            <div class="bg-white dark:bg-gray-900 p-4">
             <div class="flex items-start gap-3">
               <!-- Status icon -->
               <div :class="['w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5', statusIcon(plan).bg]">
@@ -111,7 +113,8 @@
                 class="text-xs text-gray-500 dark:text-gray-400"
               >· {{ ex.exerciseName }}</span>
             </div>
-          </div>
+            </div>
+          </SwipeDeleteWrapper>
         </div>
       </div>
     </div>
@@ -185,6 +188,7 @@ import { CalendarDays, CheckCircle2, Clock, Ban, Pencil, Trash2, AlertCircle } f
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
+import SwipeDeleteWrapper from '@/components/ui/SwipeDeleteWrapper.vue'
 
 const store = useStore()
 const router = useRouter()
