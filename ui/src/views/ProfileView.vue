@@ -113,6 +113,34 @@
       </BaseEmptyState>
     </div>
 
+    <!-- Achievements -->
+    <div class="card p-4">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="font-semibold text-gray-900 dark:text-white">Достижения</h3>
+          <p class="text-xs text-gray-400 mt-0.5">{{ unlockedCount }} / {{ achievements.length }} разблокировано</p>
+        </div>
+        <Medal class="w-5 h-5 text-primary" />
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div
+          v-for="a in achievements"
+          :key="a.id"
+          :class="['rounded-xl p-3 border transition-all', a.unlocked
+            ? 'bg-primary/10 border-primary/20 dark:bg-primary/15 dark:border-primary/30'
+            : 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-700 opacity-60']"
+        >
+          <div class="text-2xl mb-1">{{ a.icon }}</div>
+          <p class="text-sm font-semibold text-gray-900 dark:text-white leading-tight">{{ a.title }}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">{{ a.description }}</p>
+          <p v-if="a.unlocked && a.unlockedAt" class="text-xs text-primary font-medium mt-1.5">
+            {{ formatDate(new Date(a.unlockedAt).toISOString().split('T')[0]) }}
+          </p>
+          <p v-else-if="!a.unlocked" class="text-xs text-gray-400 mt-1.5">Заблокировано</p>
+        </div>
+      </div>
+    </div>
+
     <!-- Edit profile modal -->
     <BaseModal v-model="showEditProfile" title="Редактировать профиль">
       <div class="space-y-4">
@@ -167,10 +195,10 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { Target, Dumbbell, X } from 'lucide-vue-next'
+import { Target, Dumbbell, X, Medal } from 'lucide-vue-next'
 import StatCard from '@/components/profile/StatCard.vue'
 import WeightChart from '@/components/profile/WeightChart.vue'
 import ActivityHeatmap from '@/components/profile/ActivityHeatmap.vue'
@@ -255,4 +283,9 @@ async function addGoal() {
 
 async function toggleGoal(id) { await store.dispatch('user/toggleGoal', id) }
 async function deleteGoal(id) { await store.dispatch('user/deleteGoal', id) }
+
+const achievements = computed(() => store.getters['achievements/all'])
+const unlockedCount = computed(() => store.getters['achievements/unlockedCount'])
+
+onMounted(() => { store.dispatch('achievements/init') })
 </script>
