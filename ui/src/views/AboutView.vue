@@ -7,7 +7,11 @@
       </div>
       <div>
         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">LiftJournal</h1>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Дневник тренировок · v1.0</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+          Дневник тренировок
+          · <span class="font-semibold text-primary">v{{ APP_VERSION }}</span>
+          · <span class="text-gray-400">{{ BUILD_DATE }}</span>
+        </p>
         <p class="text-sm text-gray-600 dark:text-gray-300 mt-1">
           Ведите учёт тренировок, планируйте нагрузку и отслеживайте прогресс по каждому упражнению.
         </p>
@@ -236,6 +240,48 @@
         <TipRow v-for="tip in tips" :key="tip.label" :label="tip.label" :desc="tip.desc" />
       </div>
     </section>
+
+    <!-- Section: Достижения -->
+    <section :id="sections[8].id" class="space-y-3">
+      <SectionHeader :icon="sections[8].icon" :title="sections[8].title" />
+      <div class="card p-4 space-y-4">
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          Достижения открываются автоматически по результатам тренировок. Следить за прогрессом можно в разделе <strong>Профиль</strong>.
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div v-for="a in ACHIEVEMENTS" :key="a.id" class="flex items-start gap-3 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700">
+            <span class="text-2xl flex-shrink-0 leading-none mt-0.5">{{ a.icon }}</span>
+            <div class="min-w-0">
+              <p class="text-sm font-semibold text-gray-800 dark:text-gray-200 leading-tight">{{ a.title }}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ a.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section: История версий -->
+    <section id="changelog" class="space-y-3">
+      <SectionHeader :icon="historyIcon" title="История версий" />
+      <div class="space-y-3">
+        <div v-for="rel in CHANGELOG" :key="rel.version" class="card p-4">
+          <div class="flex items-center gap-3 mb-3">
+            <span class="font-bold text-primary text-sm">v{{ rel.version }}</span>
+            <span v-if="rel.label" class="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{{ rel.label }}</span>
+            <span class="text-xs text-gray-400 ml-auto">{{ rel.date }}</span>
+          </div>
+          <ul class="space-y-1.5">
+            <li v-for="entry in rel.entries" :key="entry.text" class="flex items-start gap-2 text-sm">
+              <span :class="['mt-0.5 w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 text-white text-[10px] font-bold',
+                entry.type === 'feature' ? 'bg-primary' : entry.type === 'fix' ? 'bg-red-400' : 'bg-green-400']">
+                {{ entry.type === 'feature' ? '★' : entry.type === 'fix' ? '✕' : '↑' }}
+              </span>
+              <span class="text-gray-600 dark:text-gray-400">{{ entry.text }}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -243,8 +289,12 @@
 import { markRaw, h } from 'vue'
 import {
   Dumbbell, ClipboardList, CalendarDays, BarChart3, User,
-  Timer, Lightbulb, BookOpen, Check
+  Timer, Lightbulb, History, Check, Medal
 } from 'lucide-vue-next'
+import { APP_VERSION, BUILD_DATE } from '@/version.js'
+import { CHANGELOG } from '@/changelog.js'
+
+const historyIcon = markRaw(History)
 
 // ── mini render-function components ─────────────────────────────────────────
 
@@ -315,7 +365,23 @@ const sections = [
   { id: 'exercises',title: 'Упражнения',           icon: markRaw(Dumbbell)      },
   { id: 'cycles',   title: 'Циклы',                icon: markRaw(BarChart3)     },
   { id: 'profile',  title: 'Профиль',              icon: markRaw(User)          },
-  { id: 'tips',     title: 'Советы и подсказки',   icon: markRaw(Lightbulb)     },
+  { id: 'tips',       title: 'Советы и подсказки',   icon: markRaw(Lightbulb) },
+  { id: 'achievements', title: 'Достижения',          icon: markRaw(Medal)     },
+  { id: 'changelog',   title: 'История версий',       icon: markRaw(History)   },
+]
+
+const ACHIEVEMENTS = [
+  { id: 'first_workout',    icon: '🎯', title: 'Первый шаг',          description: 'Запишите первую тренировку' },
+  { id: 'workouts_10',      icon: '🥉', title: 'Начало пути',          description: 'Завершите 10 тренировок' },
+  { id: 'workouts_50',      icon: '🥈', title: 'Полтинник',            description: 'Завершите 50 тренировок' },
+  { id: 'workouts_100',     icon: '🥇', title: 'Сотня',                description: 'Завершите 100 тренировок' },
+  { id: 'streak_3',         icon: '🔥', title: 'Первая серия',         description: '3 тренировки подряд' },
+  { id: 'streak_7',         icon: '💪', title: 'Неделя без пропусков', description: '7 тренировок подряд' },
+  { id: 'streak_10',        icon: '🔥', title: 'На огне',              description: '10 тренировок подряд' },
+  { id: 'streak_30',        icon: '🏆', title: 'Железная воля',        description: '30 тренировок подряд' },
+  { id: 'volume_1t_month',  icon: '💣', title: 'Первая тонна',         description: '1 000 кг тоннажа за один месяц' },
+  { id: 'volume_10t_month', icon: '🏋️', title: 'Десять тонн',          description: '10 000 кг за один месяц' },
+  { id: 'volume_100t_total',icon: '🌐', title: 'Сотня тонн',           description: '100 000 кг суммарно' },
 ]
 
 const tips = [
