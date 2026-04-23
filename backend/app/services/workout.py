@@ -3,6 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas import WorkoutCreate, WorkoutUpdate, WorkoutOut, WorkoutExerciseOut, SetOut
 from app.repositories.workout import WorkoutRepository
+from app.repositories.achievements import AchievementRepository
+from app.services.achievements import AchievementService
 from app.domain.models import Workout
 
 
@@ -53,6 +55,7 @@ class WorkoutService:
             notes=data.notes,
             exercises_data=data.exercises,
         )
+        await AchievementService(self.repo.db).evaluate(user_id)
         return self._to_dto(w)
 
     async def update_workout(self, workout_id: str, data: WorkoutUpdate, user_id: int) -> WorkoutOut:
