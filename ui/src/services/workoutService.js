@@ -194,6 +194,14 @@ const workoutService = {
   deletePlannedWorkout(id) {
     return request('DELETE', `/planned-workouts/${id}`)
   },
+
+  // Achievements
+  fetchAchievements() {
+    return request('GET', '/achievements')
+  },
+  evaluateAchievements() {
+    return request('POST', '/achievements/evaluate')
+  },
 }
 
 export default workoutService
