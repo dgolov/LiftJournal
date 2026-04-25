@@ -7,6 +7,7 @@
   >
     <!-- Delete reveal layer -->
     <div
+      v-if="!props.disabled"
       class="absolute inset-0 bg-red-500 flex items-center justify-end pr-5 gap-2 select-none cursor-pointer"
       @click.stop="onZoneTap"
     >
@@ -33,8 +34,9 @@
 import { ref } from 'vue'
 import { Trash2 } from 'lucide-vue-next'
 
-defineProps({
+const props = defineProps({
   deleteLabel: { type: String, default: 'Удалить' },
+  disabled: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['delete'])
@@ -48,6 +50,7 @@ const AUTO_DELETE_PX = -220
 let startX = 0, startY = 0, baseX = 0, axis = null
 
 function onTouchStart(e) {
+  if (props.disabled) return
   startX = e.touches[0].clientX
   startY = e.touches[0].clientY
   baseX = swipeX.value
