@@ -75,7 +75,16 @@
     <!-- Exercises -->
     <div class="space-y-4">
       <div v-for="ex in displayExercises" :key="ex.exerciseId" class="card p-4">
-        <h3 class="font-semibold text-gray-900 dark:text-white mb-3">{{ ex.exerciseName }}</h3>
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-semibold text-gray-900 dark:text-white">{{ ex.exerciseName }}</h3>
+          <button
+            v-if="isEditing"
+            class="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors"
+            @click="removeDraftExercise(ex.exerciseId)"
+          >
+            <Trash2 class="w-4 h-4" />
+          </button>
+        </div>
         <div class="space-y-2">
           <div v-for="(set, i) in ex.sets" :key="set.id"
             class="flex items-center gap-1 text-sm">
@@ -193,7 +202,7 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
-import { ChevronLeft, Pencil, X, Plus, RefreshCw } from 'lucide-vue-next'
+import { ChevronLeft, Pencil, X, Plus, RefreshCw, Trash2 } from 'lucide-vue-next'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import StepperInput from '@/components/ui/StepperInput.vue'
 import ExercisePicker from '@/components/workout/ExercisePicker.vue'
@@ -301,6 +310,10 @@ function removeDraftSet(exerciseId, setId) {
   const ex = draft.value.exercises.find(e => e.exerciseId === exerciseId)
   if (!ex) return
   ex.sets = ex.sets.filter(s => s.id !== setId)
+}
+
+function removeDraftExercise(exerciseId) {
+  draft.value.exercises = draft.value.exercises.filter(e => e.exerciseId !== exerciseId)
 }
 
 function addDraftExercise(exercise) {
