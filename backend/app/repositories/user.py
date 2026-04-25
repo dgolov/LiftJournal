@@ -28,7 +28,7 @@ class UserRepository:
         return result.scalar_one_or_none()
 
     async def create(self, *, email: str, hashed_password: str, name: str) -> User:
-        user = User(email=email, hashed_password=hashed_password, name=name, age=0)
+        user = User(email=email, hashed_password=hashed_password, name=name)
         self.db.add(user)
         await self.db.commit()
         await self.db.refresh(user)
@@ -39,13 +39,13 @@ class UserRepository:
         user: User,
         *,
         name: str | None,
-        age: int | None,
+        birth_date,
         avatar_url: str | None,
     ) -> User:
         if name is not None:
             user.name = name
-        if age is not None:
-            user.age = age
+        if birth_date is not None:
+            user.birth_date = birth_date
         if avatar_url is not None:
             user.avatar_url = avatar_url
         await self.db.commit()
