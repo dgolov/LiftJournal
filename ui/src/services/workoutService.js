@@ -165,6 +165,9 @@ const workoutService = {
   },
 
   // Cycle runs
+  fetchAnyActiveRun() {
+    return request('GET', '/cycle-runs/active')
+  },
   fetchCycleRun(cycleId) {
     return request('GET', `/cycles/${cycleId}/run`)
   },

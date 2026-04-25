@@ -11,6 +11,14 @@ from app.services.cycle_run import CycleRunService
 router = APIRouter()
 
 
+@router.get("/cycle-runs/active", response_model=CycleRunOut | None)
+async def get_any_active_run(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await CycleRunService(db).get_any_active_run(current_user.id)
+
+
 @router.post("/cycles/{cycle_id}/start", response_model=CycleRunOut)
 async def start_cycle(
     cycle_id: str,
