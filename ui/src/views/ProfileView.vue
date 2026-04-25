@@ -223,7 +223,9 @@ const maxForm = reactive({ exercise_name: '', weight_kg: null })
 const allExercises = computed(() => store.getters['exercises/allExercises'])
 const filteredMaxExercises = computed(() => {
   const q = maxExSearch.value.toLowerCase().trim()
-  return q ? allExercises.value.filter(e => e.name.toLowerCase().includes(q)) : allExercises.value
+  return allExercises.value
+    .filter(e => e.muscleGroup !== 'Кардио')
+    .filter(e => !q || e.name.toLowerCase().includes(q))
 })
 
 async function saveMax() {
