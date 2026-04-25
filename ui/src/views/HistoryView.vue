@@ -148,11 +148,12 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, defineComponent, h } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { CalendarDays, List, ChevronLeft, ChevronRight, Activity, X, Clock, CheckCircle2, Ban, Plus, Pencil } from 'lucide-vue-next'
+import { CalendarDays, List, ChevronLeft, ChevronRight, Activity, X, Clock, CheckCircle2, Ban, Plus } from 'lucide-vue-next'
 import WorkoutCard from '@/components/workout/WorkoutCard.vue'
+import PlanCard from '@/components/workout/PlanCard.vue'
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
 import { WORKOUT_TYPES } from '@/services/mockData.js'
 
@@ -163,66 +164,6 @@ const workoutTypes = WORKOUT_TYPES
 onMounted(() => {
   if (!store.state.workouts.workouts.length) store.dispatch('workouts/initWorkouts')
   if (!store.state.planned.plannedWorkouts.length) store.dispatch('planned/fetchPlannedWorkouts')
-})
-
-// --- inline PlanCard component ---
-const PlanCard = defineComponent({
-  props: { plan: { type: Object, required: true } },
-  setup(props) {
-    const statusMap = {
-      planned:   { label: 'Запланировано', cls: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' },
-      completed: { label: 'Выполнено',     cls: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'   },
-      skipped:   { label: 'Пропущено',     cls: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'           },
-    }
-    const s = computed(() => statusMap[props.plan.status] || statusMap.planned)
-    const exCount = computed(() => props.plan.exercises?.length || 0)
-    const setCount = computed(() => props.plan.exercises?.reduce((n, e) => n + (e.sets?.length || 0), 0) || 0)
-    const dateLabel = computed(() => {
-      const d = new Date(props.plan.scheduledDate + 'T00:00:00')
-      return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })
-    })
-
-    async function startPlan() {
-      await store.dispatch('workouts/startWorkoutFromPlan', props.plan)
-      router.push('/workouts/new')
-    }
-
-    function editPlan() {
-      router.push(`/planning/${props.plan.id}/edit`)
-    }
-
-    return () => h('div',
-      { class: 'card p-4 border-l-2 border-dashed border-primary/40' },
-      [
-        h('div', { class: 'flex items-start gap-2' }, [
-          h('div', { class: 'flex-1 min-w-0' }, [
-            h('div', { class: 'flex items-center gap-2 flex-wrap mb-0.5' }, [
-              h('span', { class: `text-xs px-2 py-0.5 rounded-full font-medium ${s.value.cls}` }, s.value.label),
-              h('span', { class: 'text-xs text-gray-400' }, props.plan.type),
-              h('span', { class: 'text-xs text-gray-400' }, dateLabel.value),
-            ]),
-            h('p', { class: 'font-semibold text-gray-900 dark:text-white text-sm line-clamp-2' }, props.plan.title),
-            exCount.value
-              ? h('p', { class: 'text-xs text-gray-400 mt-0.5 whitespace-nowrap' }, `${exCount.value} упр. · ${setCount.value} подходов`)
-              : null,
-          ]),
-          h('div', { class: 'flex items-center gap-1 flex-shrink-0' }, [
-            h('button', {
-              class: 'w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors',
-              title: 'Редактировать',
-              onClick: editPlan,
-            }, h(Pencil, { class: 'w-3.5 h-3.5' })),
-            props.plan.status === 'planned'
-              ? h('button', {
-                  class: 'px-3 py-1.5 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary/90 transition-colors',
-                  onClick: startPlan,
-                }, 'Начать')
-              : null,
-          ]),
-        ]),
-      ]
-    )
-  }
 })
 
 // --- View state ---

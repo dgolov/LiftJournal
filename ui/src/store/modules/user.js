@@ -4,7 +4,7 @@ export default {
   namespaced: true,
 
   state: () => ({
-    profile: { name: '', age: 0, avatarUrl: null },
+    profile: { name: '', birthDate: null, avatarUrl: null },
     theme: 'light',
     weightLog: [],
     goals: [],
@@ -23,7 +23,7 @@ export default {
 
   mutations: {
     SET_USER(state, user) {
-      state.profile = { name: user.name, age: user.age, avatarUrl: user.avatarUrl }
+      state.profile = { name: user.name, birthDate: user.birthDate ?? null, avatarUrl: user.avatarUrl }
       state.theme = user.theme || 'light'
       state.weightLog = user.weightLog
       state.goals = user.goals
@@ -109,7 +109,7 @@ export default {
     },
 
     reset({ commit }) {
-      commit('SET_USER', { name: '', age: 0, avatarUrl: null, weightLog: [], goals: [], maxes: [] })
+      commit('SET_USER', { name: '', birthDate: null, avatarUrl: null, weightLog: [], goals: [], maxes: [] })
     }
   }
 }

@@ -6,12 +6,6 @@
       </button>
       <h2 class="text-xl font-bold text-gray-900 dark:text-white">Новая тренировка</h2>
 
-      <!-- Live timer (shown once workout started) -->
-      <div v-if="workoutStartedAt" class="ml-auto flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full">
-        <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0"></span>
-        <span class="font-mono font-bold text-primary text-sm">{{ elapsedFormatted }}</span>
-      </div>
-
       <!-- Cancel button (only when workout is in progress) -->
       <button
         v-if="step > 0"
@@ -30,13 +24,6 @@
         <BaseButton variant="danger" @click="cancelWorkout">Отменить тренировку</BaseButton>
       </template>
     </BaseModal>
-
-    <!-- Steps indicator -->
-    <div class="flex gap-1 mb-6">
-      <div v-for="(s, i) in steps" :key="i"
-        :class="['h-1 flex-1 rounded-full transition-colors', step > i ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-700']"
-      />
-    </div>
 
     <!-- Step 1: Info -->
     <div v-if="step === 0" class="space-y-4">
@@ -88,7 +75,13 @@
     <div v-else-if="step === 1">
       <div class="flex items-center justify-between mb-4">
         <h3 class="font-semibold text-gray-900 dark:text-white">Упражнения</h3>
-        <BaseButton variant="outline" size="sm" @click="showPicker = true">+ Добавить</BaseButton>
+        <div class="flex items-center gap-3">
+          <div v-if="workoutStartedAt" class="flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 rounded-full">
+            <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse flex-shrink-0"></span>
+            <span class="font-mono font-bold text-primary text-sm">{{ elapsedFormatted }}</span>
+          </div>
+          <BaseButton variant="outline" size="sm" @click="showPicker = true">+ Добавить</BaseButton>
+        </div>
       </div>
 
       <draggable

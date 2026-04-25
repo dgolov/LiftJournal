@@ -31,10 +31,17 @@ class CycleRunService:
         run = await self.repo.get_active_run(user_id, cycle_id)
         return self._to_dto(run) if run else None
 
+    async def get_any_active_run(self, user_id: int) -> CycleRunOut | None:
+        run = await self.repo.get_any_active_run(user_id)
+        return self._to_dto(run) if run else None
+
     async def start_run(self, cycle_id: str, user_id: int) -> CycleRunOut:
         run = await self.repo.get_active_run(user_id, cycle_id)
         if run:
             return self._to_dto(run)
+        existing = await self.repo.get_any_active_run(user_id)
+        if existing:
+            raise HTTPException(status_code=409, detail="Сначала завершите текущий активный цикл")
         cycle = await self.repo.get_cycle(cycle_id)
         if not cycle:
             raise HTTPException(status_code=404, detail="Цикл не найден")

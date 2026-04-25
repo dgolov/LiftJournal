@@ -106,7 +106,7 @@ const workoutService = {
   updateProfile(profile) {
     return request('PATCH', '/user/profile', {
       name: profile.name,
-      age: profile.age,
+      birthDate: profile.birthDate ?? null,
       avatarUrl: profile.avatarUrl ?? null,
     })
   },
@@ -165,6 +165,9 @@ const workoutService = {
   },
 
   // Cycle runs
+  fetchAnyActiveRun() {
+    return request('GET', '/cycle-runs/active')
+  },
   fetchCycleRun(cycleId) {
     return request('GET', `/cycles/${cycleId}/run`)
   },
@@ -193,6 +196,14 @@ const workoutService = {
   },
   deletePlannedWorkout(id) {
     return request('DELETE', `/planned-workouts/${id}`)
+  },
+
+  // Achievements
+  fetchAchievements() {
+    return request('GET', '/achievements')
+  },
+  evaluateAchievements() {
+    return request('POST', '/achievements/evaluate')
   },
 }
 

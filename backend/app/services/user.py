@@ -18,7 +18,7 @@ class UserService:
     def _to_dto(self, u: User) -> UserOut:
         return UserOut(
             name=u.name,
-            age=u.age,
+            birthDate=u.birth_date,
             avatarUrl=u.avatar_url,
             theme=u.theme if u.theme else "light",
             weightLog=sorted(
@@ -45,7 +45,7 @@ class UserService:
         u = await self.repo.get_with_relations(user_id)
         if not u:
             raise HTTPException(status_code=404, detail="User not found")
-        u = await self.repo.update_profile(u, name=data.name, age=data.age, avatar_url=data.avatarUrl)
+        u = await self.repo.update_profile(u, name=data.name, birth_date=data.birthDate, avatar_url=data.avatarUrl)
         return self._to_dto(u)
 
     async def log_weight(self, user_id: int, data: WeightEntryIn) -> WeightEntryOut:

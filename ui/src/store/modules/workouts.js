@@ -280,6 +280,7 @@ export default {
         }
       }
       commit('RESET_ACTIVE_WORKOUT')
+      dispatch('achievements/evaluate', null, { root: true }).catch(() => {})
       return { workout: saved, cycleId }
     },
 

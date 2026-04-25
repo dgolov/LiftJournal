@@ -7,6 +7,20 @@ from pydantic import BaseModel
 
 
 # ---------------------------------------------------------------------------
+# Achievements
+# ---------------------------------------------------------------------------
+
+class AchievementOut(BaseModel):
+    id: str
+    title: str
+    description: str
+    icon: str
+    category: str
+    unlocked: bool
+    unlockedAt: Optional[datetime] = None
+
+
+# ---------------------------------------------------------------------------
 # Auth
 # ---------------------------------------------------------------------------
 
@@ -120,7 +134,7 @@ class WorkoutOut(BaseModel):
 
 class ProfileUpdate(BaseModel):
     name: Optional[str] = None
-    age: Optional[int] = None
+    birthDate: Optional[date] = None
     avatarUrl: Optional[str] = None
 
 
@@ -164,7 +178,7 @@ class UserMaxOut(BaseModel):
 
 class UserOut(BaseModel):
     name: str
-    age: int
+    birthDate: Optional[date] = None
     avatarUrl: Optional[str]
     theme: str = "light"
     weightLog: list[WeightEntryOut]

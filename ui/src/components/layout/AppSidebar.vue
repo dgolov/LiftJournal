@@ -33,6 +33,7 @@
         Новая тренировка
       </RouterLink>
       <p class="text-xs text-gray-400 text-center mt-2 truncate">{{ userName }}</p>
+      <p class="text-xs text-gray-300 dark:text-gray-600 text-center mt-0.5">v{{ APP_VERSION }}</p>
     </div>
   </aside>
 
@@ -46,6 +47,7 @@
 
 <script setup>
 import { computed, markRaw } from 'vue'
+import { APP_VERSION } from '@/version.js'
 import { useStore } from 'vuex'
 import { Dumbbell, ClipboardList, BarChart3, User, Plus, CalendarDays, BookOpen, LayoutDashboard } from 'lucide-vue-next'
 

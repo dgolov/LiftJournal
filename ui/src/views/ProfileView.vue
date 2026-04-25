@@ -7,7 +7,7 @@
       </div>
       <div class="flex-1 min-w-0">
         <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ profile.name }}</h2>
-        <p class="text-sm text-gray-500">{{ profile.age }} лет</p>
+        <p class="text-sm text-gray-500">{{ age !== null ? age + ' лет' : '' }}</p>
       </div>
       <BaseButton variant="outline" size="sm" @click="showEditProfile = true">Изменить</BaseButton>
     </div>
@@ -113,11 +113,39 @@
       </BaseEmptyState>
     </div>
 
+    <!-- Achievements -->
+    <div class="card p-4">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="font-semibold text-gray-900 dark:text-white">Достижения</h3>
+          <p class="text-xs text-gray-400 mt-0.5">{{ unlockedCount }} / {{ achievements.length }} разблокировано</p>
+        </div>
+        <Medal class="w-5 h-5 text-primary" />
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div
+          v-for="a in achievements"
+          :key="a.id"
+          :class="['rounded-xl p-3 border transition-all', a.unlocked
+            ? 'bg-primary/10 border-primary/20 dark:bg-primary/15 dark:border-primary/30'
+            : 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-700 opacity-60']"
+        >
+          <div class="text-2xl mb-1">{{ a.icon }}</div>
+          <p class="text-sm font-semibold text-gray-900 dark:text-white leading-tight">{{ a.title }}</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">{{ a.description }}</p>
+          <p v-if="a.unlocked && a.unlockedAt" class="text-xs text-primary font-medium mt-1.5">
+            {{ formatDate(new Date(a.unlockedAt).toISOString().split('T')[0]) }}
+          </p>
+          <p v-else-if="!a.unlocked" class="text-xs text-gray-400 mt-1.5">Заблокировано</p>
+        </div>
+      </div>
+    </div>
+
     <!-- Edit profile modal -->
     <BaseModal v-model="showEditProfile" title="Редактировать профиль">
       <div class="space-y-4">
         <BaseInput v-model="editForm.name" label="Имя" />
-        <BaseInput v-model.number="editForm.age" type="number" label="Возраст" min="10" max="100" />
+        <BaseInput v-model="editForm.birthDate" type="date" label="Дата рождения" />
       </div>
       <template #footer>
         <BaseButton variant="ghost" @click="showEditProfile = false">Отмена</BaseButton>
@@ -130,16 +158,11 @@
       <div class="space-y-4">
         <div>
           <label class="label">Упражнение</label>
-          <div class="flex flex-wrap gap-2 mb-2">
-            <button
-              v-for="ex in commonLifts"
-              :key="ex"
-              :class="['text-xs px-2.5 py-1 rounded-full border transition-colors',
-                maxForm.exercise_name === ex ? 'bg-primary text-white border-primary' : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-primary dark:hover:border-primary']"
-              @click="maxForm.exercise_name = ex"
-            >{{ ex }}</button>
-          </div>
-          <input v-model="maxForm.exercise_name" class="input" placeholder="или введите своё упражнение" />
+          <input v-model="maxExSearch" class="input mb-2" placeholder="Поиск упражнения…" />
+          <select v-model="maxForm.exercise_name" class="input" size="5">
+            <option v-for="ex in filteredMaxExercises" :key="ex.id" :value="ex.name">{{ ex.name }}</option>
+          </select>
+          <p v-if="maxForm.exercise_name" class="text-xs text-primary mt-1">{{ maxForm.exercise_name }}</p>
         </div>
         <div>
           <label class="label">Максимальный вес (кг)</label>
@@ -156,21 +179,21 @@
     <BaseModal v-model="showAddGoal" title="Новая цель">
       <div class="space-y-4">
         <BaseInput v-model="goalForm.text" label="Цель" placeholder="Например: Жим лёжа 100 кг" />
-        <BaseInput v-model="goalForm.targetDate" type="date" label="Дата дедлайна" />
+        <BaseInput v-model="goalForm.targetDate" type="date" label="Дата дедлайна" :min="today" />
       </div>
       <template #footer>
         <BaseButton variant="ghost" @click="showAddGoal = false">Отмена</BaseButton>
-        <BaseButton :disabled="!goalForm.text" @click="addGoal">Добавить</BaseButton>
+        <BaseButton :disabled="!goalForm.text || goalForm.targetDate < today" @click="addGoal">Добавить</BaseButton>
       </template>
     </BaseModal>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, reactive } from 'vue'
+import { ref, computed, reactive, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { Target, Dumbbell, X } from 'lucide-vue-next'
+import { Target, Dumbbell, X, Medal } from 'lucide-vue-next'
 import StatCard from '@/components/profile/StatCard.vue'
 import WeightChart from '@/components/profile/WeightChart.vue'
 import ActivityHeatmap from '@/components/profile/ActivityHeatmap.vue'
@@ -193,16 +216,24 @@ function logout() {
 const profile = computed(() => store.state.user.profile)
 const maxes = computed(() => store.state.user.maxes)
 
-const commonLifts = ['Приседания со штангой', 'Жим лёжа', 'Становая тяга']
-
 const showAddMax = ref(false)
+const maxExSearch = ref('')
 const maxForm = reactive({ exercise_name: '', weight_kg: null })
+
+const allExercises = computed(() => store.getters['exercises/allExercises'])
+const filteredMaxExercises = computed(() => {
+  const q = maxExSearch.value.toLowerCase().trim()
+  return allExercises.value
+    .filter(e => e.muscleGroup !== 'Кардио')
+    .filter(e => !q || e.name.toLowerCase().includes(q))
+})
 
 async function saveMax() {
   await store.dispatch('user/saveUserMax', { exercise_name: maxForm.exercise_name, weight_kg: maxForm.weight_kg })
   store.dispatch('ui/showToast', { message: 'ПМ сохранён!', type: 'success' })
   maxForm.exercise_name = ''
   maxForm.weight_kg = null
+  maxExSearch.value = ''
   showAddMax.value = false
 }
 
@@ -226,8 +257,19 @@ const formattedVolume = computed(() => {
 const showEditProfile = ref(false)
 const showAddGoal = ref(false)
 
-const editForm = reactive({ name: profile.value.name, age: profile.value.age })
-const goalForm = reactive({ text: '', targetDate: new Date().toISOString().split('T')[0] })
+const editForm = reactive({ name: profile.value.name, birthDate: profile.value.birthDate ?? '' })
+
+const age = computed(() => {
+  const bd = profile.value.birthDate
+  if (!bd) return null
+  const today = new Date()
+  const b = new Date(bd + 'T00:00:00')
+  let a = today.getFullYear() - b.getFullYear()
+  if (today.getMonth() < b.getMonth() || (today.getMonth() === b.getMonth() && today.getDate() < b.getDate())) a--
+  return a
+})
+const today = new Date().toISOString().split('T')[0]
+const goalForm = reactive({ text: '', targetDate: today })
 const weightForm = reactive({ date: new Date().toISOString().split('T')[0], kg: null })
 
 function formatDate(date) {
@@ -235,7 +277,7 @@ function formatDate(date) {
 }
 
 async function saveProfile() {
-  await store.dispatch('user/updateProfile', { ...editForm })
+  await store.dispatch('user/updateProfile', { name: editForm.name, birthDate: editForm.birthDate || null })
   store.dispatch('ui/showToast', { message: 'Профиль обновлён', type: 'success' })
   showEditProfile.value = false
 }
@@ -255,4 +297,9 @@ async function addGoal() {
 
 async function toggleGoal(id) { await store.dispatch('user/toggleGoal', id) }
 async function deleteGoal(id) { await store.dispatch('user/deleteGoal', id) }
+
+const achievements = computed(() => store.getters['achievements/all'])
+const unlockedCount = computed(() => store.getters['achievements/unlockedCount'])
+
+onMounted(() => { store.dispatch('achievements/init') })
 </script>

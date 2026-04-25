@@ -91,7 +91,7 @@ class User(Base):
     email: Mapped[Optional[str]] = mapped_column(String(255), unique=True, nullable=True, index=True)
     hashed_password: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     name: Mapped[str] = mapped_column(String(100), default="")
-    age: Mapped[int] = mapped_column(Integer, default=0)
+    birth_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     avatar_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     theme: Mapped[str] = mapped_column(String(10), default="light")
 
@@ -284,6 +284,18 @@ class PlannedSet(Base):
     order: Mapped[int] = mapped_column(Integer, default=0)
 
     planned_exercise: Mapped["PlannedExercise"] = relationship("PlannedExercise", back_populates="sets")
+
+
+class UserAchievement(Base):
+    """Tracks which achievements a user has unlocked."""
+    __tablename__ = "user_achievements"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    achievement_id: Mapped[str] = mapped_column(String(100), nullable=False)
+    unlocked_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
 
 class UserMax(Base):
