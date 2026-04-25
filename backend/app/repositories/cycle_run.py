@@ -14,6 +14,14 @@ class CycleRunRepository:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
 
+    async def get_any_active_run(self, user_id: int) -> UserCycleRun | None:
+        result = await self.db.execute(
+            select(UserCycleRun)
+            .options(selectinload(UserCycleRun.logs))
+            .where(UserCycleRun.user_id == user_id, UserCycleRun.completed_at.is_(None))
+        )
+        return result.scalar_one_or_none()
+
     async def get_active_run(self, user_id: int, cycle_id: str) -> UserCycleRun | None:
         result = await self.db.execute(
             select(UserCycleRun)
