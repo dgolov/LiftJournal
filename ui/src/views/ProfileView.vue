@@ -7,7 +7,7 @@
       </div>
       <div class="flex-1 min-w-0">
         <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ profile.name }}</h2>
-        <p class="text-sm text-gray-500">{{ profile.age }} лет</p>
+        <p class="text-sm text-gray-500">{{ age !== null ? age + ' лет' : '' }}</p>
       </div>
       <BaseButton variant="outline" size="sm" @click="showEditProfile = true">Изменить</BaseButton>
     </div>
@@ -145,7 +145,7 @@
     <BaseModal v-model="showEditProfile" title="Редактировать профиль">
       <div class="space-y-4">
         <BaseInput v-model="editForm.name" label="Имя" />
-        <BaseInput v-model.number="editForm.age" type="number" label="Возраст" min="10" max="100" />
+        <BaseInput v-model="editForm.birthDate" type="date" label="Дата рождения" />
       </div>
       <template #footer>
         <BaseButton variant="ghost" @click="showEditProfile = false">Отмена</BaseButton>
@@ -254,7 +254,17 @@ const formattedVolume = computed(() => {
 const showEditProfile = ref(false)
 const showAddGoal = ref(false)
 
-const editForm = reactive({ name: profile.value.name, age: profile.value.age })
+const editForm = reactive({ name: profile.value.name, birthDate: profile.value.birthDate ?? '' })
+
+const age = computed(() => {
+  const bd = profile.value.birthDate
+  if (!bd) return null
+  const today = new Date()
+  const b = new Date(bd + 'T00:00:00')
+  let a = today.getFullYear() - b.getFullYear()
+  if (today.getMonth() < b.getMonth() || (today.getMonth() === b.getMonth() && today.getDate() < b.getDate())) a--
+  return a
+})
 const goalForm = reactive({ text: '', targetDate: new Date().toISOString().split('T')[0] })
 const weightForm = reactive({ date: new Date().toISOString().split('T')[0], kg: null })
 
@@ -263,7 +273,7 @@ function formatDate(date) {
 }
 
 async function saveProfile() {
-  await store.dispatch('user/updateProfile', { ...editForm })
+  await store.dispatch('user/updateProfile', { name: editForm.name, birthDate: editForm.birthDate || null })
   store.dispatch('ui/showToast', { message: 'Профиль обновлён', type: 'success' })
   showEditProfile.value = false
 }

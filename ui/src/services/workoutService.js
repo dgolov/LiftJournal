@@ -106,7 +106,7 @@ const workoutService = {
   updateProfile(profile) {
     return request('PATCH', '/user/profile', {
       name: profile.name,
-      age: profile.age,
+      birthDate: profile.birthDate ?? null,
       avatarUrl: profile.avatarUrl ?? null,
     })
   },
