@@ -74,7 +74,14 @@
 
     <!-- Exercises -->
     <div class="space-y-4">
-      <div v-for="ex in displayExercises" :key="ex.exerciseId" class="card p-4">
+      <SwipeDeleteWrapper
+        v-for="ex in displayExercises"
+        :key="ex.exerciseId"
+        :disabled="!isEditing"
+        delete-label="Удалить упражнение"
+        @delete="removeDraftExercise(ex.exerciseId)"
+      >
+      <div class="card p-4">
         <div class="flex items-center justify-between mb-3">
           <h3 class="font-semibold text-gray-900 dark:text-white">{{ ex.exerciseName }}</h3>
           <button
@@ -170,6 +177,7 @@
           </template>
         </p>
       </div>
+      </SwipeDeleteWrapper>
     </div>
 
     <div v-if="!workout.exercises.length" class="text-center py-8 text-gray-400">
@@ -206,6 +214,7 @@ import { ChevronLeft, Pencil, X, Plus, RefreshCw, Trash2 } from 'lucide-vue-next
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import StepperInput from '@/components/ui/StepperInput.vue'
 import ExercisePicker from '@/components/workout/ExercisePicker.vue'
+import SwipeDeleteWrapper from '@/components/ui/SwipeDeleteWrapper.vue'
 import { WORKOUT_TYPES } from '@/services/mockData.js'
 
 const route = useRoute()
