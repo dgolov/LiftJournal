@@ -7,10 +7,13 @@ export default {
     cycles: [],
     currentCycle: null,
     currentRun: null,
+    anyActiveRun: null,  // active run across ALL cycles (null if none)
   }),
 
   getters: {
     cycleById: state => id => state.cycles.find(c => c.id === id),
+    hasActiveRun: state => !!state.anyActiveRun,
+    activeRunCycleId: state => state.anyActiveRun?.cycle_id ?? null,
     completedWorkoutIds: state => {
       if (!state.currentRun) return new Set()
       return new Set(state.currentRun.logs.filter(l => l.completed_at).map(l => l.cycle_workout_id))
@@ -22,6 +25,7 @@ export default {
     SET_CYCLES(state, cycles) { state.cycles = cycles },
     SET_CURRENT(state, cycle) { state.currentCycle = cycle },
     SET_RUN(state, run) { state.currentRun = run },
+    SET_ANY_ACTIVE_RUN(state, run) { state.anyActiveRun = run },
     ADD_CYCLE(state, cycle) { state.cycles.unshift(cycle) },
     UPDATE_CYCLE(state, cycle) {
       const i = state.cycles.findIndex(c => c.id === cycle.id)
@@ -32,13 +36,17 @@ export default {
       state.cycles = state.cycles.filter(c => c.id !== id)
       if (state.currentCycle?.id === id) state.currentCycle = null
     },
-    RESET(state) { state.cycles = []; state.currentCycle = null; state.currentRun = null },
+    RESET(state) { state.cycles = []; state.currentCycle = null; state.currentRun = null; state.anyActiveRun = null },
   },
 
   actions: {
     async fetchCycles({ commit }) {
-      const cycles = await workoutService.fetchCycles()
+      const [cycles, anyRun] = await Promise.all([
+        workoutService.fetchCycles(),
+        workoutService.fetchAnyActiveRun().catch(() => null),
+      ])
       commit('SET_CYCLES', cycles)
+      commit('SET_ANY_ACTIVE_RUN', anyRun ?? null)
     },
 
     async fetchCycle({ commit }, id) {
@@ -56,6 +64,7 @@ export default {
     async startCycleRun({ commit }, cycleId) {
       const run = await workoutService.startCycleRun(cycleId)
       commit('SET_RUN', run)
+      commit('SET_ANY_ACTIVE_RUN', run)
       return run
     },
 
@@ -72,6 +81,7 @@ export default {
     async finishCycleRun({ commit }, runId) {
       await workoutService.finishCycleRun(runId)
       commit('SET_RUN', null)
+      commit('SET_ANY_ACTIVE_RUN', null)
     },
 
     async createCycle({ commit }, data) {
