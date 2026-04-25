@@ -52,7 +52,19 @@
         <div class="flex flex-wrap items-center justify-between gap-2">
           <p v-if="completedCount === totalCount" class="text-sm text-green-600 font-semibold">Все тренировки выполнены!</p>
           <p v-else class="text-xs text-gray-400">Выполнено {{ completedCount }} из {{ totalCount }}</p>
-          <BaseButton variant="outline" size="sm" :loading="finishingRun" @click="finishRun">Завершить цикл</BaseButton>
+          <BaseButton variant="outline" size="sm" :loading="finishingRun" @click="completedCount === totalCount ? finishRun() : (showEarlyFinishConfirm = true)">
+            {{ completedCount === totalCount ? 'Завершить цикл' : 'Завершить досрочно' }}
+          </BaseButton>
+        </div>
+      </div>
+      <div v-else-if="otherActiveCycleId" class="flex items-start gap-3">
+        <AlertTriangle class="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold text-gray-700 dark:text-gray-200">Уже есть активный цикл</p>
+          <p class="text-xs text-gray-400 mt-0.5">
+            Сначала завершите текущий активный цикл, чтобы начать новый.
+            <RouterLink :to="`/cycles/${otherActiveCycleId}`" class="text-primary font-medium underline ml-1">Перейти</RouterLink>
+          </p>
         </div>
       </div>
       <div v-else class="flex flex-wrap items-center justify-between gap-3">
@@ -63,6 +75,17 @@
         <BaseButton class="w-full sm:w-auto" :loading="startingRun" @click="startRun">Начать цикл</BaseButton>
       </div>
     </div>
+
+    <!-- Early finish confirm -->
+    <BaseModal v-model="showEarlyFinishConfirm" title="Завершить цикл досрочно?">
+      <p class="text-sm text-gray-600 dark:text-gray-400">
+        Выполнено {{ completedCount }} из {{ totalCount }} тренировок. Цикл будет отмечен как завершённый и начать новый станет возможным.
+      </p>
+      <template #footer>
+        <BaseButton variant="ghost" @click="showEarlyFinishConfirm = false">Отмена</BaseButton>
+        <BaseButton variant="danger" :loading="finishingRun" @click="finishRun">Завершить</BaseButton>
+      </template>
+    </BaseModal>
 
     <!-- 1RM notice -->
     <div v-if="missingMaxes.length" class="card p-3 mb-4 border-l-4 border-amber-400 flex items-start gap-2">
@@ -230,6 +253,7 @@ onBeforeRouteLeave(() => { leaving = true })
 const viewMode = ref('list')
 const startingRun = ref(false)
 const finishingRun = ref(false)
+const showEarlyFinishConfirm = ref(false)
 const startingWorkout = ref(null) // cycle_workout_id being started
 const showStartModal = ref(false)
 const pendingWorkoutId = ref(null)
@@ -245,6 +269,12 @@ const completedIds = computed(() => store.getters['cycles/completedWorkoutIds'])
 const completedCount = computed(() => completedIds.value.size)
 const totalCount = computed(() => cycle.value?.workouts.length ?? 0)
 const progressPct = computed(() => totalCount.value ? Math.round(completedCount.value / totalCount.value * 100) : 0)
+
+const activeRunCycleId = computed(() => store.getters['cycles/activeRunCycleId'])
+const otherActiveCycleId = computed(() => {
+  const id = activeRunCycleId.value
+  return id && id !== route.params.id ? id : null
+})
 
 onMounted(async () => {
   loading.value = true
@@ -264,6 +294,7 @@ async function startRun() {
 
 async function finishRun() {
   finishingRun.value = true
+  showEarlyFinishConfirm.value = false
   try { await store.dispatch('cycles/finishCycleRun', currentRun.value.id) }
   finally { finishingRun.value = false }
 }
