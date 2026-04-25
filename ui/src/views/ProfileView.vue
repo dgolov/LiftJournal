@@ -158,16 +158,11 @@
       <div class="space-y-4">
         <div>
           <label class="label">Упражнение</label>
-          <div class="flex flex-wrap gap-2 mb-2">
-            <button
-              v-for="ex in commonLifts"
-              :key="ex"
-              :class="['text-xs px-2.5 py-1 rounded-full border transition-colors',
-                maxForm.exercise_name === ex ? 'bg-primary text-white border-primary' : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:border-primary dark:hover:border-primary']"
-              @click="maxForm.exercise_name = ex"
-            >{{ ex }}</button>
-          </div>
-          <input v-model="maxForm.exercise_name" class="input" placeholder="или введите своё упражнение" />
+          <input v-model="maxExSearch" class="input mb-2" placeholder="Поиск упражнения…" />
+          <select v-model="maxForm.exercise_name" class="input" size="5">
+            <option v-for="ex in filteredMaxExercises" :key="ex.id" :value="ex.name">{{ ex.name }}</option>
+          </select>
+          <p v-if="maxForm.exercise_name" class="text-xs text-primary mt-1">{{ maxForm.exercise_name }}</p>
         </div>
         <div>
           <label class="label">Максимальный вес (кг)</label>
@@ -184,11 +179,11 @@
     <BaseModal v-model="showAddGoal" title="Новая цель">
       <div class="space-y-4">
         <BaseInput v-model="goalForm.text" label="Цель" placeholder="Например: Жим лёжа 100 кг" />
-        <BaseInput v-model="goalForm.targetDate" type="date" label="Дата дедлайна" />
+        <BaseInput v-model="goalForm.targetDate" type="date" label="Дата дедлайна" :min="today" />
       </div>
       <template #footer>
         <BaseButton variant="ghost" @click="showAddGoal = false">Отмена</BaseButton>
-        <BaseButton :disabled="!goalForm.text" @click="addGoal">Добавить</BaseButton>
+        <BaseButton :disabled="!goalForm.text || goalForm.targetDate < today" @click="addGoal">Добавить</BaseButton>
       </template>
     </BaseModal>
   </div>
@@ -221,16 +216,22 @@ function logout() {
 const profile = computed(() => store.state.user.profile)
 const maxes = computed(() => store.state.user.maxes)
 
-const commonLifts = ['Приседания со штангой', 'Жим лёжа', 'Становая тяга']
-
 const showAddMax = ref(false)
+const maxExSearch = ref('')
 const maxForm = reactive({ exercise_name: '', weight_kg: null })
+
+const allExercises = computed(() => store.getters['exercises/allExercises'])
+const filteredMaxExercises = computed(() => {
+  const q = maxExSearch.value.toLowerCase().trim()
+  return q ? allExercises.value.filter(e => e.name.toLowerCase().includes(q)) : allExercises.value
+})
 
 async function saveMax() {
   await store.dispatch('user/saveUserMax', { exercise_name: maxForm.exercise_name, weight_kg: maxForm.weight_kg })
   store.dispatch('ui/showToast', { message: 'ПМ сохранён!', type: 'success' })
   maxForm.exercise_name = ''
   maxForm.weight_kg = null
+  maxExSearch.value = ''
   showAddMax.value = false
 }
 
@@ -265,7 +266,8 @@ const age = computed(() => {
   if (today.getMonth() < b.getMonth() || (today.getMonth() === b.getMonth() && today.getDate() < b.getDate())) a--
   return a
 })
-const goalForm = reactive({ text: '', targetDate: new Date().toISOString().split('T')[0] })
+const today = new Date().toISOString().split('T')[0]
+const goalForm = reactive({ text: '', targetDate: today })
 const weightForm = reactive({ date: new Date().toISOString().split('T')[0], kg: null })
 
 function formatDate(date) {
