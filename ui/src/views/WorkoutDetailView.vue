@@ -16,7 +16,7 @@
         </p>
         <p v-if="workout.notes" class="text-sm text-gray-600 dark:text-gray-400 mt-2 italic">{{ workout.notes }}</p>
       </div>
-      <template v-if="!isEditing">
+      <template v-if="!isEditing && isOwner">
         <button
           class="p-2 rounded-xl hover:bg-primary/10 text-primary transition-colors"
           title="Повторить тренировку"
@@ -199,6 +199,74 @@
       :added-ids="draftAddedIds"
       @pick="addDraftExercise"
     />
+
+    <!-- Likes & Comments section -->
+    <div v-if="!isEditing" class="mt-6 space-y-4">
+      <!-- Like button -->
+      <div class="flex items-center gap-4">
+        <button
+          class="flex items-center gap-2 px-4 py-2 rounded-xl border transition-colors text-sm font-medium"
+          :class="displayIsLiked
+            ? 'border-red-300 text-red-500 bg-red-50 dark:bg-red-950/30 dark:border-red-800'
+            : 'border-gray-200 dark:border-gray-700 text-gray-500 hover:border-red-300 hover:text-red-400'"
+          @click="toggleLike"
+        >
+          <Heart :class="['w-4 h-4 transition-all', displayIsLiked ? 'fill-current scale-110' : '']" />
+          <span>{{ displayLikesCount }}</span>
+        </button>
+      </div>
+
+      <!-- Comments -->
+      <div class="card overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800 font-semibold text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
+          <MessageCircle class="w-4 h-4" />
+          Комментарии
+          <span class="text-gray-400 font-normal">({{ comments.length }})</span>
+        </div>
+
+        <!-- Comment list -->
+        <div v-if="commentsLoading" class="p-4 text-center text-sm text-gray-400">Загрузка…</div>
+        <div v-else-if="!comments.length" class="p-4 text-center text-sm text-gray-400">Пока нет комментариев</div>
+        <div v-else class="divide-y divide-gray-100 dark:divide-gray-800">
+          <div v-for="c in comments" :key="c.id" class="flex items-start gap-3 px-4 py-3">
+            <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs flex-shrink-0">
+              {{ c.userName.charAt(0).toUpperCase() }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-baseline gap-2">
+                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ c.userName }}</span>
+                <span class="text-xs text-gray-400">{{ formatCommentDate(c.createdAt) }}</span>
+              </div>
+              <p class="text-sm text-gray-700 dark:text-gray-300 mt-0.5 break-words">{{ c.text }}</p>
+            </div>
+            <button
+              v-if="c.isOwn"
+              class="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0 mt-0.5"
+              @click="deleteComment(c.id)"
+            >
+              <Trash2 class="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        <!-- Add comment -->
+        <div class="px-4 py-3 border-t border-gray-100 dark:border-gray-800 flex gap-2">
+          <input
+            v-model="newComment"
+            class="input flex-1 text-sm"
+            placeholder="Написать комментарий…"
+            @keydown.enter.prevent="submitComment"
+          />
+          <button
+            class="btn btn-primary text-sm px-3 py-1.5"
+            :disabled="!newComment.trim() || submittingComment"
+            @click="submitComment"
+          >
+            <Send class="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div v-else class="text-center py-16 text-gray-400">
@@ -207,21 +275,99 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
-import { ChevronLeft, Pencil, X, Plus, RefreshCw, Trash2 } from 'lucide-vue-next'
+import { ChevronLeft, Pencil, X, Plus, RefreshCw, Trash2, Heart, MessageCircle, Send } from 'lucide-vue-next'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import StepperInput from '@/components/ui/StepperInput.vue'
 import ExercisePicker from '@/components/workout/ExercisePicker.vue'
 import SwipeDeleteWrapper from '@/components/ui/SwipeDeleteWrapper.vue'
 import { WORKOUT_TYPES } from '@/services/mockData.js'
+import workoutService from '@/services/workoutService.js'
 
 const route = useRoute()
 const router = useRouter()
 const store = useStore()
 
-const workout = computed(() => store.getters['workouts/workoutById'](route.params.id))
+const fetchedWorkout = ref(null)
+const socialMeta = ref(null) // { isLiked, likesCount } — for own workouts not in feed
+
+const workout = computed(() =>
+  store.getters['workouts/workoutById'](route.params.id) ??
+  store.state.social.feed.find(w => w.id === route.params.id) ??
+  fetchedWorkout.value ??
+  null
+)
+
+onMounted(async () => {
+  const id = route.params.id
+  // Always fetch social data to get likes/comments counts (works for own workouts too)
+  try {
+    const meta = await workoutService.fetchSocialWorkout(id)
+    socialMeta.value = { isLiked: meta.isLiked, likesCount: meta.likesCount }
+    // Only use as fetchedWorkout if not already in local store or feed
+    if (!store.getters['workouts/workoutById'](id) && !store.state.social.feed.find(w => w.id === id)) {
+      fetchedWorkout.value = meta
+    }
+  } catch { /* no access or not found */ }
+
+  // Always load comments
+  commentsLoading.value = true
+  try {
+    await store.dispatch('social/fetchComments', id)
+  } catch { /* no access */ }
+  finally { commentsLoading.value = false }
+})
+
+const currentUserId = computed(() => store.state.auth.userId)
+const isOwner = computed(() => {
+  const w = workout.value
+  if (!w) return false
+  return !('userId' in w) || w.userId === currentUserId.value
+})
+const isSocialWorkout = computed(() => workout.value && 'userId' in workout.value)
+
+// ── Likes ──────────────────────────────────────────────────────────────────
+const displayIsLiked = computed(() => socialMeta.value?.isLiked ?? workout.value?.isLiked ?? false)
+const displayLikesCount = computed(() => socialMeta.value?.likesCount ?? workout.value?.likesCount ?? 0)
+
+async function toggleLike() {
+  if (!workout.value) return
+  const status = await store.dispatch('social/toggleLike', workout.value.id)
+  if (status) {
+    socialMeta.value = { isLiked: status.isLiked, likesCount: status.likesCount }
+    if (fetchedWorkout.value) {
+      fetchedWorkout.value = { ...fetchedWorkout.value, ...status }
+    }
+  }
+}
+
+// ── Comments ───────────────────────────────────────────────────────────────
+const newComment = ref('')
+const submittingComment = ref(false)
+const commentsLoading = ref(false)
+const comments = computed(() => store.state.social.comments[route.params.id] || [])
+
+async function submitComment() {
+  const text = newComment.value.trim()
+  if (!text || submittingComment.value) return
+  submittingComment.value = true
+  try {
+    await store.dispatch('social/addComment', { workoutId: route.params.id, text })
+    newComment.value = ''
+  } finally {
+    submittingComment.value = false
+  }
+}
+
+async function deleteComment(commentId) {
+  await store.dispatch('social/deleteComment', { workoutId: route.params.id, commentId })
+}
+
+function formatCommentDate(iso) {
+  return new Date(iso).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+}
 
 const exerciseLibrary = computed(() => store.state.exercises.library)
 function isCardio(exerciseId) {

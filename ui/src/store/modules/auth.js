@@ -56,6 +56,7 @@ export default {
       // Clear user data from other modules
       dispatch('workouts/reset', null, { root: true })
       dispatch('user/reset', null, { root: true })
+      dispatch('social/reset', null, { root: true })
     },
   },
 }

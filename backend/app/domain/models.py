@@ -321,6 +321,19 @@ class UserFollow(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=gen_uuid)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    type: Mapped[str] = mapped_column(String(20), nullable=False)  # follow | like | comment
+    actor_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    workout_id: Mapped[Optional[str]] = mapped_column(String, ForeignKey("workouts.id", ondelete="CASCADE"), nullable=True)
+    comment_text: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+
+
 class WorkoutLike(Base):
     __tablename__ = "workout_likes"
     __table_args__ = (UniqueConstraint("user_id", "workout_id"),)

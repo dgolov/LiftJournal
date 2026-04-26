@@ -21,12 +21,12 @@
 
 <script setup>
 import { markRaw } from 'vue'
-import { ClipboardList, Dumbbell, Plus, CalendarDays, LayoutDashboard } from 'lucide-vue-next'
+import { ClipboardList, Dumbbell, Plus, CalendarDays, LayoutDashboard, Users } from 'lucide-vue-next'
 
 const navItems = [
   { to: '/dashboard', icon: markRaw(LayoutDashboard), label: 'Дашборд' },
+  { to: '/feed', icon: markRaw(Users), label: 'Лента' },
   { to: '/history', icon: markRaw(ClipboardList), label: 'История' },
-  { to: '/planning', icon: markRaw(CalendarDays), label: 'План' },
   { to: '/exercises', icon: markRaw(Dumbbell), label: 'Упражнения' },
 ]
 </script>

@@ -198,6 +198,77 @@ const workoutService = {
     return request('DELETE', `/planned-workouts/${id}`)
   },
 
+  // Social
+  searchUsers(q) {
+    return request('GET', `/social/users/search?q=${encodeURIComponent(q)}`)
+  },
+  getPublicProfile(userId) {
+    return request('GET', `/social/users/${userId}`)
+  },
+  followUser(userId) {
+    return request('POST', `/social/users/${userId}/follow`)
+  },
+  unfollowUser(userId) {
+    return request('DELETE', `/social/users/${userId}/follow`)
+  },
+  fetchFeed(limit = 30, offset = 0) {
+    return request('GET', `/social/feed?limit=${limit}&offset=${offset}`)
+  },
+  fetchMyFollowers() {
+    return request('GET', '/social/me/followers')
+  },
+  fetchMyFollowing() {
+    return request('GET', '/social/me/following')
+  },
+  fetchUserWorkouts(userId) {
+    return request('GET', `/social/users/${userId}/workouts`)
+  },
+  fetchUserActivity(userId) {
+    return request('GET', `/social/users/${userId}/activity`)
+  },
+  fetchUserMaxes(userId) {
+    return request('GET', `/social/users/${userId}/maxes`)
+  },
+  fetchUserGoals(userId) {
+    return request('GET', `/social/users/${userId}/goals`)
+  },
+  fetchUserAchievements(userId) {
+    return request('GET', `/social/users/${userId}/achievements`)
+  },
+  fetchSocialWorkout(workoutId) {
+    return request('GET', `/social/workouts/${workoutId}`)
+  },
+  fetchWorkoutsMeta(ids) {
+    const params = ids.map(id => `ids=${encodeURIComponent(id)}`).join('&')
+    return request('GET', `/social/workouts/meta?${params}`)
+  },
+  toggleLike(workoutId) {
+    return request('POST', `/social/workouts/${workoutId}/like`)
+  },
+  getComments(workoutId) {
+    return request('GET', `/social/workouts/${workoutId}/comments`)
+  },
+  addComment(workoutId, text) {
+    return request('POST', `/social/workouts/${workoutId}/comments`, { text })
+  },
+  deleteComment(workoutId, commentId) {
+    return request('DELETE', `/social/workouts/${workoutId}/comments/${commentId}`)
+  },
+
+  // Notifications
+  fetchUnreadCount() {
+    return request('GET', '/notifications/unread-count')
+  },
+  fetchNotifications({ unreadOnly = false, page = 1, perPage = 20 } = {}) {
+    return request('GET', `/notifications?unread_only=${unreadOnly}&page=${page}&per_page=${perPage}`)
+  },
+  markNotificationRead(id) {
+    return request('PATCH', `/notifications/${id}/read`)
+  },
+  markAllNotificationsRead() {
+    return request('POST', '/notifications/read-all')
+  },
+
   // Achievements
   fetchAchievements() {
     return request('GET', '/achievements')
