@@ -161,9 +161,11 @@ const store = useStore()
 const router = useRouter()
 const workoutTypes = WORKOUT_TYPES
 
-onMounted(() => {
-  if (!store.state.workouts.workouts.length) store.dispatch('workouts/initWorkouts')
+onMounted(async () => {
+  if (!store.state.workouts.workouts.length) await store.dispatch('workouts/initWorkouts')
   if (!store.state.planned.plannedWorkouts.length) store.dispatch('planned/fetchPlannedWorkouts')
+  const ids = store.state.workouts.workouts.map(w => w.id)
+  if (ids.length) store.dispatch('social/fetchWorkoutsMeta', ids)
 })
 
 // --- View state ---

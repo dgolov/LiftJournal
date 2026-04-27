@@ -350,3 +350,121 @@ class PlannedWorkoutOut(BaseModel):
     completedWorkoutId: Optional[str]
     createdAt: datetime
     exercises: list[PlannedExerciseOut]
+
+
+# ---------------------------------------------------------------------------
+# Social
+# ---------------------------------------------------------------------------
+
+class UserPublicOut(BaseModel):
+    id: int
+    name: str
+    avatarUrl: Optional[str] = None
+    age: Optional[int] = None
+    followersCount: int
+    followingCount: int
+    workoutsCount: int
+    isFollowing: bool
+
+
+class ActivityDayOut(BaseModel):
+    date: str
+    count: int
+
+
+class PublicMaxOut(BaseModel):
+    exerciseName: str
+    weightKg: float
+
+
+class PublicGoalOut(BaseModel):
+    text: str
+    targetDate: Optional[_Date] = None
+
+
+class PublicAchievementOut(BaseModel):
+    id: str
+    title: str
+    icon: str
+    category: str
+    unlockedAt: datetime
+
+
+class UserSearchOut(BaseModel):
+    id: int
+    name: str
+    avatarUrl: Optional[str] = None
+    isFollowing: bool
+
+
+class FollowStatusOut(BaseModel):
+    isFollowing: bool
+    followersCount: int
+
+
+class FeedWorkoutOut(BaseModel):
+    id: str
+    date: _Date
+    type: str
+    title: str
+    durationMinutes: int
+    notes: str
+    createdAt: datetime
+    exercises: list[WorkoutExerciseOut]
+    userId: int
+    userName: str
+    userAvatarUrl: Optional[str] = None
+    likesCount: int = 0
+    commentsCount: int = 0
+    isLiked: bool = False
+
+
+class LikeStatusOut(BaseModel):
+    isLiked: bool
+    likesCount: int
+
+
+class WorkoutMetaOut(BaseModel):
+    workoutId: str
+    likesCount: int
+    commentsCount: int
+    isLiked: bool
+
+
+# ---------------------------------------------------------------------------
+# Notifications
+# ---------------------------------------------------------------------------
+
+class NotificationOut(BaseModel):
+    id: str
+    type: str
+    actorId: int
+    actorName: str
+    workoutId: Optional[str] = None
+    workoutTitle: Optional[str] = None
+    commentText: Optional[str] = None
+    isRead: bool
+    createdAt: datetime
+
+
+class NotificationsPageOut(BaseModel):
+    items: list[NotificationOut]
+    hasMore: bool
+    total: int
+
+
+class UnreadCountOut(BaseModel):
+    count: int
+
+
+class WorkoutCommentIn(BaseModel):
+    text: str
+
+
+class WorkoutCommentOut(BaseModel):
+    id: str
+    userId: int
+    userName: str
+    text: str
+    createdAt: datetime
+    isOwn: bool = False

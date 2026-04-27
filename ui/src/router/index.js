@@ -94,6 +94,16 @@ const routes = [
     path: '/about',
     name: 'about',
     component: () => import('@/views/AboutView.vue')
+  },
+  {
+    path: '/feed',
+    name: 'feed',
+    component: () => import('@/views/FeedView.vue')
+  },
+  {
+    path: '/users/:id',
+    name: 'user-public',
+    component: () => import('@/views/UserPublicView.vue')
   }
 ]
 

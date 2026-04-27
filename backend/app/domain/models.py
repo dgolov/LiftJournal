@@ -2,7 +2,7 @@ import uuid
 from datetime import date, datetime
 from typing import Optional
 
-from sqlalchemy import String, Integer, Float, Boolean, Text, Date, DateTime, ForeignKey, JSON
+from sqlalchemy import String, Integer, Float, Boolean, Text, Date, DateTime, ForeignKey, JSON, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -309,3 +309,46 @@ class UserMax(Base):
     recorded_at: Mapped[date] = mapped_column(Date, default=date.today)
 
     user: Mapped["User"] = relationship("User", back_populates="maxes")
+
+
+class UserFollow(Base):
+    __tablename__ = "user_follows"
+    __table_args__ = (UniqueConstraint("follower_id", "following_id"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=gen_uuid)
+    follower_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    following_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=gen_uuid)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    type: Mapped[str] = mapped_column(String(20), nullable=False)  # follow | like | comment
+    actor_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    workout_id: Mapped[Optional[str]] = mapped_column(String, ForeignKey("workouts.id", ondelete="CASCADE"), nullable=True)
+    comment_text: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+
+
+class WorkoutLike(Base):
+    __tablename__ = "workout_likes"
+    __table_args__ = (UniqueConstraint("user_id", "workout_id"),)
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=gen_uuid)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    workout_id: Mapped[str] = mapped_column(String, ForeignKey("workouts.id", ondelete="CASCADE"), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class WorkoutComment(Base):
+    __tablename__ = "workout_comments"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=gen_uuid)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    workout_id: Mapped[str] = mapped_column(String, ForeignKey("workouts.id", ondelete="CASCADE"), nullable=False, index=True)
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
