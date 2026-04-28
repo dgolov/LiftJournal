@@ -37,6 +37,16 @@
           <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
             Тоннаж: {{ formatVolume(totalVolume) }} кг
           </p>
+          <div v-if="socialMeta" class="flex items-center gap-3 mt-1.5">
+            <span class="flex items-center gap-1 text-xs text-gray-400">
+              <Heart class="w-3 h-3" :class="socialMeta.isLiked ? 'fill-red-400 text-red-400' : ''" />
+              {{ socialMeta.likesCount }}
+            </span>
+            <span class="flex items-center gap-1 text-xs text-gray-400">
+              <MessageCircle class="w-3 h-3" />
+              {{ socialMeta.commentsCount }}
+            </span>
+          </div>
         </div>
         <!-- Desktop-only trash button -->
         <button
@@ -65,7 +75,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
-import { Trash2 } from 'lucide-vue-next'
+import { Trash2, Heart, MessageCircle } from 'lucide-vue-next'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
@@ -164,6 +174,8 @@ async function doDelete() {
     swipeX.value = 0
   }
 }
+
+const socialMeta = computed(() => store.state.social.workoutMeta[props.workout.id] || null)
 
 // ── Display ────────────────────────────────────────────────────────────────────
 const typeColorMap = { 'Силовая': 'indigo', 'Кардио': 'green', 'Растяжка': 'purple', 'HIIT': 'orange', 'Другое': 'gray' }

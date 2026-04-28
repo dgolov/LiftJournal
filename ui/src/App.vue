@@ -28,6 +28,19 @@ watch(
   { immediate: true }
 )
 
+// Start/stop WebSocket when auth state changes
+watch(
+  () => store.state.auth.token,
+  (token) => {
+    if (token) {
+      store.dispatch('notifications/startWs')
+    } else {
+      store.dispatch('notifications/stopWs')
+    }
+  },
+  { immediate: true }
+)
+
 onMounted(() => {
   const session = loadSession()
   if (!session?.startedAt) return

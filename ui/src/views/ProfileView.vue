@@ -21,6 +21,24 @@
       <BaseButton variant="danger" size="sm" @click="logout">Выйти</BaseButton>
     </div>
 
+    <!-- Social stats -->
+    <div class="card p-4 flex items-center justify-around">
+      <button class="flex flex-col items-center gap-0.5 hover:text-primary transition-colors" @click="openSocial('followers')">
+        <span class="text-xl font-bold text-gray-900 dark:text-white">{{ followers.length }}</span>
+        <span class="text-xs text-gray-500">подписчиков</span>
+      </button>
+      <div class="w-px h-8 bg-gray-100 dark:bg-gray-800" />
+      <button class="flex flex-col items-center gap-0.5 hover:text-primary transition-colors" @click="openSocial('following')">
+        <span class="text-xl font-bold text-gray-900 dark:text-white">{{ following.length }}</span>
+        <span class="text-xs text-gray-500">подписок</span>
+      </button>
+      <div class="w-px h-8 bg-gray-100 dark:bg-gray-800" />
+      <RouterLink to="/feed" class="flex flex-col items-center gap-0.5 hover:text-primary transition-colors">
+        <Users class="w-5 h-5 text-gray-400" />
+        <span class="text-xs text-gray-500">Лента</span>
+      </RouterLink>
+    </div>
+
     <!-- Stats -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
       <StatCard label="Всего тренировок" :value="totalWorkouts" />
@@ -175,6 +193,39 @@
       </template>
     </BaseModal>
 
+    <!-- Followers / Following modal -->
+    <BaseModal v-model="showSocial" :title="socialTab === 'followers' ? 'Подписчики' : 'Подписки'">
+      <div class="flex border-b border-gray-100 dark:border-gray-800 mb-3 -mt-1">
+        <button
+          v-for="tab in [{id:'followers',label:'Подписчики'},{id:'following',label:'Подписки'}]"
+          :key="tab.id"
+          :class="['flex-1 py-2 text-sm font-medium transition-colors border-b-2 -mb-px',
+            socialTab === tab.id ? 'border-primary text-primary' : 'border-transparent text-gray-400 hover:text-gray-600']"
+          @click="switchSocialTab(tab.id)"
+        >{{ tab.label }}</button>
+      </div>
+      <div v-if="socialLoading" class="py-6 text-center text-sm text-gray-400">Загрузка…</div>
+      <div v-else-if="!socialList.length" class="py-6 text-center text-sm text-gray-400">
+        {{ socialTab === 'followers' ? 'Нет подписчиков' : 'Нет подписок' }}
+      </div>
+      <div v-else class="space-y-1 max-h-80 overflow-y-auto">
+        <div v-for="user in socialList" :key="user.id" class="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+          <RouterLink :to="`/users/${user.id}`" class="flex items-center gap-3 flex-1 min-w-0" @click="showSocial = false">
+            <div class="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">
+              {{ user.name.charAt(0).toUpperCase() }}
+            </div>
+            <span class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ user.name }}</span>
+          </RouterLink>
+          <BaseButton
+            :variant="user.isFollowing ? 'outline' : 'primary'"
+            size="sm"
+            @click="toggleSocialFollow(user)"
+          >{{ user.isFollowing ? 'Отписаться' : 'Подписаться' }}</BaseButton>
+        </div>
+      </div>
+      <template #footer><div /></template>
+    </BaseModal>
+
     <!-- Add goal modal -->
     <BaseModal v-model="showAddGoal" title="Новая цель">
       <div class="space-y-4">
@@ -193,7 +244,7 @@
 import { ref, computed, reactive, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { Target, Dumbbell, X, Medal } from 'lucide-vue-next'
+import { Target, Dumbbell, X, Medal, Users } from 'lucide-vue-next'
 import StatCard from '@/components/profile/StatCard.vue'
 import WeightChart from '@/components/profile/WeightChart.vue'
 import ActivityHeatmap from '@/components/profile/ActivityHeatmap.vue'
@@ -301,5 +352,50 @@ async function deleteGoal(id) { await store.dispatch('user/deleteGoal', id) }
 const achievements = computed(() => store.getters['achievements/all'])
 const unlockedCount = computed(() => store.getters['achievements/unlockedCount'])
 
-onMounted(() => { store.dispatch('achievements/init') })
+// Social
+const followers = computed(() => store.state.social.followers)
+const following = computed(() => store.state.social.following)
+const showSocial = ref(false)
+const socialTab = ref('followers')
+const socialLoading = ref(false)
+
+const socialList = computed(() =>
+  socialTab.value === 'followers' ? followers.value : following.value
+)
+
+async function openSocial(tab) {
+  socialTab.value = tab
+  showSocial.value = true
+  socialLoading.value = true
+  try {
+    await Promise.all([
+      store.dispatch('social/fetchFollowers'),
+      store.dispatch('social/fetchFollowing'),
+    ])
+  } finally {
+    socialLoading.value = false
+  }
+}
+
+async function switchSocialTab(tab) {
+  socialTab.value = tab
+}
+
+async function toggleSocialFollow(user) {
+  if (user.isFollowing) {
+    await store.dispatch('social/unfollow', user.id)
+  } else {
+    await store.dispatch('social/follow', user.id)
+  }
+  await Promise.all([
+    store.dispatch('social/fetchFollowers'),
+    store.dispatch('social/fetchFollowing'),
+  ])
+}
+
+onMounted(() => {
+  store.dispatch('achievements/init')
+  store.dispatch('social/fetchFollowers')
+  store.dispatch('social/fetchFollowing')
+})
 </script>

@@ -7,9 +7,11 @@ import auth from './modules/auth.js'
 import cycles from './modules/cycles.js'
 import planned from './modules/planned.js'
 import achievements from './modules/achievements.js'
+import social from './modules/social.js'
+import notifications from './modules/notifications.js'
 
 const store = createStore({
-  modules: { workouts, exercises, user, ui, auth, cycles, planned, achievements }
+  modules: { workouts, exercises, user, ui, auth, cycles, planned, achievements, social, notifications }
 })
 
 // Sync activeWorkout draft to localStorage whenever exercises/sets change during an active session
