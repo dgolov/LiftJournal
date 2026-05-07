@@ -1,41 +1,45 @@
 <template>
   <div>
-    <!-- Month labels -->
-    <div class="flex mb-1 ml-7">
-      <template v-for="(m, i) in monthLabels" :key="i">
-        <span
-          class="text-xs text-gray-400 flex-shrink-0"
-          :style="{ width: m.weeks * (cellSize + gap) + 'px' }"
-        >{{ m.label }}</span>
-      </template>
-    </div>
+    <div class="heatmap-scroll overflow-x-auto pb-1">
+      <div class="min-w-max">
+        <!-- Month labels -->
+        <div class="flex mb-1 ml-7">
+          <template v-for="(m, i) in monthLabels" :key="i">
+            <span
+              class="text-xs text-gray-400 flex-shrink-0"
+              :style="{ width: m.weeks * (cellSize + gap) + 'px' }"
+            >{{ m.label }}</span>
+          </template>
+        </div>
 
-    <div class="flex gap-0 items-start">
-      <!-- Day-of-week labels -->
-      <div class="flex flex-col mr-1.5" :style="{ gap: gap + 'px' }">
-        <div
-          v-for="(d, i) in dayLabels"
-          :key="i"
-          class="text-xs text-gray-400 leading-none flex items-center justify-end"
-          :style="{ height: cellSize + 'px', width: '20px' }"
-        >{{ d }}</div>
-      </div>
+        <div class="flex gap-0 items-start">
+          <!-- Day-of-week labels -->
+          <div class="flex flex-col mr-1.5" :style="{ gap: gap + 'px' }">
+            <div
+              v-for="(d, i) in dayLabels"
+              :key="i"
+              class="text-xs text-gray-400 leading-none flex items-center justify-end"
+              :style="{ height: cellSize + 'px', width: '20px' }"
+            >{{ d }}</div>
+          </div>
 
-      <!-- Grid -->
-      <div class="flex overflow-x-auto pb-1" :style="{ gap: gap + 'px' }">
-        <div
-          v-for="(week, wi) in grid"
-          :key="wi"
-          class="flex flex-col flex-shrink-0"
-          :style="{ gap: gap + 'px' }"
-        >
-          <div
-            v-for="(day, di) in week"
-            :key="di"
-            :class="['rounded-sm transition-opacity', day.future ? 'opacity-0' : '', cellColor(day.count)]"
-            :style="{ width: cellSize + 'px', height: cellSize + 'px' }"
-            :title="day.date && !day.future ? tooltipText(day) : undefined"
-          />
+          <!-- Grid -->
+          <div class="flex" :style="{ gap: gap + 'px' }">
+            <div
+              v-for="(week, wi) in grid"
+              :key="wi"
+              class="flex flex-col flex-shrink-0"
+              :style="{ gap: gap + 'px' }"
+            >
+              <div
+                v-for="(day, di) in week"
+                :key="di"
+                :class="['rounded-sm transition-opacity', day.future ? 'opacity-0' : '', cellColor(day.count)]"
+                :style="{ width: cellSize + 'px', height: cellSize + 'px' }"
+                :title="day.date && !day.future ? tooltipText(day) : undefined"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -135,3 +139,19 @@ function tooltipText(day) {
   return `${label}: ${day.count} тренировка${day.count === 1 ? '' : day.count < 5 ? 'и' : ''}`
 }
 </script>
+
+<style scoped>
+.heatmap-scroll::-webkit-scrollbar {
+  height: 3px;
+}
+.heatmap-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.heatmap-scroll::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.35);
+  border-radius: 2px;
+}
+.heatmap-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.6);
+}
+</style>
