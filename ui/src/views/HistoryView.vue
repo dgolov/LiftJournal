@@ -3,7 +3,14 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-5">
       <h2 class="text-xl font-bold text-gray-900 dark:text-white">История</h2>
-      <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 gap-0.5">
+      <div class="flex items-center gap-2">
+        <!-- Export button -->
+        <button
+          class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400"
+          title="Экспорт"
+          @click="exportModalOpen = true"
+        ><Download class="w-4 h-4" /></button>
+        <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 gap-0.5">
         <button
           :class="['p-2 rounded-md transition-colors', viewMode === 'calendar'
             ? 'bg-white dark:bg-gray-700 shadow-sm text-primary'
@@ -18,6 +25,7 @@
           title="Список"
           @click="switchView('list')"
         ><List class="w-4 h-4" /></button>
+      </div>
       </div>
     </div>
 
@@ -144,6 +152,8 @@
         <template #icon><Activity class="w-12 h-12" /></template>
       </BaseEmptyState>
     </template>
+
+    <ExportModal v-model="exportModalOpen" :workouts="allWorkouts" />
   </div>
 </template>
 
@@ -151,10 +161,11 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { CalendarDays, List, ChevronLeft, ChevronRight, Activity, X, Clock, CheckCircle2, Ban, Plus } from 'lucide-vue-next'
+import { CalendarDays, List, ChevronLeft, ChevronRight, Activity, X, Clock, CheckCircle2, Ban, Plus, Download } from 'lucide-vue-next'
 import WorkoutCard from '@/components/workout/WorkoutCard.vue'
 import PlanCard from '@/components/workout/PlanCard.vue'
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
+import ExportModal from '@/components/ui/ExportModal.vue'
 import { WORKOUT_TYPES } from '@/services/mockData.js'
 
 const store = useStore()
@@ -381,4 +392,7 @@ function addWorkoutForDay(dateStr) {
   store.commit('workouts/SET_ACTIVE_WORKOUT_FIELD', { field: 'date', value: dateStr })
   router.push('/workouts/new')
 }
+
+// --- Export ---
+const exportModalOpen = ref(false)
 </script>
