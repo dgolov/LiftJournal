@@ -26,6 +26,13 @@
         </button>
         <button
           class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+          title="Экспорт"
+          @click="exportModalOpen = true"
+        >
+          <Download class="w-5 h-5" />
+        </button>
+        <button
+          class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
           title="Редактировать"
           @click="startEdit"
         >
@@ -321,13 +328,16 @@
   <div v-else class="text-center py-16 text-gray-400">
     Тренировка не найдена
   </div>
+
+  <ExportModal v-model="exportModalOpen" :workouts="workout ? [workout] : []" lock-period />
 </template>
 
 <script setup>
 import { computed, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
-import { ChevronLeft, Pencil, X, Plus, RefreshCw, Trash2, Heart, MessageCircle, Send } from 'lucide-vue-next'
+import { ChevronLeft, Pencil, X, Plus, RefreshCw, Trash2, Heart, MessageCircle, Send, Download } from 'lucide-vue-next'
+import ExportModal from '@/components/ui/ExportModal.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import StepperInput from '@/components/ui/StepperInput.vue'
 import ExercisePicker from '@/components/workout/ExercisePicker.vue'
@@ -453,6 +463,7 @@ function formatDuration(minutes) {
 const isEditing = ref(false)
 const saving = ref(false)
 const draft = ref(null)
+const exportModalOpen = ref(false)
 const showPicker = ref(false)
 
 const draftAddedIds = computed(() =>
