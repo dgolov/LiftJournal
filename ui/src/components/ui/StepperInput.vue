@@ -60,10 +60,8 @@ function onBlur() {
   focused.value = false
   const num = parse(raw.value)
   if (!isNaN(num) && num >= props.min) {
-    const rounded = Math.round(num / props.step) * props.step
-    const fixed = parseFloat(rounded.toFixed(10))
-    raw.value = String(fixed)
-    emit('update:modelValue', fixed)
+    raw.value = String(num)
+    emit('update:modelValue', num)
   } else {
     raw.value = formatNum(props.modelValue)
   }
