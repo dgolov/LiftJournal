@@ -73,25 +73,35 @@
     </div>
 
     <!-- Exercises -->
-    <div class="space-y-4">
-      <SwipeDeleteWrapper
-        v-for="ex in displayExercises"
-        :key="ex.exerciseId"
-        :disabled="!isEditing"
-        delete-label="Удалить упражнение"
-        @delete="removeDraftExercise(ex.exerciseId)"
-      >
-      <div class="card p-4">
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="font-semibold text-gray-900 dark:text-white">{{ ex.exerciseName }}</h3>
-          <button
-            v-if="isEditing"
-            class="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors"
-            @click="removeDraftExercise(ex.exerciseId)"
-          >
-            <Trash2 class="w-4 h-4" />
-          </button>
-        </div>
+    <draggable
+      :list="isEditing ? draft.exercises : []"
+      item-key="exerciseId"
+      handle=".drag-handle"
+      animation="200"
+      class="space-y-4"
+      :disabled="!isEditing"
+    >
+      <template #item="{ element: ex }">
+        <SwipeDeleteWrapper
+          :key="ex.exerciseId"
+          :disabled="!isEditing"
+          delete-label="Удалить упражнение"
+          @delete="removeDraftExercise(ex.exerciseId)"
+        >
+        <div class="card p-4">
+          <div class="flex items-center gap-2 mb-3">
+            <span v-if="isEditing" class="drag-handle flex-shrink-0 text-gray-300 hover:text-gray-500 dark:hover:text-gray-400 cursor-grab active:cursor-grabbing touch-none p-1 -ml-1">
+              <GripVertical class="w-4 h-4" />
+            </span>
+            <h3 class="font-semibold text-gray-900 dark:text-white flex-1">{{ ex.exerciseName }}</h3>
+            <button
+              v-if="isEditing"
+              class="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors"
+              @click="removeDraftExercise(ex.exerciseId)"
+            >
+              <Trash2 class="w-4 h-4" />
+            </button>
+          </div>
         <div class="space-y-2">
           <div v-for="(set, i) in ex.sets" :key="set.id"
             class="flex items-center gap-1 text-sm">
@@ -176,9 +186,48 @@
             <span v-if="ex.sets.some(s => !s.failed)">· Расч. 1ПМ: {{ Math.max(...ex.sets.filter(s => !s.failed).map(s => s.reps === 1 ? s.weight : Math.round(s.weight * (1 + s.reps / 30)))) }} кг</span>
           </template>
         </p>
-      </div>
-      </SwipeDeleteWrapper>
-    </div>
+        </div>
+        </SwipeDeleteWrapper>
+      </template>
+
+      <!-- View mode items (draggable requires template #item, so we add non-editable ones here) -->
+      <template v-if="!isEditing" #header>
+        <div
+          v-for="ex in displayExercises"
+          :key="ex.exerciseId"
+          class="card p-4 mb-4"
+        >
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-semibold text-gray-900 dark:text-white">{{ ex.exerciseName }}</h3>
+          </div>
+          <div class="space-y-2">
+            <div v-for="(set, i) in ex.sets" :key="set.id" class="flex items-center gap-1 text-sm">
+              <span class="text-gray-400 w-5 text-center flex-shrink-0">{{ i + 1 }}</span>
+              <template v-if="isCardio(ex.exerciseId)">
+                <span :class="['font-medium', set.failed ? 'line-through text-gray-400' : '']">{{ set.reps }} мин.</span>
+              </template>
+              <template v-else>
+                <span :class="['font-medium', set.failed ? 'line-through text-gray-400' : '']">{{ set.weight > 0 ? set.weight + ' кг' : 'Б/в' }}</span>
+                <span class="text-gray-400">×</span>
+                <span :class="['font-medium', set.failed ? 'line-through text-gray-400' : '']">{{ set.reps }} повт.</span>
+              </template>
+              <span :class="['ml-auto text-xs font-medium', set.completed ? 'text-green-500' : set.failed ? 'text-red-400' : 'text-gray-300']">
+                {{ set.completed ? '✓' : set.failed ? '✗' : '○' }}
+              </span>
+            </div>
+          </div>
+          <p class="mt-2 text-xs text-gray-400 flex gap-3">
+            <template v-if="isCardio(ex.exerciseId)">
+              <span>Итого: {{ ex.sets.filter(s => !s.failed).reduce((s, set) => s + (set.reps || 0), 0) }} мин.</span>
+            </template>
+            <template v-else>
+              <span>Тоннаж: {{ ex.sets.filter(s => !s.failed).reduce((s, set) => s + set.weight * set.reps, 0) }} кг</span>
+              <span v-if="ex.sets.some(s => !s.failed)">· Расч. 1ПМ: {{ Math.max(...ex.sets.filter(s => !s.failed).map(s => s.reps === 1 ? s.weight : Math.round(s.weight * (1 + s.reps / 30)))) }} кг</span>
+            </template>
+          </p>
+        </div>
+      </template>
+    </draggable>
 
     <div v-if="!workout.exercises.length" class="text-center py-8 text-gray-400">
       Упражнения не записаны
