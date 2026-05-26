@@ -18,16 +18,14 @@
       <button
         v-for="ex in filtered"
         :key="ex.id"
-        :class="['w-full text-left px-3 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-3',
-          isAdded(ex.id) ? 'opacity-50 cursor-not-allowed' : '']"
-        :disabled="isAdded(ex.id)"
+        class="w-full text-left px-3 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-3"
         @click="pick(ex)"
       >
         <div class="flex-1 min-w-0">
           <p class="text-sm font-medium text-gray-900 dark:text-white">{{ ex.name }}</p>
           <p class="text-xs text-gray-400">{{ ex.muscleGroup }} · {{ ex.equipment }}</p>
         </div>
-        <span v-if="isAdded(ex.id)" class="text-xs text-green-500 font-medium flex-shrink-0">Добавлено</span>
+        <span v-if="isAdded(ex.id)" class="text-xs text-green-500 font-medium flex-shrink-0">В тренировке</span>
       </button>
       <div v-if="!filtered.length" class="text-center py-8 text-gray-400 text-sm">
         Ничего не найдено
@@ -82,7 +80,6 @@ const filtered = computed(() => {
 function isAdded(id) { return resolvedAddedIds.value.has(id) }
 
 function pick(exercise) {
-  if (isAdded(exercise.id)) return
   if (props.addedIds !== null) {
     emit('pick', exercise)
   } else {
