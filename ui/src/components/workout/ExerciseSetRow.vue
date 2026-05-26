@@ -60,7 +60,7 @@ import { useRestTimer } from '@/composables/useRestTimer.js'
 
 const props = defineProps({
   set: { type: Object, required: true },
-  exerciseId: { type: String, required: true },
+  instanceId: { type: String, required: true },
   index: { type: Number, required: true },
   isCardio: { type: Boolean, default: false }
 })
@@ -70,7 +70,7 @@ const store = useStore()
 const { start: startTimer } = useRestTimer()
 
 function update(field, value) {
-  store.commit('workouts/UPDATE_SET', { exerciseId: props.exerciseId, setId: props.set.id, field, value })
+  store.commit('workouts/UPDATE_SET', { instanceId: props.instanceId, setId: props.set.id, field, value })
 }
 
 function cycleState() {

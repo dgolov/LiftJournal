@@ -79,111 +79,86 @@
       </div>
     </div>
 
-    <!-- Exercises -->
+    <!-- Exercises: edit mode -->
     <draggable
-      :list="isEditing ? draft.exercises : []"
-      item-key="exerciseId"
+      v-if="isEditing"
+      :list="draft.exercises"
+      item-key="instanceId"
       handle=".drag-handle"
       animation="200"
       class="space-y-4"
-      :disabled="!isEditing"
     >
       <template #item="{ element: ex }">
-        <SwipeDeleteWrapper
-          :key="ex.exerciseId"
-          :disabled="!isEditing"
-          delete-label="Удалить упражнение"
-          @delete="removeDraftExercise(ex.exerciseId)"
-        >
-        <div class="card p-4">
-          <div class="flex items-center gap-2 mb-3">
-            <span v-if="isEditing" class="drag-handle flex-shrink-0 text-gray-300 hover:text-gray-500 dark:hover:text-gray-400 cursor-grab active:cursor-grabbing touch-none p-1 -ml-1">
-              <GripVertical class="w-4 h-4" />
-            </span>
-            <h3 class="font-semibold text-gray-900 dark:text-white flex-1">{{ ex.exerciseName }}</h3>
-            <button
-              v-if="isEditing"
-              class="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors"
-              @click="removeDraftExercise(ex.exerciseId)"
-            >
-              <Trash2 class="w-4 h-4" />
-            </button>
-          </div>
-        <div class="space-y-2">
-          <div v-for="(set, i) in ex.sets" :key="set.id"
-            class="flex items-center gap-1 text-sm">
-            <span class="text-gray-400 w-5 text-center flex-shrink-0">{{ i + 1 }}</span>
-
-            <!-- View mode -->
-            <template v-if="!isEditing">
-              <template v-if="isCardio(ex.exerciseId)">
-                <span :class="['font-medium', set.failed ? 'line-through text-gray-400' : '']">{{ set.reps }} мин.</span>
-              </template>
-              <template v-else>
-                <span :class="['font-medium', set.failed ? 'line-through text-gray-400' : '']">{{ set.weight > 0 ? set.weight + ' кг' : 'Б/в' }}</span>
-                <span class="text-gray-400">×</span>
-                <span :class="['font-medium', set.failed ? 'line-through text-gray-400' : '']">{{ set.reps }} повт.</span>
-              </template>
-              <span :class="['ml-auto text-xs font-medium',
-                set.completed ? 'text-green-500' : set.failed ? 'text-red-400' : 'text-gray-300']">
-                {{ set.completed ? '✓' : set.failed ? '✗' : '○' }}
+        <SwipeDeleteWrapper delete-label="Удалить упражнение" @delete="removeDraftExercise(ex.instanceId)">
+          <div class="card p-4">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="drag-handle flex-shrink-0 text-gray-300 hover:text-gray-500 dark:hover:text-gray-400 cursor-grab active:cursor-grabbing touch-none p-1 -ml-1">
+                <GripVertical class="w-4 h-4" />
               </span>
-            </template>
-
-            <!-- Edit mode -->
-            <template v-else>
+              <h3 class="font-semibold text-gray-900 dark:text-white flex-1">{{ ex.exerciseName }}</h3>
+              <button class="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors" @click="removeDraftExercise(ex.instanceId)">
+                <Trash2 class="w-4 h-4" />
+              </button>
+            </div>
+            <div class="space-y-2">
+              <div v-for="(set, i) in ex.sets" :key="set.id" class="flex items-center gap-1 text-sm">
+                <span class="text-gray-400 w-5 text-center flex-shrink-0">{{ i + 1 }}</span>
+                <template v-if="isCardio(ex.exerciseId)">
+                  <StepperInput class="flex-1" :model-value="set.reps" :step="1" placeholder="мин" @update:model-value="updateDraftSet(ex.instanceId, set.id, 'reps', $event)" />
+                </template>
+                <template v-else>
+                  <StepperInput :class="['flex-1', set.failed ? 'opacity-50' : '']" :model-value="set.weight" :step="2.5" :decimals="1" placeholder="кг" @update:model-value="updateDraftSet(ex.instanceId, set.id, 'weight', $event)" />
+                  <span class="text-gray-300 text-sm flex-shrink-0">×</span>
+                  <StepperInput :class="['flex-1', set.failed ? 'opacity-50' : '']" :model-value="set.reps" :step="1" placeholder="повт" @update:model-value="updateDraftSet(ex.instanceId, set.id, 'reps', $event)" />
+                </template>
+                <button
+                  :class="['w-9 h-9 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0 text-sm font-bold',
+                    set.completed ? 'bg-green-500 border-green-500 text-white' :
+                    set.failed    ? 'bg-red-500 border-red-500 text-white' :
+                                    'border-gray-300 text-gray-300 hover:border-green-400']"
+                  :title="set.completed ? 'Выполнено → провал' : set.failed ? 'Провал → сбросить' : 'Отметить выполненным'"
+                  @click="cycleDraftSetState(ex.instanceId, set.id, set)"
+                >{{ set.completed ? '✓' : set.failed ? '✗' : '○' }}</button>
+                <button class="w-7 h-9 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0" @click="removeDraftSet(ex.instanceId, set.id)">
+                  <X class="w-5 h-5" />
+                </button>
+              </div>
+              <button class="text-xs text-primary hover:underline mt-1" @click="addDraftSet(ex.instanceId)">+ добавить подход</button>
+            </div>
+            <p class="mt-2 text-xs text-gray-400 flex gap-3">
               <template v-if="isCardio(ex.exerciseId)">
-                <StepperInput
-                  class="flex-1"
-                  :model-value="set.reps"
-                  :step="1"
-                  placeholder="мин"
-                  @update:model-value="updateDraftSet(ex.exerciseId, set.id, 'reps', $event)"
-                />
+                <span>Итого: {{ ex.sets.filter(s => !s.failed).reduce((s, set) => s + (set.reps || 0), 0) }} мин.</span>
               </template>
               <template v-else>
-                <StepperInput
-                  :class="['flex-1', set.failed ? 'line-through opacity-50' : '']"
-                  :model-value="set.weight"
-                  :step="2.5"
-                  :decimals="1"
-                  placeholder="кг"
-                  @update:model-value="updateDraftSet(ex.exerciseId, set.id, 'weight', $event)"
-                />
-                <span class="text-gray-300 text-sm flex-shrink-0">×</span>
-                <StepperInput
-                  :class="['flex-1', set.failed ? 'line-through opacity-50' : '']"
-                  :model-value="set.reps"
-                  :step="1"
-                  placeholder="повт"
-                  @update:model-value="updateDraftSet(ex.exerciseId, set.id, 'reps', $event)"
-                />
+                <span>Тоннаж: {{ ex.sets.filter(s => !s.failed).reduce((s, set) => s + set.weight * set.reps, 0) }} кг</span>
+                <span v-if="ex.sets.some(s => !s.failed)">· Расч. 1ПМ: {{ Math.max(...ex.sets.filter(s => !s.failed).map(s => s.reps === 1 ? s.weight : Math.round(s.weight * (1 + s.reps / 30)))) }} кг</span>
               </template>
-              <button
-                :class="['w-9 h-9 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0 text-sm font-bold',
-                  set.completed ? 'bg-green-500 border-green-500 text-white' :
-                  set.failed    ? 'bg-red-500 border-red-500 text-white' :
-                                  'border-gray-300 text-gray-300 hover:border-green-400']"
-                :title="set.completed ? 'Выполнено → провал' : set.failed ? 'Провал → сбросить' : 'Отметить выполненным'"
-                @click="cycleDraftSetState(ex.exerciseId, set.id, set)"
-              >{{ set.completed ? '✓' : set.failed ? '✗' : '○' }}</button>
-              <button
-                class="w-7 h-9 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
-                @click="removeDraftSet(ex.exerciseId, set.id)"
-              >
-                <X class="w-5 h-5" />
-              </button>
-            </template>
+            </p>
           </div>
+        </SwipeDeleteWrapper>
+      </template>
+    </draggable>
 
-          <!-- Add set button in edit mode -->
-          <button
-            v-if="isEditing"
-            class="text-xs text-primary hover:underline mt-1"
-            @click="addDraftSet(ex.exerciseId)"
-          >+ добавить подход</button>
+    <!-- Exercises: view mode -->
+    <div v-else class="space-y-4">
+      <div v-for="(ex, idx) in workout.exercises" :key="ex.instanceId || ex.exerciseId + idx" class="card p-4">
+        <h3 class="font-semibold text-gray-900 dark:text-white mb-3">{{ ex.exerciseName }}</h3>
+        <div class="space-y-2">
+          <div v-for="(set, i) in ex.sets" :key="set.id" class="flex items-center gap-1 text-sm">
+            <span class="text-gray-400 w-5 text-center flex-shrink-0">{{ i + 1 }}</span>
+            <template v-if="isCardio(ex.exerciseId)">
+              <span :class="['font-medium', set.failed ? 'line-through text-gray-400' : '']">{{ set.reps }} мин.</span>
+            </template>
+            <template v-else>
+              <span :class="['font-medium', set.failed ? 'line-through text-gray-400' : '']">{{ set.weight > 0 ? set.weight + ' кг' : 'Б/в' }}</span>
+              <span class="text-gray-400">×</span>
+              <span :class="['font-medium', set.failed ? 'line-through text-gray-400' : '']">{{ set.reps }} повт.</span>
+            </template>
+            <span :class="['ml-auto text-xs font-medium', set.completed ? 'text-green-500' : set.failed ? 'text-red-400' : 'text-gray-300']">
+              {{ set.completed ? '✓' : set.failed ? '✗' : '○' }}
+            </span>
+          </div>
         </div>
-
         <p class="mt-2 text-xs text-gray-400 flex gap-3">
           <template v-if="isCardio(ex.exerciseId)">
             <span>Итого: {{ ex.sets.filter(s => !s.failed).reduce((s, set) => s + (set.reps || 0), 0) }} мин.</span>
@@ -193,51 +168,8 @@
             <span v-if="ex.sets.some(s => !s.failed)">· Расч. 1ПМ: {{ Math.max(...ex.sets.filter(s => !s.failed).map(s => s.reps === 1 ? s.weight : Math.round(s.weight * (1 + s.reps / 30)))) }} кг</span>
           </template>
         </p>
-        </div>
-        </SwipeDeleteWrapper>
-      </template>
-
-      <!-- View mode items (draggable requires template #item, so we add non-editable ones here) -->
-      <template v-if="!isEditing" #header>
-        <div
-          v-for="ex in displayExercises"
-          :key="ex.exerciseId"
-          class="card p-4 mb-4"
-        >
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="font-semibold text-gray-900 dark:text-white">{{ ex.exerciseName }}</h3>
-          </div>
-          <div class="space-y-2">
-            <div v-for="(set, i) in ex.sets" :key="set.id" class="flex items-center gap-1 text-sm">
-              <span class="text-gray-400 w-5 text-center flex-shrink-0">{{ i + 1 }}</span>
-              <template v-if="isCardio(ex.exerciseId)">
-                <span :class="['font-medium', set.failed ? 'line-through text-gray-400' : '']">{{ set.reps }} мин.</span>
-              </template>
-              <template v-else>
-                <span :class="['font-medium', set.failed ? 'line-through text-gray-400' : '']">{{ set.weight > 0 ? set.weight + ' кг' : 'Б/в' }}</span>
-                <span class="text-gray-400">×</span>
-                <span :class="['font-medium', set.failed ? 'line-through text-gray-400' : '']">{{ set.reps }} повт.</span>
-              </template>
-              <span :class="['ml-auto text-xs font-medium', set.completed ? 'text-green-500' : set.failed ? 'text-red-400' : 'text-gray-300']">
-                {{ set.completed ? '✓' : set.failed ? '✗' : '○' }}
-              </span>
-            </div>
-          </div>
-          <p class="mt-2 text-xs text-gray-400 flex gap-3">
-            <template v-if="isCardio(ex.exerciseId)">
-              <span>Итого: {{ ex.sets.filter(s => !s.failed).reduce((s, set) => s + (set.reps || 0), 0) }} мин.</span>
-            </template>
-            <template v-else>
-              <span>Тоннаж: {{ ex.sets.filter(s => !s.failed).reduce((s, set) => s + set.weight * set.reps, 0) }} кг</span>
-              <span v-if="ex.sets.some(s => !s.failed)">· Расч. 1ПМ: {{ Math.max(...ex.sets.filter(s => !s.failed).map(s => s.reps === 1 ? s.weight : Math.round(s.weight * (1 + s.reps / 30)))) }} кг</span>
-            </template>
-          </p>
-        </div>
-      </template>
-    </draggable>
-
-    <div v-if="!workout.exercises.length" class="text-center py-8 text-gray-400">
-      Упражнения не записаны
+      </div>
+      <div v-if="!workout.exercises.length" class="text-center py-8 text-gray-400">Упражнения не записаны</div>
     </div>
 
     <!-- Add exercise button in edit mode -->
@@ -480,6 +412,9 @@ function uid() {
 
 function startEdit() {
   draft.value = deepClone(workout.value)
+  draft.value.exercises.forEach(ex => {
+    if (!ex.instanceId) ex.instanceId = uid()
+  })
   isEditing.value = true
 }
 
@@ -502,46 +437,47 @@ const displayExercises = computed(() =>
   isEditing.value ? draft.value.exercises : workout.value.exercises
 )
 
-function updateDraftSet(exerciseId, setId, field, value) {
-  const ex = draft.value.exercises.find(e => e.exerciseId === exerciseId)
+function updateDraftSet(instanceId, setId, field, value) {
+  const ex = draft.value.exercises.find(e => e.instanceId === instanceId)
   if (!ex) return
   const set = ex.sets.find(s => s.id === setId)
   if (set) set[field] = value
 }
 
-function cycleDraftSetState(exerciseId, setId, set) {
+function cycleDraftSetState(instanceId, setId, set) {
   if (!set.completed && !set.failed) {
-    updateDraftSet(exerciseId, setId, 'completed', true)
-    updateDraftSet(exerciseId, setId, 'failed', false)
+    updateDraftSet(instanceId, setId, 'completed', true)
+    updateDraftSet(instanceId, setId, 'failed', false)
   } else if (set.completed) {
-    updateDraftSet(exerciseId, setId, 'completed', false)
-    updateDraftSet(exerciseId, setId, 'failed', true)
+    updateDraftSet(instanceId, setId, 'completed', false)
+    updateDraftSet(instanceId, setId, 'failed', true)
   } else {
-    updateDraftSet(exerciseId, setId, 'failed', false)
+    updateDraftSet(instanceId, setId, 'failed', false)
   }
 }
 
-function removeDraftSet(exerciseId, setId) {
-  const ex = draft.value.exercises.find(e => e.exerciseId === exerciseId)
+function removeDraftSet(instanceId, setId) {
+  const ex = draft.value.exercises.find(e => e.instanceId === instanceId)
   if (!ex) return
   ex.sets = ex.sets.filter(s => s.id !== setId)
 }
 
-function removeDraftExercise(exerciseId) {
-  draft.value.exercises = draft.value.exercises.filter(e => e.exerciseId !== exerciseId)
+function removeDraftExercise(instanceId) {
+  draft.value.exercises = draft.value.exercises.filter(e => e.instanceId !== instanceId)
 }
 
 function addDraftExercise(exercise) {
   showPicker.value = false
   draft.value.exercises.push({
+    instanceId: uid(),
     exerciseId: exercise.id,
     exerciseName: exercise.name,
     sets: [{ id: uid(), weight: 0, reps: 0, completed: false, failed: false }]
   })
 }
 
-function addDraftSet(exerciseId) {
-  const ex = draft.value.exercises.find(e => e.exerciseId === exerciseId)
+function addDraftSet(instanceId) {
+  const ex = draft.value.exercises.find(e => e.instanceId === instanceId)
   if (!ex) return
   const last = ex.sets[ex.sets.length - 1] || { weight: 0, reps: 0 }
   ex.sets.push({ id: uid(), weight: last.weight, reps: last.reps, completed: false, failed: false })
