@@ -140,14 +140,14 @@
                     set.failed    ? 'bg-red-500 border-red-500 text-white' :
                                     'border-gray-300 text-gray-300 hover:border-green-400']"
                   :title="set.completed ? 'Выполнено → провал' : set.failed ? 'Провал → сбросить' : 'Отметить выполненным'"
-                  @click="cycleDraftSetState(ex.exerciseId, set.id, set)"
+                  @click="cycleDraftSetState(ex.instanceId, set.id, set)"
                 >{{ set.completed ? '✓' : set.failed ? '✗' : '○' }}</button>
                 <button
                   class="w-7 h-9 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
-                  @click="removeDraftSet(ex.exerciseId, set.id)"
+                  @click="removeDraftSet(ex.instanceId, set.id)"
                 ><X class="w-5 h-5" /></button>
               </div>
-              <button class="text-xs text-primary hover:underline mt-1" @click="addDraftSet(ex.exerciseId)">
+              <button class="text-xs text-primary hover:underline mt-1" @click="addDraftSet(ex.instanceId)">
                 + добавить подход
               </button>
             </div>
@@ -196,39 +196,6 @@
         </p>
       </div>
       <div v-if="!workout.exercises.length" class="text-center py-8 text-gray-400">Упражнения не записаны</div>
-    <!-- Exercises: view mode -->
-    <div v-else class="space-y-4">
-      <div v-for="ex in workout.exercises" :key="ex.exerciseId" class="card p-4">
-        <h3 class="font-semibold text-gray-900 dark:text-white mb-3">{{ ex.exerciseName }}</h3>
-        <div class="space-y-2">
-          <div v-for="(set, i) in ex.sets" :key="set.id" class="flex items-center gap-1 text-sm">
-            <span class="text-gray-400 w-5 text-center flex-shrink-0">{{ i + 1 }}</span>
-            <template v-if="isCardio(ex.exerciseId)">
-              <span :class="['font-medium', set.failed ? 'line-through text-gray-400' : '']">{{ set.reps }} мин.</span>
-            </template>
-            <template v-else>
-              <span :class="['font-medium', set.failed ? 'line-through text-gray-400' : '']">{{ set.weight > 0 ? set.weight + ' кг' : 'Б/в' }}</span>
-              <span class="text-gray-400">×</span>
-              <span :class="['font-medium', set.failed ? 'line-through text-gray-400' : '']">{{ set.reps }} повт.</span>
-            </template>
-            <span :class="['ml-auto text-xs font-medium', set.completed ? 'text-green-500' : set.failed ? 'text-red-400' : 'text-gray-300']">
-              {{ set.completed ? '✓' : set.failed ? '✗' : '○' }}
-            </span>
-          </div>
-        </div>
-        <p class="mt-2 text-xs text-gray-400 flex gap-3">
-          <template v-if="isCardio(ex.exerciseId)">
-            <span>Итого: {{ ex.sets.filter(s => !s.failed).reduce((s, set) => s + (set.reps || 0), 0) }} мин.</span>
-          </template>
-          <template v-else>
-            <span>Тоннаж: {{ ex.sets.filter(s => !s.failed).reduce((s, set) => s + set.weight * set.reps, 0) }} кг</span>
-            <span v-if="ex.sets.some(s => !s.failed)">· Расч. 1ПМ: {{ Math.max(...ex.sets.filter(s => !s.failed).map(s => s.reps === 1 ? s.weight : Math.round(s.weight * (1 + s.reps / 30)))) }} кг</span>
-          </template>
-        </p>
-      </div>
-      <div v-if="!workout.exercises.length" class="text-center py-8 text-gray-400">
-        Упражнения не записаны
-      </div>
     </div>
 
     <!-- Add exercise button in edit mode -->
@@ -327,7 +294,8 @@
 import { computed, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
-import { ChevronLeft, Pencil, X, Plus, RefreshCw, Trash2, Heart, MessageCircle, Send, Download } from 'lucide-vue-next'
+import { ChevronLeft, Pencil, X, Plus, RefreshCw, Trash2, Heart, MessageCircle, Send, Download, GripVertical } from 'lucide-vue-next'
+import draggable from 'vuedraggable'
 import ExportModal from '@/components/ui/ExportModal.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import StepperInput from '@/components/ui/StepperInput.vue'
