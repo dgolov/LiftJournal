@@ -62,7 +62,7 @@
           v-for="(set, i) in exercise.sets"
           :key="set.id"
           :set="set"
-          :exercise-id="exercise.exerciseId"
+          :instance-id="exercise.instanceId"
           :index="i"
           :is-cardio="isCardio"
           @remove="removeSet(set.id)"
@@ -160,14 +160,14 @@ function onDeleteZoneTap() {
 
 // ── Actions ────────────────────────────────────────────────────────────────────
 function addSet() {
-  store.commit('workouts/ADD_SET_TO_EXERCISE', props.exercise.exerciseId)
+  store.commit('workouts/ADD_SET_TO_EXERCISE', props.exercise.instanceId)
 }
 
 function removeSet(setId) {
-  store.commit('workouts/REMOVE_SET', { exerciseId: props.exercise.exerciseId, setId })
+  store.commit('workouts/REMOVE_SET', { instanceId: props.exercise.instanceId, setId })
 }
 
 function removeExercise() {
-  store.commit('workouts/REMOVE_EXERCISE_FROM_ACTIVE', props.exercise.exerciseId)
+  store.commit('workouts/REMOVE_EXERCISE_FROM_ACTIVE', props.exercise.instanceId)
 }
 </script>
