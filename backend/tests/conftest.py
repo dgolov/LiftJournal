@@ -52,6 +52,7 @@ def make_user(
     hashed_password="$2b$12$fakehash",
     age=25, avatar_url=None,
     weight_log=None, goals=None, maxes=None,
+    birth_date=None, theme="light",
 ):
     u = MagicMock()
     u.id = id
@@ -63,6 +64,8 @@ def make_user(
     u.weight_log = weight_log if weight_log is not None else []
     u.goals = goals if goals is not None else []
     u.maxes = maxes if maxes is not None else []
+    u.birth_date = birth_date
+    u.theme = theme
     return u
 
 
