@@ -58,7 +58,7 @@
         <template #icon><Users class="w-12 h-12" /></template>
       </BaseEmptyState>
 
-      <div v-else>
+      <div v-else class="space-y-3">
         <div v-for="item in feed" :key="item.id" class="card overflow-hidden">
           <!-- User row -->
           <RouterLink :to="`/users/${item.userId}`" class="flex items-center gap-3 px-4 pt-4 pb-2 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
