@@ -1,11 +1,40 @@
 <template>
   <div v-if="workout">
     <!-- Header -->
-    <div class="flex items-start gap-4 mb-6">
-      <button class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors" @click="onBack">
-        <ChevronLeft class="w-5 h-5" />
-      </button>
-      <div class="flex-1">
+    <div class="mb-6">
+      <!-- Back + actions row -->
+      <div class="flex items-center gap-2 mb-3">
+        <button class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors" @click="onBack">
+          <ChevronLeft class="w-5 h-5" />
+        </button>
+        <template v-if="!isEditing && isOwner">
+          <div class="ml-auto flex items-center gap-1">
+            <button
+              class="p-2 rounded-xl hover:bg-primary/10 text-primary transition-colors"
+              title="Повторить тренировку"
+              @click="repeatWorkout"
+            >
+              <RefreshCw class="w-5 h-5" />
+            </button>
+            <button
+              class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+              title="Экспорт"
+              @click="exportModalOpen = true"
+            >
+              <Download class="w-5 h-5" />
+            </button>
+            <button
+              class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+              title="Редактировать"
+              @click="startEdit"
+            >
+              <Pencil class="w-5 h-5" />
+            </button>
+          </div>
+        </template>
+      </div>
+      <!-- Title block -->
+      <div>
         <div class="flex items-center gap-2 mb-1">
           <BaseBadge :color="typeColor">{{ workout.type }}</BaseBadge>
           <span class="text-sm text-gray-400">{{ formattedDate }}</span>
@@ -16,29 +45,6 @@
         </p>
         <p v-if="workout.notes" class="text-sm text-gray-600 dark:text-gray-400 mt-2 italic">{{ workout.notes }}</p>
       </div>
-      <template v-if="!isEditing && isOwner">
-        <button
-          class="p-2 rounded-xl hover:bg-primary/10 text-primary transition-colors"
-          title="Повторить тренировку"
-          @click="repeatWorkout"
-        >
-          <RefreshCw class="w-5 h-5" />
-        </button>
-        <button
-          class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
-          title="Экспорт"
-          @click="exportModalOpen = true"
-        >
-          <Download class="w-5 h-5" />
-        </button>
-        <button
-          class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
-          title="Редактировать"
-          @click="startEdit"
-        >
-          <Pencil class="w-5 h-5" />
-        </button>
-      </template>
     </div>
 
     <!-- Edit form -->
