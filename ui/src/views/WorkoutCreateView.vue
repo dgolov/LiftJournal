@@ -87,7 +87,7 @@
       <draggable
         v-if="activeWorkout.exercises.length"
         :list="exercisesList"
-        item-key="exerciseId"
+        item-key="instanceId"
         handle=".drag-handle"
         animation="200"
         class="space-y-3 mb-4"

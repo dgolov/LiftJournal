@@ -100,10 +100,16 @@ async def test_get_workout_wrong_user_forbidden(mock_db):
 async def test_create_workout(mock_db):
     w = _full_workout()
 
-    with patch("app.services.workout.WorkoutRepository") as MockRepo:
+    with (
+        patch("app.services.workout.WorkoutRepository") as MockRepo,
+        patch("app.services.workout.AchievementService") as MockAch,
+    ):
         repo = AsyncMock()
         MockRepo.return_value = repo
         repo.create.return_value = w
+        ach_svc = AsyncMock()
+        MockAch.return_value = ach_svc
+        ach_svc.evaluate.return_value = []
 
         payload = WorkoutCreate(
             date=date(2026, 3, 1), type="Силовая",

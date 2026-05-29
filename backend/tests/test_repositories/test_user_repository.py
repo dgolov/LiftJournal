@@ -93,29 +93,28 @@ async def test_create_user_adds_and_commits(repo, mock_db):
 # ---------------------------------------------------------------------------
 
 async def test_update_profile_updates_fields(repo, mock_db):
-    user = make_user(id=1, name="Old", age=20)
-    updated_user = make_user(id=1, name="New", age=30)
+    from datetime import date as date_type
+    user = make_user(id=1, name="Old")
+    updated_user = make_user(id=1, name="New")
+    birth = date_type(1990, 5, 15)
 
-    # First call: get_with_relations after update
     mock_db.execute.return_value = scalar_result(updated_user)
 
-    result = await repo.update_profile(user, name="New", age=30, avatar_url=None)
+    await repo.update_profile(user, name="New", birth_date=birth, avatar_url=None)
 
     assert user.name == "New"
-    assert user.age == 30
+    assert user.birth_date == birth
     mock_db.commit.assert_called_once()
 
 
 async def test_update_profile_skips_none_fields(repo, mock_db):
-    user = make_user(id=1, name="Keep", age=25, avatar_url="url")
-    updated_user = make_user(id=1, name="Keep", age=25)
+    user = make_user(id=1, name="Keep", avatar_url="url")
+    updated_user = make_user(id=1, name="Keep")
     mock_db.execute.return_value = scalar_result(updated_user)
 
-    await repo.update_profile(user, name=None, age=None, avatar_url=None)
+    await repo.update_profile(user, name=None, birth_date=None, avatar_url=None)
 
-    # Fields should remain unchanged
     assert user.name == "Keep"
-    assert user.age == 25
 
 
 # ---------------------------------------------------------------------------

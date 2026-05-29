@@ -75,6 +75,7 @@ async def test_start_run_cycle_not_found(mock_db):
         repo = AsyncMock()
         MockRepo.return_value = repo
         repo.get_active_run.return_value = None
+        repo.get_any_active_run.return_value = None
         repo.get_cycle.return_value = None
 
         with pytest.raises(HTTPException) as exc_info:
@@ -90,6 +91,7 @@ async def test_start_run_private_cycle_forbidden(mock_db):
         repo = AsyncMock()
         MockRepo.return_value = repo
         repo.get_active_run.return_value = None
+        repo.get_any_active_run.return_value = None
         repo.get_cycle.return_value = cycle
 
         with pytest.raises(HTTPException) as exc_info:
@@ -106,6 +108,7 @@ async def test_start_run_creates_new_run(mock_db):
         repo = AsyncMock()
         MockRepo.return_value = repo
         repo.get_active_run.return_value = None
+        repo.get_any_active_run.return_value = None
         repo.get_cycle.return_value = cycle
         repo.create_run.return_value = new_run
 

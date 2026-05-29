@@ -19,7 +19,7 @@ def mock_db():
 # ---------------------------------------------------------------------------
 
 async def test_get_user_success(mock_db):
-    user = make_user(id=1, name="Alex", age=28)
+    user = make_user(id=1, name="Alex")
 
     with patch("app.services.user.UserRepository") as MockRepo:
         repo = AsyncMock()
@@ -29,7 +29,7 @@ async def test_get_user_success(mock_db):
         result = await UserService(mock_db).get_user(1)
 
     assert result.name == "Alex"
-    assert result.age == 28
+    assert result.birthDate is None
 
 
 async def test_get_user_not_found(mock_db):
@@ -50,7 +50,7 @@ async def test_get_user_not_found(mock_db):
 
 async def test_update_profile_success(mock_db):
     user = make_user(id=1, name="Old Name")
-    updated = make_user(id=1, name="New Name", age=30)
+    updated = make_user(id=1, name="New Name")
 
     with patch("app.services.user.UserRepository") as MockRepo:
         repo = AsyncMock()
@@ -58,12 +58,12 @@ async def test_update_profile_success(mock_db):
         repo.get_with_relations.return_value = user
         repo.update_profile.return_value = updated
 
-        payload = ProfileUpdate(name="New Name", age=30)
+        payload = ProfileUpdate(name="New Name")
         result = await UserService(mock_db).update_profile(1, payload)
 
     assert result.name == "New Name"
     repo.update_profile.assert_called_once_with(
-        user, name="New Name", age=30, avatar_url=None
+        user, name="New Name", birth_date=None, avatar_url=None
     )
 
 

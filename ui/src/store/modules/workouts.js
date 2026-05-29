@@ -141,28 +141,29 @@ export default {
     },
     ADD_EXERCISE_TO_ACTIVE(state, { exercise, sets }) {
       state.activeWorkout.exercises.push({
+        instanceId: uid(),
         exerciseId: exercise.id,
         exerciseName: exercise.name,
         sets
       })
     },
-    REMOVE_EXERCISE_FROM_ACTIVE(state, exerciseId) {
-      state.activeWorkout.exercises = state.activeWorkout.exercises.filter(e => e.exerciseId !== exerciseId)
+    REMOVE_EXERCISE_FROM_ACTIVE(state, instanceId) {
+      state.activeWorkout.exercises = state.activeWorkout.exercises.filter(e => e.instanceId !== instanceId)
     },
-    ADD_SET_TO_EXERCISE(state, exerciseId) {
-      const ex = state.activeWorkout.exercises.find(e => e.exerciseId === exerciseId)
+    ADD_SET_TO_EXERCISE(state, instanceId) {
+      const ex = state.activeWorkout.exercises.find(e => e.instanceId === instanceId)
       if (!ex) return
       const last = ex.sets[ex.sets.length - 1] || { weight: 0, reps: 0 }
       ex.sets.push({ id: uid(), weight: last.weight, reps: last.reps, completed: false, failed: false })
     },
-    UPDATE_SET(state, { exerciseId, setId, field, value }) {
-      const ex = state.activeWorkout.exercises.find(e => e.exerciseId === exerciseId)
+    UPDATE_SET(state, { instanceId, setId, field, value }) {
+      const ex = state.activeWorkout.exercises.find(e => e.instanceId === instanceId)
       if (!ex) return
       const set = ex.sets.find(s => s.id === setId)
       if (set) set[field] = value
     },
-    REMOVE_SET(state, { exerciseId, setId }) {
-      const ex = state.activeWorkout.exercises.find(e => e.exerciseId === exerciseId)
+    REMOVE_SET(state, { instanceId, setId }) {
+      const ex = state.activeWorkout.exercises.find(e => e.instanceId === instanceId)
       if (!ex) return
       ex.sets = ex.sets.filter(s => s.id !== setId)
     },
@@ -206,6 +207,7 @@ export default {
       commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'date', value: new Date().toISOString().split('T')[0] })
       commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'notes', value: workout.notes || '' })
       commit('SET_ACTIVE_WORKOUT_EXERCISES', workout.exercises.map(ex => ({
+        instanceId: uid(),
         exerciseId: ex.exerciseId,
         exerciseName: ex.exerciseName,
         sets: ex.sets.map(s => ({ id: s.id, weight: s.weight, reps: s.reps, completed: false, failed: false })),
@@ -221,6 +223,7 @@ export default {
       commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'date', value: new Date().toISOString().split('T')[0] })
       commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'notes', value: plannedWorkout.notes || '' })
       commit('SET_ACTIVE_WORKOUT_EXERCISES', plannedWorkout.exercises.map(ex => ({
+        instanceId: uid(),
         exerciseId: ex.exerciseId,
         exerciseName: ex.exerciseName,
         sets: ex.sets.map(s => ({ ...s, completed: false })),
