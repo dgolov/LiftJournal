@@ -61,11 +61,11 @@
           <span v-if="currentWeight" class="text-sm font-bold text-primary">{{ currentWeight.kg }} кг</span>
         </div>
         <WeightChart :data="weightHistory" />
-        <div class="mt-4 border-t border-gray-100 dark:border-gray-800 pt-4">
+        <div class="mt-4 border-t border-gray-100 dark:border-gray-800 pt-4 overflow-hidden">
           <p class="text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Записать вес</p>
           <div class="flex flex-col sm:flex-row gap-2">
-            <input type="date" v-model="weightForm.date" class="input w-full min-w-0 sm:flex-1" />
-            <input type="number" v-model.number="weightForm.kg" step="0.1" min="20" max="300" placeholder="кг" class="input sm:w-24" inputmode="decimal" />
+            <input type="date" v-model="weightForm.date" class="input w-full max-w-full min-w-0 sm:flex-1" />
+            <input type="number" v-model.number="weightForm.kg" step="0.1" min="20" max="300" placeholder="кг" class="input w-full sm:w-24" inputmode="decimal" />
             <BaseButton :disabled="!weightForm.kg" @click="logWeight" class="w-full sm:w-auto">Сохранить</BaseButton>
           </div>
         </div>
