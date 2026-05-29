@@ -51,14 +51,14 @@
     <div v-if="isEditing" class="card p-4 mb-4 space-y-4">
       <h3 class="font-semibold text-gray-900 dark:text-white">Редактирование тренировки</h3>
 
-      <div class="grid grid-cols-2 gap-3">
-        <div>
+      <div class="grid grid-cols-2 gap-3 overflow-hidden">
+        <div class="min-w-0">
           <label class="label">Название</label>
           <input v-model="draft.title" class="input w-full" />
         </div>
-        <div>
+        <div class="min-w-0">
           <label class="label">Дата</label>
-          <input v-model="draft.date" type="date" class="input w-full" />
+          <input v-model="draft.date" type="date" class="input w-full max-w-full min-w-0" />
         </div>
         <div>
           <label class="label">Длительность (мин)</label>
