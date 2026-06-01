@@ -37,11 +37,12 @@
         </div>
       </div>
 
-      <BaseInput
-        v-model="form.scheduledDate"
-        type="date"
-        label="Дата тренировки"
-      />
+      <div>
+        <label class="label">Дата тренировки</label>
+        <div class="grid grid-cols-1">
+          <input v-model="form.scheduledDate" type="date" class="input" />
+        </div>
+      </div>
 
       <!-- Recurrence (only for new plans) -->
       <div v-if="!isEdit">
