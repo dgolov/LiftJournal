@@ -115,6 +115,13 @@ const workoutService = {
     return request('PATCH', '/user/theme', { theme })
   },
 
+  changePassword(data) {
+    return request('PATCH', '/user/password', {
+      currentPassword: data.currentPassword,
+      newPassword: data.newPassword,
+    })
+  },
+
   logWeight(entry) {
     return request('POST', '/user/weight', { date: entry.date, kg: entry.kg })
   },
