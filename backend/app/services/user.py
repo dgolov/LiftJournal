@@ -5,8 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas import (
     UserOut, WeightEntryOut, GoalOut, UserMaxOut,
-    ProfileUpdate, WeightEntryIn, GoalCreate, UserMaxIn, ThemeUpdate,
+    ProfileUpdate, WeightEntryIn, GoalCreate, UserMaxIn, ThemeUpdate, PasswordChange,
 )
+from app.core.security import hash_password, verify_password
 from app.repositories.user import UserRepository
 from app.domain.models import User
 
@@ -82,6 +83,16 @@ class UserService:
 
     async def delete_max(self, user_id: int, exercise_name: str) -> None:
         await self.repo.delete_max(user_id, exercise_name)
+
+    async def change_password(self, user_id: int, data: PasswordChange) -> None:
+        u = await self.repo.get_with_relations(user_id)
+        if not u:
+            raise HTTPException(status_code=404, detail="User not found")
+        if not u.hashed_password or not verify_password(data.currentPassword, u.hashed_password):
+            raise HTTPException(status_code=400, detail="Неверный текущий пароль")
+        if len(data.newPassword) < 6:
+            raise HTTPException(status_code=422, detail="Пароль должен быть не короче 6 символов")
+        await self.repo.update_password(user_id, hash_password(data.newPassword))
 
     async def update_theme(self, user_id: int, data: ThemeUpdate) -> UserOut:
         u = await self.repo.update_theme(user_id, data.theme)
