@@ -18,7 +18,10 @@
         <p class="text-sm font-medium text-gray-700 dark:text-gray-200">Аккаунт</p>
         <p class="text-xs text-gray-400 mt-0.5">{{ userName }}</p>
       </div>
-      <BaseButton variant="danger" size="sm" @click="logout">Выйти</BaseButton>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <BaseButton variant="outline" size="sm" @click="openChangePassword">Пароль</BaseButton>
+        <BaseButton variant="danger" size="sm" @click="logout">Выйти</BaseButton>
+      </div>
     </div>
 
     <!-- Social stats -->
@@ -171,6 +174,20 @@
       </template>
     </BaseModal>
 
+    <!-- Change password modal -->
+    <BaseModal v-model="showChangePassword" title="Изменить пароль">
+      <div class="space-y-4">
+        <BaseInput v-model="passwordForm.currentPassword" type="password" label="Текущий пароль" />
+        <BaseInput v-model="passwordForm.newPassword" type="password" label="Новый пароль" />
+        <BaseInput v-model="passwordForm.confirmPassword" type="password" label="Повторите новый пароль" />
+        <p v-if="passwordError" class="text-sm text-red-500">{{ passwordError }}</p>
+      </div>
+      <template #footer>
+        <BaseButton variant="ghost" @click="showChangePassword = false">Отмена</BaseButton>
+        <BaseButton :disabled="!canSubmitPassword" :loading="passwordSaving" @click="savePassword">Сохранить</BaseButton>
+      </template>
+    </BaseModal>
+
     <!-- Add max modal -->
     <BaseModal v-model="showAddMax" title="Личный максимум (ПМ)">
       <div class="space-y-4">
@@ -307,6 +324,50 @@ const formattedVolume = computed(() => {
 // Modals
 const showEditProfile = ref(false)
 const showAddGoal = ref(false)
+const showChangePassword = ref(false)
+const passwordSaving = ref(false)
+const passwordError = ref('')
+const passwordForm = reactive({ currentPassword: '', newPassword: '', confirmPassword: '' })
+
+const canSubmitPassword = computed(() =>
+  passwordForm.currentPassword &&
+  passwordForm.newPassword.length >= 6 &&
+  passwordForm.newPassword === passwordForm.confirmPassword
+)
+
+function openChangePassword() {
+  passwordForm.currentPassword = ''
+  passwordForm.newPassword = ''
+  passwordForm.confirmPassword = ''
+  passwordError.value = ''
+  showChangePassword.value = true
+}
+
+async function savePassword() {
+  if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+    passwordError.value = 'Пароли не совпадают'
+    return
+  }
+  passwordError.value = ''
+  passwordSaving.value = true
+  try {
+    await store.dispatch('user/changePassword', {
+      currentPassword: passwordForm.currentPassword,
+      newPassword: passwordForm.newPassword,
+    })
+    store.dispatch('ui/showToast', { message: 'Пароль изменён', type: 'success' })
+    showChangePassword.value = false
+  } catch (e) {
+    const msg = e.message || ''
+    passwordError.value = msg.includes('400')
+      ? 'Неверный текущий пароль'
+      : msg.includes('422')
+        ? 'Пароль должен быть не короче 6 символов'
+        : 'Не удалось изменить пароль'
+  } finally {
+    passwordSaving.value = false
+  }
+}
 
 const editForm = reactive({ name: profile.value.name, birthDate: profile.value.birthDate ?? '' })
 
