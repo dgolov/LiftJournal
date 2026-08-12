@@ -142,6 +142,11 @@ class ThemeUpdate(BaseModel):
     theme: str  # "light" | "dark"
 
 
+class PasswordChange(BaseModel):
+    currentPassword: str
+    newPassword: str
+
+
 class WeightEntryIn(BaseModel):
     date: date
     kg: float
