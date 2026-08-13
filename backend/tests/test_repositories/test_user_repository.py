@@ -283,3 +283,25 @@ async def test_delete_max_not_found_does_nothing(repo, mock_db):
     await repo.delete_max(1, "Unknown")
 
     mock_db.delete.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# update_password
+# ---------------------------------------------------------------------------
+
+async def test_update_password_existing_user(repo, mock_db):
+    user = make_user(id=1, hashed_password="$2b$12$oldhash")
+    mock_db.execute.return_value = scalar_result(user)
+
+    await repo.update_password(1, "$2b$12$newhash")
+
+    assert user.hashed_password == "$2b$12$newhash"
+    mock_db.commit.assert_called_once()
+
+
+async def test_update_password_not_found_does_nothing(repo, mock_db):
+    mock_db.execute.return_value = scalar_result(None)
+
+    await repo.update_password(999, "$2b$12$newhash")
+
+    mock_db.commit.assert_not_called()
