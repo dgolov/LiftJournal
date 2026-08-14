@@ -157,3 +157,53 @@ async def test_delete_max(client):
 
     assert resp.status_code == 204
     svc.delete_max.assert_called_once_with(1, "Bench Press")
+
+
+async def test_change_password(client):
+    with patch("app.api.routers.users.UserService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+
+        resp = await client.patch("/api/user/password", json={
+            "currentPassword": "old-pass", "newPassword": "new-password"
+        })
+
+    assert resp.status_code == 204
+    args, _ = svc.change_password.call_args
+    assert args[0] == 1
+    assert args[1].currentPassword == "old-pass"
+    assert args[1].newPassword == "new-password"
+
+
+async def test_change_password_wrong_current_returns_400(client):
+    with patch("app.api.routers.users.UserService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.change_password.side_effect = HTTPException(status_code=400, detail="Неверный текущий пароль")
+
+        resp = await client.patch("/api/user/password", json={
+            "currentPassword": "wrong-pass", "newPassword": "new-password"
+        })
+
+    assert resp.status_code == 400
+
+
+async def test_change_password_too_short_returns_422(client):
+    with patch("app.api.routers.users.UserService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.change_password.side_effect = HTTPException(
+            status_code=422, detail="Пароль должен быть не короче 6 символов"
+        )
+
+        resp = await client.patch("/api/user/password", json={
+            "currentPassword": "old-pass", "newPassword": "short"
+        })
+
+    assert resp.status_code == 422
+
+
+async def test_change_password_missing_field_returns_422(client):
+    resp = await client.patch("/api/user/password", json={"currentPassword": "old-pass"})
+
+    assert resp.status_code == 422
