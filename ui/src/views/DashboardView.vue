@@ -16,6 +16,28 @@
       </RouterLink>
     </div>
 
+    <!-- Today's planned workout -->
+    <div v-if="todaysPlan" class="card p-4 border-primary/30 dark:border-primary/40 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+        <CalendarClock class="w-5 h-5 text-primary" />
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-xs text-primary font-medium">Запланировано на сегодня</p>
+        <p class="font-semibold text-sm text-gray-900 dark:text-white truncate">{{ todaysPlan.title }}</p>
+      </div>
+      <div class="flex items-center gap-2 flex-shrink-0">
+        <button
+          class="px-3 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-1.5"
+          @click="startTodaysPlan"
+        ><Play class="w-3.5 h-3.5" />Начать</button>
+        <button
+          class="w-9 h-9 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors"
+          title="Пропустить"
+          @click="skipTodaysPlan"
+        ><Ban class="w-4 h-4" /></button>
+      </div>
+    </div>
+
     <!-- Top stat cards -->
     <div class="grid grid-cols-3 gap-3">
       <div class="card p-4 flex flex-col items-center text-center gap-1">
@@ -185,14 +207,17 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
-import { Flame, Dumbbell, TrendingUp, Trophy, ClipboardList, Plus, ChevronRight, BarChart2 } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { Flame, Dumbbell, TrendingUp, Trophy, ClipboardList, Plus, ChevronRight, BarChart2, CalendarClock, Play, Ban } from 'lucide-vue-next'
 
 const store = useStore()
+const router = useRouter()
 
 onMounted(() => {
   if (!store.state.workouts.workouts.length) store.dispatch('workouts/initWorkouts')
   if (!store.state.exercises.library.length) store.dispatch('exercises/initExercises')
   if (!store.state.user.profile?.name) store.dispatch('user/initUser')
+  if (!store.state.planned.plannedWorkouts.length) store.dispatch('planned/fetchPlannedWorkouts')
 })
 
 // ── Greeting ──────────────────────────────────────────────────────────────────
@@ -218,6 +243,25 @@ function toDateStr(d) {
 }
 
 const todayStr = toDateStr(today)
+
+// ── Today's planned workout ──────────────────────────────────────────────────
+const todaysPlan = computed(() =>
+  store.state.planned.plannedWorkouts.find(p => p.status === 'planned' && p.scheduledDate === todayStr)
+)
+
+async function startTodaysPlan() {
+  await store.dispatch('workouts/startWorkoutFromPlan', todaysPlan.value)
+  router.push('/workouts/new')
+}
+
+async function skipTodaysPlan() {
+  try {
+    await store.dispatch('planned/skipPlannedWorkout', todaysPlan.value.id)
+    store.dispatch('ui/showToast', { message: 'Тренировка пропущена', type: 'info' })
+  } catch (e) {
+    store.dispatch('ui/showToast', { message: 'Ошибка: ' + e.message, type: 'error' })
+  }
+}
 
 // Current streak (consecutive days ending today or yesterday)
 const currentStreak = computed(() => {
