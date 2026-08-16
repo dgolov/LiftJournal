@@ -9,7 +9,10 @@ export default {
 
   getters: {
     all: state => [...state.plannedWorkouts].sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate)),
-    upcoming: (state, getters) => getters.all.filter(w => w.status === 'planned'),
+    upcoming: (state, getters) => {
+      const today = new Date().toISOString().split('T')[0]
+      return getters.all.filter(w => w.status === 'planned' && w.scheduledDate >= today)
+    },
     byId: state => id => state.plannedWorkouts.find(w => w.id === id),
     upcomingByGroup: state => (groupId, fromDate) =>
       state.plannedWorkouts.filter(

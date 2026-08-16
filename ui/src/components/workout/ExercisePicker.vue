@@ -84,7 +84,7 @@ function pick(exercise) {
     emit('pick', exercise)
   } else {
     store.dispatch('workouts/addExerciseToActive', exercise)
-    show.value = false
   }
+  show.value = false
 }
 </script>
