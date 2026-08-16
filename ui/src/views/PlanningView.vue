@@ -211,12 +211,17 @@ const tabs = [
 
 const allPlanned = computed(() => store.getters['planned/all'])
 
+const today = new Date().toISOString().split('T')[0]
+
 const filtered = computed(() => {
   if (activeTab.value === 'all') return allPlanned.value
+  if (activeTab.value === 'planned') {
+    // Overdue plans (still 'planned' but the date has passed) are excluded here —
+    // they clutter "Предстоящие" without being actionable; still visible under "Все".
+    return allPlanned.value.filter(p => p.status === 'planned' && p.scheduledDate >= today)
+  }
   return allPlanned.value.filter(p => p.status === activeTab.value)
 })
-
-const today = new Date().toISOString().split('T')[0]
 
 function dateLabel(dateStr) {
   const d = new Date(dateStr + 'T00:00:00')

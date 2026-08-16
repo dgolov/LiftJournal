@@ -100,12 +100,23 @@
               <h4 class="font-semibold text-gray-900 dark:text-white">{{ ex.exerciseName }}</h4>
               <p class="text-xs text-gray-400">{{ ex.sets.length }} подходов (план)</p>
             </div>
-            <button
-              class="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors"
-              @click="removeExercise(exIdx)"
-            >
-              <Trash2 class="w-5 h-5" />
-            </button>
+            <div class="flex items-center gap-1 flex-shrink-0">
+              <button
+                v-if="ex.history?.length > 1"
+                class="flex items-center gap-1 px-2 h-8 rounded-lg text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+                title="Показать подходы из другой тренировки"
+                @click="cycleHistory(exIdx)"
+              >
+                <RotateCw class="w-3.5 h-3.5" />
+                {{ ex.historyIndex + 1 }}/{{ ex.history.length }} · {{ historyDateLabel(ex) }}
+              </button>
+              <button
+                class="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors"
+                @click="removeExercise(exIdx)"
+              >
+                <Trash2 class="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           <!-- Column headers -->
@@ -186,7 +197,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter, useRoute } from 'vue-router'
-import { ChevronLeft, Dumbbell, Trash2, X } from 'lucide-vue-next'
+import { ChevronLeft, Dumbbell, Trash2, X, RotateCw } from 'lucide-vue-next'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
@@ -234,15 +245,36 @@ const canSave = computed(() => form.value.title.trim().length > 0)
 const addedExerciseIds = computed(() => new Set(form.value.exercises.map(e => e.exerciseId)))
 
 function addExercise(exercise) {
+  const history = store.getters['workouts/exerciseHistoryOptions'](exercise.id)
+  const sets = history.length
+    ? history[0].sets.map(s => ({ id: uid(), weight: s.weight, reps: s.reps }))
+    : [{ id: uid(), weight: 0, reps: 0 }]
   form.value.exercises.push({
     exerciseId: exercise.id,
     exerciseName: exercise.name,
-    sets: [{ id: uid(), weight: 0, reps: 0 }],
+    sets,
+    history,
+    historyIndex: 0,
   })
 }
 
 function removeExercise(exIdx) {
   form.value.exercises.splice(exIdx, 1)
+}
+
+function cycleHistory(exIdx) {
+  const ex = form.value.exercises[exIdx]
+  if (!ex.history?.length) return
+  ex.historyIndex = (ex.historyIndex + 1) % ex.history.length
+  const option = ex.history[ex.historyIndex]
+  ex.sets = option.sets.map(s => ({ id: uid(), weight: s.weight, reps: s.reps }))
+}
+
+function historyDateLabel(ex) {
+  const option = ex.history?.[ex.historyIndex]
+  if (!option) return ''
+  const d = new Date(option.date + 'T00:00:00')
+  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
 }
 
 function addSet(exIdx) {
@@ -263,7 +295,11 @@ async function save() {
       type: form.value.type,
       scheduledDate: form.value.scheduledDate,
       notes: form.value.notes,
-      exercises: form.value.exercises,
+      exercises: form.value.exercises.map(ex => ({
+        exerciseId: ex.exerciseId,
+        exerciseName: ex.exerciseName,
+        sets: ex.sets.map(s => ({ id: s.id, weight: s.weight, reps: s.reps })),
+      })),
       status: 'planned',
     }
     if (isEdit.value) {
@@ -286,6 +322,7 @@ async function save() {
 
 onMounted(async () => {
   await store.dispatch('exercises/initExercises')
+  if (!store.state.workouts.workouts.length) await store.dispatch('workouts/initWorkouts')
   if (isEdit.value) {
     let plan = store.getters['planned/byId'](route.params.id)
     if (!plan) {
