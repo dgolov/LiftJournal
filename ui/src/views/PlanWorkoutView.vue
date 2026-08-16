@@ -89,83 +89,93 @@
         <BaseButton variant="outline" size="sm" @click="showPicker = true">+ Добавить</BaseButton>
       </div>
 
-      <div v-if="form.exercises.length" class="space-y-3">
-        <div
-          v-for="(ex, exIdx) in form.exercises"
-          :key="ex.exerciseId"
-          class="card p-4"
-        >
-          <div class="flex items-center justify-between mb-3">
-            <div>
-              <h4 class="font-semibold text-gray-900 dark:text-white">{{ ex.exerciseName }}</h4>
-              <p class="text-xs text-gray-400">{{ ex.sets.length }} подходов (план)</p>
+      <draggable
+        v-if="form.exercises.length"
+        :list="form.exercises"
+        item-key="exerciseId"
+        handle=".drag-handle"
+        animation="200"
+        class="space-y-3"
+      >
+        <template #item="{ element: ex, index: exIdx }">
+          <div class="card p-4">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="drag-handle flex-shrink-0 text-gray-300 hover:text-gray-500 dark:hover:text-gray-400 cursor-grab active:cursor-grabbing touch-none p-1 -ml-1">
+                  <GripVertical class="w-4 h-4" />
+                </span>
+                <div class="min-w-0">
+                  <h4 class="font-semibold text-gray-900 dark:text-white">{{ ex.exerciseName }}</h4>
+                  <p class="text-xs text-gray-400">{{ ex.sets.length }} подходов (план)</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-1 flex-shrink-0">
+                <button
+                  v-if="ex.history?.length > 1"
+                  class="flex items-center gap-1 px-2 h-8 rounded-lg text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+                  title="Показать подходы из другой тренировки"
+                  @click="cycleHistory(exIdx)"
+                >
+                  <RotateCw class="w-3.5 h-3.5" />
+                  {{ ex.historyIndex + 1 }}/{{ ex.history.length }} · {{ historyDateLabel(ex) }}
+                </button>
+                <button
+                  class="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors"
+                  @click="removeExercise(exIdx)"
+                >
+                  <Trash2 class="w-5 h-5" />
+                </button>
+              </div>
             </div>
-            <div class="flex items-center gap-1 flex-shrink-0">
-              <button
-                v-if="ex.history?.length > 1"
-                class="flex items-center gap-1 px-2 h-8 rounded-lg text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
-                title="Показать подходы из другой тренировки"
-                @click="cycleHistory(exIdx)"
-              >
-                <RotateCw class="w-3.5 h-3.5" />
-                {{ ex.historyIndex + 1 }}/{{ ex.history.length }} · {{ historyDateLabel(ex) }}
-              </button>
-              <button
-                class="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors"
-                @click="removeExercise(exIdx)"
-              >
-                <Trash2 class="w-5 h-5" />
-              </button>
+
+            <!-- Column headers -->
+            <div class="flex items-center gap-1 mb-2 text-xs text-gray-400 font-medium">
+              <span class="w-5" />
+              <span class="flex-1 text-center">Вес (кг)</span>
+              <span class="w-3 text-center">×</span>
+              <span class="flex-1 text-center">Повт.</span>
+              <span class="w-7" />
             </div>
-          </div>
 
-          <!-- Column headers -->
-          <div class="flex items-center gap-1 mb-2 text-xs text-gray-400 font-medium">
-            <span class="w-5" />
-            <span class="flex-1 text-center">Вес (кг)</span>
-            <span class="w-3 text-center">×</span>
-            <span class="flex-1 text-center">Повт.</span>
-            <span class="w-7" />
-          </div>
-
-          <div class="space-y-2">
-            <div
-              v-for="(set, setIdx) in ex.sets"
-              :key="set.id"
-              class="flex items-center gap-1"
-            >
-              <span class="text-xs text-gray-400 w-5 text-center flex-shrink-0">{{ setIdx + 1 }}</span>
-              <StepperInput
-                class="flex-1"
-                :model-value="set.weight"
-                :step="0.5"
-                :decimals="1"
-                placeholder="кг"
-                @update:model-value="set.weight = $event"
-              />
-              <span class="text-gray-300 text-sm flex-shrink-0">×</span>
-              <StepperInput
-                class="flex-1"
-                :model-value="set.reps"
-                :step="1"
-                placeholder="повт"
-                @update:model-value="set.reps = $event"
-              />
-              <button
-                class="w-7 h-9 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
-                @click="removeSet(exIdx, setIdx)"
+            <div class="space-y-2">
+              <div
+                v-for="(set, setIdx) in ex.sets"
+                :key="set.id"
+                class="flex items-center gap-1"
               >
-                <X class="w-4 h-4" />
-              </button>
+                <span class="text-xs text-gray-400 w-5 text-center flex-shrink-0">{{ setIdx + 1 }}</span>
+                <StepperInput
+                  class="flex-1"
+                  :model-value="set.weight"
+                  :step="0.5"
+                  :decimals="1"
+                  placeholder="кг"
+                  @update:model-value="set.weight = $event"
+                />
+                <span class="text-gray-300 text-sm flex-shrink-0">×</span>
+                <StepperInput
+                  class="flex-1"
+                  :model-value="set.reps"
+                  :step="1"
+                  placeholder="повт"
+                  @update:model-value="set.reps = $event"
+                />
+                <button
+                  class="w-7 h-9 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
+                  @click="removeSet(exIdx, setIdx)"
+                >
+                  <X class="w-4 h-4" />
+                </button>
+              </div>
             </div>
-          </div>
 
-          <button
-            class="mt-3 w-full py-2 text-sm text-primary hover:text-primary font-medium border border-dashed border-primary/30 hover:border-primary/60 rounded-lg transition-colors"
-            @click="addSet(exIdx)"
-          >+ Добавить подход</button>
-        </div>
-      </div>
+            <button
+              class="mt-3 w-full py-2 text-sm text-primary hover:text-primary font-medium border border-dashed border-primary/30 hover:border-primary/60 rounded-lg transition-colors"
+              @click="addSet(exIdx)"
+            >+ Добавить подход</button>
+          </div>
+        </template>
+      </draggable>
 
       <BaseEmptyState
         v-else
@@ -197,7 +207,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter, useRoute } from 'vue-router'
-import { ChevronLeft, Dumbbell, Trash2, X, RotateCw } from 'lucide-vue-next'
+import { ChevronLeft, Dumbbell, Trash2, X, RotateCw, GripVertical } from 'lucide-vue-next'
+import draggable from 'vuedraggable'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
