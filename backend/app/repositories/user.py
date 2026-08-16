@@ -51,6 +51,13 @@ class UserRepository:
         await self.db.commit()
         return await self.get_with_relations(user.id)  # type: ignore[return-value]
 
+    async def update_password(self, user_id: int, hashed_password: str) -> None:
+        result = await self.db.execute(select(User).where(User.id == user_id))
+        user = result.scalar_one_or_none()
+        if user:
+            user.hashed_password = hashed_password
+            await self.db.commit()
+
     async def update_theme(self, user_id: int, theme: str) -> User:
         result = await self.db.execute(select(User).where(User.id == user_id))
         user = result.scalar_one_or_none()

@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from fastapi import HTTPException
 
-from app.api.schemas import ProfileUpdate, WeightEntryIn, GoalCreate, UserMaxIn
+from app.api.schemas import ProfileUpdate, WeightEntryIn, GoalCreate, UserMaxIn, PasswordChange
 from app.services.user import UserService
 from tests.conftest import make_user, make_weight_entry, make_goal, make_user_max
 
@@ -200,6 +200,94 @@ async def test_delete_max(mock_db):
         await UserService(mock_db).delete_max(1, "Squat")
 
     repo.delete_max.assert_called_once_with(1, "Squat")
+
+
+# ---------------------------------------------------------------------------
+# change_password
+# ---------------------------------------------------------------------------
+
+async def test_change_password_success(mock_db):
+    user = make_user(id=1, hashed_password="$2b$12$oldhash")
+    payload = PasswordChange(currentPassword="old-pass", newPassword="new-password")
+
+    with patch("app.services.user.UserRepository") as MockRepo, \
+         patch("app.services.user.verify_password", return_value=True) as mock_verify, \
+         patch("app.services.user.hash_password", return_value="$2b$12$newhash") as mock_hash:
+        repo = AsyncMock()
+        MockRepo.return_value = repo
+        repo.get_with_relations.return_value = user
+
+        await UserService(mock_db).change_password(1, payload)
+
+    mock_verify.assert_called_once_with("old-pass", "$2b$12$oldhash")
+    mock_hash.assert_called_once_with("new-password")
+    repo.update_password.assert_called_once_with(1, "$2b$12$newhash")
+
+
+async def test_change_password_user_not_found(mock_db):
+    payload = PasswordChange(currentPassword="old-pass", newPassword="new-password")
+
+    with patch("app.services.user.UserRepository") as MockRepo:
+        repo = AsyncMock()
+        MockRepo.return_value = repo
+        repo.get_with_relations.return_value = None
+
+        with pytest.raises(HTTPException) as exc_info:
+            await UserService(mock_db).change_password(999, payload)
+
+    assert exc_info.value.status_code == 404
+    repo.update_password.assert_not_called()
+
+
+async def test_change_password_wrong_current_password(mock_db):
+    user = make_user(id=1, hashed_password="$2b$12$oldhash")
+    payload = PasswordChange(currentPassword="wrong-pass", newPassword="new-password")
+
+    with patch("app.services.user.UserRepository") as MockRepo, \
+         patch("app.services.user.verify_password", return_value=False):
+        repo = AsyncMock()
+        MockRepo.return_value = repo
+        repo.get_with_relations.return_value = user
+
+        with pytest.raises(HTTPException) as exc_info:
+            await UserService(mock_db).change_password(1, payload)
+
+    assert exc_info.value.status_code == 400
+    repo.update_password.assert_not_called()
+
+
+async def test_change_password_no_existing_hash_rejected(mock_db):
+    # e.g. an account created via a future OAuth-only flow with no local password set
+    user = make_user(id=1, hashed_password=None)
+    payload = PasswordChange(currentPassword="anything", newPassword="new-password")
+
+    with patch("app.services.user.UserRepository") as MockRepo:
+        repo = AsyncMock()
+        MockRepo.return_value = repo
+        repo.get_with_relations.return_value = user
+
+        with pytest.raises(HTTPException) as exc_info:
+            await UserService(mock_db).change_password(1, payload)
+
+    assert exc_info.value.status_code == 400
+    repo.update_password.assert_not_called()
+
+
+async def test_change_password_new_password_too_short(mock_db):
+    user = make_user(id=1, hashed_password="$2b$12$oldhash")
+    payload = PasswordChange(currentPassword="old-pass", newPassword="short")
+
+    with patch("app.services.user.UserRepository") as MockRepo, \
+         patch("app.services.user.verify_password", return_value=True):
+        repo = AsyncMock()
+        MockRepo.return_value = repo
+        repo.get_with_relations.return_value = user
+
+        with pytest.raises(HTTPException) as exc_info:
+            await UserService(mock_db).change_password(1, payload)
+
+    assert exc_info.value.status_code == 422
+    repo.update_password.assert_not_called()
 
 
 # ---------------------------------------------------------------------------

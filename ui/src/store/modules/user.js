@@ -74,6 +74,10 @@ export default {
       await workoutService.updateTheme(theme)
     },
 
+    async changePassword(_, { currentPassword, newPassword }) {
+      await workoutService.changePassword({ currentPassword, newPassword })
+    },
+
     async logWeight({ commit }, entry) {
       await workoutService.logWeight(entry)
       commit('ADD_WEIGHT_ENTRY', entry)

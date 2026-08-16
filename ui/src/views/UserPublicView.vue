@@ -34,10 +34,10 @@
               @click="toggleFollow"
             >{{ profile.isFollowing ? 'Отписаться' : 'Подписаться' }}</BaseButton>
           </div>
-          <div class="flex gap-4 mt-3 text-sm text-gray-500">
-            <span><strong class="text-gray-900 dark:text-white">{{ profile.workoutsCount }}</strong> тренировок</span>
-            <span><strong class="text-gray-900 dark:text-white">{{ profile.followersCount }}</strong> подписчиков</span>
-            <span><strong class="text-gray-900 dark:text-white">{{ profile.followingCount }}</strong> подписок</span>
+          <div class="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm text-gray-500">
+            <span class="whitespace-nowrap"><strong class="text-gray-900 dark:text-white">{{ profile.workoutsCount }}</strong> тренировок</span>
+            <span class="whitespace-nowrap"><strong class="text-gray-900 dark:text-white">{{ profile.followersCount }}</strong> подписчиков</span>
+            <span class="whitespace-nowrap"><strong class="text-gray-900 dark:text-white">{{ profile.followingCount }}</strong> подписок</span>
           </div>
         </div>
       </div>

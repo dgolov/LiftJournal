@@ -47,6 +47,15 @@ canvas {
   max-width: 100%;
 }
 
+/* Mobile browsers size the native date widget (day/month/year segments +
+   calendar icon) by its own internal layout and ignore width/max-width,
+   so it can render wider than sibling inputs. Turning off the native
+   appearance lets normal CSS sizing apply; the tap-to-open picker still works. */
+input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }

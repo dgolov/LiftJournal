@@ -109,7 +109,24 @@ export default {
       return max
     },
 
-    workoutDates: state => new Set(state.workouts.map(w => w.date))
+    workoutDates: state => new Set(state.workouts.map(w => w.date)),
+
+    // Up to the last 5 workouts that logged this exercise with valid (non-failed) sets,
+    // most recent first — lets the user cycle prefill through recent sessions instead of
+    // always landing on the very last one (which may have been a warm-up-only session).
+    exerciseHistoryOptions: state => exerciseId => {
+      const sorted = [...state.workouts].sort((a, b) => b.date.localeCompare(a.date))
+      const options = []
+      for (const w of sorted) {
+        const ex = w.exercises.find(e => e.exerciseId === exerciseId)
+        const validSets = ex?.sets?.filter(s => !s.failed)
+        if (validSets?.length) {
+          options.push({ date: w.date, sets: validSets })
+          if (options.length >= 5) break
+        }
+      }
+      return options
+    }
   },
 
   mutations: {
@@ -139,12 +156,14 @@ export default {
     SET_ACTIVE_WORKOUT_FIELD(state, { field, value }) {
       state.activeWorkout[field] = value
     },
-    ADD_EXERCISE_TO_ACTIVE(state, { exercise, sets }) {
+    ADD_EXERCISE_TO_ACTIVE(state, { exercise, sets, history }) {
       state.activeWorkout.exercises.push({
         instanceId: uid(),
         exerciseId: exercise.id,
         exerciseName: exercise.name,
-        sets
+        sets,
+        history: history || [],
+        historyIndex: 0
       })
     },
     REMOVE_EXERCISE_FROM_ACTIVE(state, instanceId) {
@@ -155,6 +174,13 @@ export default {
       if (!ex) return
       const last = ex.sets[ex.sets.length - 1] || { weight: 0, reps: 0 }
       ex.sets.push({ id: uid(), weight: last.weight, reps: last.reps, completed: false, failed: false })
+    },
+    CYCLE_EXERCISE_HISTORY(state, instanceId) {
+      const ex = state.activeWorkout.exercises.find(e => e.instanceId === instanceId)
+      if (!ex || !ex.history?.length) return
+      ex.historyIndex = (ex.historyIndex + 1) % ex.history.length
+      const option = ex.history[ex.historyIndex]
+      ex.sets = option.sets.map(s => ({ id: uid(), weight: s.weight, reps: s.reps, completed: false, failed: false }))
     },
     UPDATE_SET(state, { instanceId, setId, field, value }) {
       const ex = state.activeWorkout.exercises.find(e => e.instanceId === instanceId)
@@ -175,18 +201,12 @@ export default {
   },
 
   actions: {
-    addExerciseToActive({ commit, state }, exercise) {
-      const sorted = [...state.workouts].sort((a, b) => b.date.localeCompare(a.date))
-      let lastSets = null
-      for (const w of sorted) {
-        const ex = w.exercises.find(e => e.exerciseId === exercise.id)
-        const validSets = ex?.sets?.filter(s => !s.failed)
-        if (validSets?.length) { lastSets = validSets; break }
-      }
-      const sets = lastSets
-        ? lastSets.map(s => ({ id: uid(), weight: s.weight, reps: s.reps, completed: false, failed: false }))
+    addExerciseToActive({ commit, getters }, exercise) {
+      const history = getters.exerciseHistoryOptions(exercise.id)
+      const sets = history.length
+        ? history[0].sets.map(s => ({ id: uid(), weight: s.weight, reps: s.reps, completed: false, failed: false }))
         : [{ id: uid(), weight: 0, reps: 0, completed: false, failed: false }]
-      commit('ADD_EXERCISE_TO_ACTIVE', { exercise, sets })
+      commit('ADD_EXERCISE_TO_ACTIVE', { exercise, sets, history })
     },
 
     async initWorkouts({ commit }) {

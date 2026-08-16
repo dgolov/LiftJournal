@@ -33,12 +33,23 @@
             <p class="text-xs text-gray-400">{{ exercise.sets.length }} {{ isCardio ? 'сессий' : 'подход(ов)' }}</p>
           </div>
         </div>
-        <button
-          class="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
-          @click.stop="removeExercise"
-        >
-          <Trash2 class="w-5 h-5" />
-        </button>
+        <div class="flex items-center gap-1 flex-shrink-0">
+          <button
+            v-if="exercise.history?.length > 1"
+            class="flex items-center gap-1 px-2 h-8 rounded-lg text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+            title="Показать подходы из другой тренировки"
+            @click.stop="cycleHistory"
+          >
+            <RotateCw class="w-3.5 h-3.5" />
+            {{ historyIndex + 1 }}/{{ exercise.history.length }} · {{ historyDateLabel }}
+          </button>
+          <button
+            class="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
+            @click.stop="removeExercise"
+          >
+            <Trash2 class="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       <!-- Header row -->
@@ -82,7 +93,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useStore } from 'vuex'
-import { Trash2, GripVertical } from 'lucide-vue-next'
+import { Trash2, GripVertical, RotateCw } from 'lucide-vue-next'
 import ExerciseSetRow from './ExerciseSetRow.vue'
 
 const props = defineProps({
@@ -92,6 +103,19 @@ const props = defineProps({
 const store = useStore()
 const exerciseData = computed(() => store.getters['exercises/exerciseById'](props.exercise.exerciseId))
 const isCardio = computed(() => exerciseData.value?.muscleGroup === 'Кардио')
+
+// ── History cycling ──────────────────────────────────────────────────────────
+const historyIndex = computed(() => props.exercise.historyIndex || 0)
+const historyDateLabel = computed(() => {
+  const option = props.exercise.history?.[historyIndex.value]
+  if (!option) return ''
+  const d = new Date(option.date + 'T00:00:00')
+  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+})
+
+function cycleHistory() {
+  store.commit('workouts/CYCLE_EXERCISE_HISTORY', props.exercise.instanceId)
+}
 
 // ── Swipe ──────────────────────────────────────────────────────────────────────
 const swipeX = ref(0)
