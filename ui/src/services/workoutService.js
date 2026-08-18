@@ -205,6 +205,20 @@ const workoutService = {
     return request('DELETE', `/planned-workouts/${id}`)
   },
 
+  // Templates
+  fetchTemplates() {
+    return request('GET', '/templates')
+  },
+  createTemplate(data) {
+    return request('POST', '/templates', data)
+  },
+  updateTemplate(id, data) {
+    return request('PATCH', `/templates/${id}`, data)
+  },
+  deleteTemplate(id) {
+    return request('DELETE', `/templates/${id}`)
+  },
+
   // Social
   searchUsers(q) {
     return request('GET', `/social/users/search?q=${encodeURIComponent(q)}`)
