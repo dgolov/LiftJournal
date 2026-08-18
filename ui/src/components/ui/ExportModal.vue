@@ -71,9 +71,12 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import { useStore } from 'vuex'
 import { FileSpreadsheet, FileText } from 'lucide-vue-next'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import { exportCSV, exportPDF } from '@/services/exportService.js'
+
+const store = useStore()
 
 const props = defineProps({
   modelValue: Boolean,
@@ -145,8 +148,13 @@ const formattedSingleDate = computed(() => {
 })
 
 function doExport() {
-  if (format.value === 'csv') exportCSV(filtered.value)
-  else exportPDF(filtered.value)
+  if (format.value === 'csv') {
+    exportCSV(filtered.value)
+  } else {
+    exportPDF(filtered.value).catch(() => {
+      store.dispatch('ui/showToast', { message: 'Не удалось создать PDF', type: 'error' })
+    })
+  }
   emit('update:modelValue', false)
 }
 
