@@ -36,6 +36,13 @@ function emptyWorkout() {
   }
 }
 
+function buildSetsFromHistory(history, fallbackCount) {
+  if (history.length) {
+    return history[0].sets.map(s => ({ id: uid(), weight: s.weight, reps: s.reps, completed: false, failed: false }))
+  }
+  return Array.from({ length: fallbackCount }, () => ({ id: uid(), weight: 0, reps: 0, completed: false, failed: false }))
+}
+
 export default {
   namespaced: true,
 
@@ -203,10 +210,27 @@ export default {
   actions: {
     addExerciseToActive({ commit, getters }, exercise) {
       const history = getters.exerciseHistoryOptions(exercise.id)
-      const sets = history.length
-        ? history[0].sets.map(s => ({ id: uid(), weight: s.weight, reps: s.reps, completed: false, failed: false }))
-        : [{ id: uid(), weight: 0, reps: 0, completed: false, failed: false }]
+      const sets = buildSetsFromHistory(history, 1)
       commit('ADD_EXERCISE_TO_ACTIVE', { exercise, sets, history })
+    },
+
+    // Loads every exercise from a saved template, prefilling sets from each
+    // exercise's own recent history (falling back to the template's target
+    // set count for exercises with no history yet) — same mechanism as
+    // addExerciseToActive, just looped across a whole template at once.
+    applyTemplate({ commit, getters }, template) {
+      commit('RESET_ACTIVE_WORKOUT')
+      commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'title', value: template.title })
+      commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'type', value: template.type })
+      for (const ex of template.exercises) {
+        const history = getters.exerciseHistoryOptions(ex.exerciseId)
+        const sets = buildSetsFromHistory(history, ex.targetSets || 3)
+        commit('ADD_EXERCISE_TO_ACTIVE', {
+          exercise: { id: ex.exerciseId, name: ex.exerciseName },
+          sets,
+          history,
+        })
+      }
     },
 
     async initWorkouts({ commit }) {

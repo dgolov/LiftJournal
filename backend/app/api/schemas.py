@@ -358,6 +358,42 @@ class PlannedWorkoutOut(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Workout templates
+# ---------------------------------------------------------------------------
+
+class TemplateExerciseIn(BaseModel):
+    exerciseId: str
+    exerciseName: str
+    targetSets: int = 3
+
+
+class TemplateExerciseOut(BaseModel):
+    exerciseId: str
+    exerciseName: str
+    targetSets: int
+
+
+class WorkoutTemplateCreate(BaseModel):
+    title: str
+    type: str = "Силовая"
+    exercises: list[TemplateExerciseIn] = []
+
+
+class WorkoutTemplateUpdate(BaseModel):
+    title: Optional[str] = None
+    type: Optional[str] = None
+    exercises: Optional[list[TemplateExerciseIn]] = None
+
+
+class WorkoutTemplateOut(BaseModel):
+    id: str
+    title: str
+    type: str
+    createdAt: datetime
+    exercises: list[TemplateExerciseOut]
+
+
+# ---------------------------------------------------------------------------
 # Social
 # ---------------------------------------------------------------------------
 

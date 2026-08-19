@@ -352,3 +352,39 @@ class WorkoutComment(Base):
     workout_id: Mapped[str] = mapped_column(String, ForeignKey("workouts.id", ondelete="CASCADE"), nullable=False, index=True)
     text: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class WorkoutTemplate(Base):
+    """A reusable, dateless exercise list. Weights/reps are never stored here —
+    applying a template re-derives sets from the user's recent workout history."""
+    __tablename__ = "workout_templates"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    type: Mapped[str] = mapped_column(String(50), nullable=False, default="Силовая")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    exercises: Mapped[list["TemplateExercise"]] = relationship(
+        "TemplateExercise",
+        back_populates="template",
+        cascade="all, delete-orphan",
+        order_by="TemplateExercise.order",
+    )
+
+
+class TemplateExercise(Base):
+    __tablename__ = "template_exercises"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
+    template_id: Mapped[str] = mapped_column(
+        String, ForeignKey("workout_templates.id", ondelete="CASCADE"), nullable=False
+    )
+    exercise_id: Mapped[str] = mapped_column(String, nullable=False)
+    exercise_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    target_sets: Mapped[int] = mapped_column(Integer, default=3)
+    order: Mapped[int] = mapped_column(Integer, default=0)
+
+    template: Mapped["WorkoutTemplate"] = relationship("WorkoutTemplate", back_populates="exercises")

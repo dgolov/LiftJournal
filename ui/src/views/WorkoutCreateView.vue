@@ -77,6 +77,13 @@
       >
         <RefreshCw class="w-4 h-4" /> Повторить тренировку
       </BaseButton>
+      <BaseButton
+        variant="outline"
+        class="w-full flex items-center justify-center gap-2"
+        @click="showTemplatePicker = true"
+      >
+        <LayoutTemplate class="w-4 h-4" /> Загрузить шаблон
+      </BaseButton>
     </div>
 
     <!-- Step 2: Exercises -->
@@ -88,6 +95,14 @@
             <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse flex-shrink-0"></span>
             <span class="font-mono font-bold text-primary text-sm">{{ elapsedFormatted }}</span>
           </div>
+          <button
+            v-if="activeWorkout.exercises.length"
+            class="p-2 rounded-lg text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors"
+            title="Сохранить как шаблон"
+            @click="templateName = activeWorkout.title; showSaveTemplate = true"
+          >
+            <LayoutTemplate class="w-4 h-4" />
+          </button>
           <BaseButton variant="outline" size="sm" @click="showPicker = true">+ Добавить</BaseButton>
         </div>
       </div>
@@ -183,6 +198,16 @@
         <BaseButton variant="ghost" @click="showRepeatPicker = false">Закрыть</BaseButton>
       </template>
     </BaseModal>
+
+    <TemplatePicker v-model="showTemplatePicker" @apply="onApplyTemplate" />
+
+    <BaseModal v-model="showSaveTemplate" title="Сохранить как шаблон" max-width="sm">
+      <BaseInput v-model="templateName" label="Название шаблона" placeholder="Например: Push day" />
+      <template #footer>
+        <BaseButton variant="ghost" @click="showSaveTemplate = false">Отмена</BaseButton>
+        <BaseButton :disabled="!templateName.trim()" :loading="savingTemplate" @click="saveAsTemplate">Сохранить</BaseButton>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
@@ -190,7 +215,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { ChevronLeft, Dumbbell, Play, X, RefreshCw } from 'lucide-vue-next'
+import { ChevronLeft, Dumbbell, Play, X, RefreshCw, LayoutTemplate } from 'lucide-vue-next'
 import draggable from 'vuedraggable'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
@@ -199,6 +224,7 @@ import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import ExerciseBlock from '@/components/workout/ExerciseBlock.vue'
 import ExercisePicker from '@/components/workout/ExercisePicker.vue'
+import TemplatePicker from '@/components/workout/TemplatePicker.vue'
 import RestTimerBar from '@/components/workout/RestTimerBar.vue'
 import { WORKOUT_TYPES } from '@/services/mockData.js'
 
@@ -214,6 +240,10 @@ const showPicker = ref(false)
 const saving = ref(false)
 const showCancelConfirm = ref(false)
 const showRepeatPicker = ref(false)
+const showTemplatePicker = ref(false)
+const showSaveTemplate = ref(false)
+const templateName = ref('')
+const savingTemplate = ref(false)
 const workoutTypes = WORKOUT_TYPES
 
 onMounted(() => {
@@ -298,6 +328,32 @@ async function repeatWorkout(w) {
 function formatShortDate(dateStr) {
   const d = new Date(dateStr + 'T00:00:00')
   return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+}
+
+async function onApplyTemplate(template) {
+  await store.dispatch('workouts/applyTemplate', template)
+}
+
+async function saveAsTemplate() {
+  savingTemplate.value = true
+  try {
+    await store.dispatch('templates/createTemplate', {
+      title: templateName.value.trim(),
+      type: activeWorkout.value.type,
+      exercises: activeWorkout.value.exercises.map(ex => ({
+        exerciseId: ex.exerciseId,
+        exerciseName: ex.exerciseName,
+        targetSets: ex.sets.length,
+      })),
+    })
+    store.dispatch('ui/showToast', { message: 'Шаблон сохранён', type: 'success' })
+    showSaveTemplate.value = false
+    templateName.value = ''
+  } catch (e) {
+    store.dispatch('ui/showToast', { message: 'Ошибка: ' + e.message, type: 'error' })
+  } finally {
+    savingTemplate.value = false
+  }
 }
 
 async function save() {
