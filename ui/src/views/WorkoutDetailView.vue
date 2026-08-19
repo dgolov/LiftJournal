@@ -8,27 +8,24 @@
           <ChevronLeft class="w-5 h-5" />
         </button>
         <template v-if="!isEditing && isOwner">
-          <div class="ml-auto flex items-center gap-1">
+          <div class="ml-auto flex items-center flex-wrap justify-end gap-1">
             <button
-              class="p-2 rounded-xl hover:bg-primary/10 text-primary transition-colors"
-              title="Повторить тренировку"
+              class="flex items-center gap-1 px-2 h-8 rounded-lg text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
               @click="repeatWorkout"
             >
-              <RefreshCw class="w-5 h-5" />
+              <RefreshCw class="w-3.5 h-3.5" /> Повторить
             </button>
             <button
-              class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
-              title="Экспорт"
+              class="flex items-center gap-1 px-2 h-8 rounded-lg text-xs font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               @click="exportModalOpen = true"
             >
-              <Download class="w-5 h-5" />
+              <Download class="w-3.5 h-3.5" /> Экспорт
             </button>
             <button
-              class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
-              title="Редактировать"
+              class="flex items-center gap-1 px-2 h-8 rounded-lg text-xs font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               @click="startEdit"
             >
-              <Pencil class="w-5 h-5" />
+              <Pencil class="w-3.5 h-3.5" /> Изменить
             </button>
           </div>
         </template>
