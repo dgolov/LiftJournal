@@ -110,8 +110,17 @@ export default {
 
   actions: {
     async initExercises({ commit }) {
-      const library = await workoutService.fetchExercises()
-      commit('SET_LIBRARY', library)
+      try {
+        const library = await workoutService.fetchExercises()
+        commit('SET_LIBRARY', library)
+        localStorage.setItem('gym_cache_exercises', JSON.stringify(library))
+      } catch (e) {
+        if (e?.isNetworkError) {
+          const cached = localStorage.getItem('gym_cache_exercises')
+          if (cached) commit('SET_LIBRARY', JSON.parse(cached))
+        }
+        throw e
+      }
     },
 
     async addCustomExercise({ commit }, exercise) {
