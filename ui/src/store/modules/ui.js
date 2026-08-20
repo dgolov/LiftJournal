@@ -7,8 +7,13 @@ export default {
     sidebarOpen: false,
     activeModal: null,
     modalPayload: null,
-    toasts: []
+    toasts: [],
+    pendingRequests: 0
   }),
+
+  getters: {
+    isLoading: state => state.pendingRequests > 0
+  },
 
   mutations: {
     TOGGLE_SIDEBAR(state) { state.sidebarOpen = !state.sidebarOpen },
@@ -22,7 +27,9 @@ export default {
       state.modalPayload = null
     },
     ADD_TOAST(state, toast) { state.toasts.push(toast) },
-    REMOVE_TOAST(state, id) { state.toasts = state.toasts.filter(t => t.id !== id) }
+    REMOVE_TOAST(state, id) { state.toasts = state.toasts.filter(t => t.id !== id) },
+    INC_PENDING(state) { state.pendingRequests++ },
+    DEC_PENDING(state) { state.pendingRequests = Math.max(0, state.pendingRequests - 1) }
   },
 
   actions: {

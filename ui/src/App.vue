@@ -1,4 +1,10 @@
 <template>
+  <div
+    v-if="showLoadingIndicator"
+    class="fixed inset-0 z-[200] flex items-center justify-center bg-black/40"
+  >
+    <span class="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin" />
+  </div>
   <component :is="isPublicRoute ? 'div' : AppLayout">
     <RouterView v-slot="{ Component }">
       <Transition name="fade">
@@ -10,7 +16,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useStore } from 'vuex'
 import { useRoute } from 'vue-router'
 import AppLayout from '@/components/layout/AppLayout.vue'
@@ -21,6 +27,19 @@ const route = useRoute()
 const isPublicRoute = computed(() => !!route.meta.public)
 
 const store = useStore()
+
+const isLoading = computed(() => store.getters['ui/isLoading'])
+const showLoadingIndicator = ref(false)
+let showSpinnerTimer = null
+
+watch(isLoading, (loading) => {
+  if (loading) {
+    showSpinnerTimer = setTimeout(() => { showLoadingIndicator.value = true }, 300)
+  } else {
+    clearTimeout(showSpinnerTimer)
+    showLoadingIndicator.value = false
+  }
+})
 
 watch(
   () => store.state.user.theme,
