@@ -3,6 +3,15 @@
 
 export const CHANGELOG = [
   {
+    version: '0.8.0',
+    date: '2026-08-22',
+    label: 'Удобства',
+    entries: [
+      { type: 'feature',     text: 'Добавлены шаблоны тренировок' },
+      { type: 'improvement',         text: 'Улучшение отчетов по тренировкам' },
+    ],
+  },
+  {
     version: '0.7.0',
     date: '2026-08-16',
     label: 'Удобства',
@@ -10,7 +19,7 @@ export const CHANGELOG = [
       { type: 'feature',     text: 'Добавлен выбор истории в подходе за последние 5 тренировок' },
       { type: 'feature',     text: 'Добавлена смена пароля' },
       { type: 'feature',     text: 'Усовершенствована система планирования' },
-      { type: 'fix',         text: 'Улучшение фронтенд части' },
+      { type: 'improvement',         text: 'Улучшение фронтенд части' },
     ],
   },
   {
