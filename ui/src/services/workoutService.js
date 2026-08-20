@@ -1,5 +1,23 @@
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 
+const pendingListeners = new Set()
+const networkErrorListeners = new Set()
+
+export function onPendingChange(cb) { pendingListeners.add(cb) }
+export function onNetworkError(cb) { networkErrorListeners.add(cb) }
+
+function setPending(delta) {
+  pendingListeners.forEach(cb => cb(delta))
+}
+
+let lastNetworkErrorAt = 0
+function notifyNetworkError() {
+  const now = Date.now()
+  if (now - lastNetworkErrorAt < 4000) return
+  lastNetworkErrorAt = now
+  networkErrorListeners.forEach(cb => cb())
+}
+
 function serializeExercises(exercises) {
   return (exercises || []).map(ex => ({
     exerciseId: ex.exerciseId,
@@ -23,24 +41,38 @@ async function request(method, path, body, requiresAuth = true) {
     if (token) headers['Authorization'] = `Bearer ${token}`
   }
 
-  const res = await fetch(`${BASE}${path}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-  })
+  setPending(1)
+  try {
+    let res
+    try {
+      res = await fetch(`${BASE}${path}`, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+      })
+    } catch (networkErr) {
+      notifyNetworkError()
+      const err = new Error('Отсутствует соединение с сервером')
+      err.isNetworkError = true
+      err.cause = networkErr
+      throw err
+    }
 
-  if (res.status === 401) {
-    localStorage.removeItem(TOKEN_KEY)
-    window.location.href = '/login'
-    return
+    if (res.status === 401) {
+      localStorage.removeItem(TOKEN_KEY)
+      window.location.href = '/login'
+      return
+    }
+    if (!res.ok) {
+      const text = await res.text()
+      console.error(`API error ${method} ${path} → ${res.status}:`, text)
+      throw new Error(`${method} ${path} → ${res.status}: ${text}`)
+    }
+    if (res.status === 204) return undefined
+    return res.json()
+  } finally {
+    setPending(-1)
   }
-  if (!res.ok) {
-    const text = await res.text()
-    console.error(`API error ${method} ${path} → ${res.status}:`, text)
-    throw new Error(`${method} ${path} → ${res.status}: ${text}`)
-  }
-  if (res.status === 204) return undefined
-  return res.json()
 }
 
 const workoutService = {
