@@ -234,8 +234,17 @@ export default {
     },
 
     async initWorkouts({ commit }) {
-      const workouts = await workoutService.fetchWorkouts()
-      commit('SET_WORKOUTS', workouts)
+      try {
+        const workouts = await workoutService.fetchWorkouts()
+        commit('SET_WORKOUTS', workouts)
+        localStorage.setItem('gym_cache_workouts', JSON.stringify(workouts))
+      } catch (e) {
+        if (e?.isNetworkError) {
+          const cached = localStorage.getItem('gym_cache_workouts')
+          if (cached) commit('SET_WORKOUTS', JSON.parse(cached))
+        }
+        throw e
+      }
     },
 
     startWorkout({ commit, state }) {
