@@ -361,16 +361,27 @@ class PlannedWorkoutOut(BaseModel):
 # Workout templates
 # ---------------------------------------------------------------------------
 
+class TemplateSetIn(BaseModel):
+    weight: float = 0.0
+    reps: int = 0
+
+
+class TemplateSetOut(BaseModel):
+    id: str
+    weight: float
+    reps: int
+
+
 class TemplateExerciseIn(BaseModel):
     exerciseId: str
     exerciseName: str
-    targetSets: int = 3
+    sets: list[TemplateSetIn] = []
 
 
 class TemplateExerciseOut(BaseModel):
     exerciseId: str
     exerciseName: str
-    targetSets: int
+    sets: list[TemplateSetOut]
 
 
 class WorkoutTemplateCreate(BaseModel):
