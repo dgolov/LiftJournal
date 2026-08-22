@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas import (
-    WorkoutTemplateCreate, WorkoutTemplateUpdate, WorkoutTemplateOut, TemplateExerciseOut,
+    WorkoutTemplateCreate, WorkoutTemplateUpdate, WorkoutTemplateOut, TemplateExerciseOut, TemplateSetOut,
 )
 from app.domain.models import WorkoutTemplate
 from app.repositories.template import TemplateRepository
@@ -22,7 +22,10 @@ class TemplateService:
                 TemplateExerciseOut(
                     exerciseId=ex.exercise_id,
                     exerciseName=ex.exercise_name,
-                    targetSets=ex.target_sets,
+                    sets=[
+                        TemplateSetOut(id=s.id, weight=s.weight, reps=s.reps)
+                        for s in ex.sets
+                    ],
                 )
                 for ex in t.exercises
             ],
