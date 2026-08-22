@@ -300,14 +300,26 @@ function removeExercise(exIdx) {
   form.value.exercises.splice(exIdx, 1)
 }
 
-function onApplyTemplate(template) {
+// source: 'template' uses the numbers saved with the template itself, 'history'
+// (default) re-derives them from each exercise's own recent history instead,
+// falling back to the template's saved numbers where there's no history yet.
+// history is attached either way so the per-exercise cycle button still works.
+function onApplyTemplate(template, source = 'history') {
   form.value.title = template.title
   form.value.type = template.type
   form.value.exercises = template.exercises.map(ex => {
     const history = store.getters['workouts/exerciseHistoryOptions'](ex.exerciseId)
-    const sets = history.length
-      ? history[0].sets.map(s => ({ id: uid(), weight: s.weight, reps: s.reps }))
-      : Array.from({ length: ex.targetSets || 3 }, () => ({ id: uid(), weight: 0, reps: 0 }))
+    const mapTemplateSets = () => ex.sets.map(s => ({ id: uid(), weight: s.weight, reps: s.reps }))
+    let sets
+    if (source === 'template' && ex.sets.length) {
+      sets = mapTemplateSets()
+    } else if (history.length) {
+      sets = history[0].sets.map(s => ({ id: uid(), weight: s.weight, reps: s.reps }))
+    } else if (ex.sets.length) {
+      sets = mapTemplateSets()
+    } else {
+      sets = Array.from({ length: 3 }, () => ({ id: uid(), weight: 0, reps: 0 }))
+    }
     return {
       exerciseId: ex.exerciseId,
       exerciseName: ex.exerciseName,
@@ -327,7 +339,7 @@ async function saveAsTemplate() {
       exercises: form.value.exercises.map(ex => ({
         exerciseId: ex.exerciseId,
         exerciseName: ex.exerciseName,
-        targetSets: ex.sets.length,
+        sets: ex.sets.map(s => ({ weight: s.weight, reps: s.reps })),
       })),
     })
     store.dispatch('ui/showToast', { message: 'Шаблон сохранён', type: 'success' })
