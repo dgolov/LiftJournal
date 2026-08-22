@@ -50,7 +50,7 @@ async def test_create_template(client):
             "title": "Push day",
             "type": "Силовая",
             "exercises": [
-                {"exerciseId": "ex-1", "exerciseName": "Bench Press", "targetSets": 4}
+                {"exerciseId": "ex-1", "exerciseName": "Bench Press", "sets": [{"weight": 100.0, "reps": 5}]}
             ],
         })
 

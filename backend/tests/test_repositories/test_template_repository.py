@@ -26,11 +26,11 @@ def _make_template(id="tpl-1", user_id=1):
     return t
 
 
-def _make_exercise_in(exercise_id="ex-1", name="Bench Press", target_sets=3):
+def _make_exercise_in(exercise_id="ex-1", name="Bench Press", sets=None):
     ex = MagicMock()
     ex.exerciseId = exercise_id
     ex.exerciseName = name
-    ex.targetSets = target_sets
+    ex.sets = sets or []
     return ex
 
 
@@ -119,17 +119,22 @@ class TestDelete:
 
 
 class TestBuildExercises:
-    def test_builds_exercise(self):
+    def test_builds_exercise_with_sets(self):
         repo = TemplateRepository(MagicMock())
-        ex_in = _make_exercise_in(target_sets=4)
+        s = MagicMock()
+        s.weight = 100.0
+        s.reps = 5
+        ex_in = _make_exercise_in(sets=[s])
 
         result = repo._build_exercises([ex_in])
 
         assert len(result) == 1
         assert result[0].exercise_id == "ex-1"
         assert result[0].exercise_name == "Bench Press"
-        assert result[0].target_sets == 4
         assert result[0].order == 0
+        assert len(result[0].sets) == 1
+        assert result[0].sets[0].weight == 100.0
+        assert result[0].sets[0].reps == 5
 
     def test_empty_exercises(self):
         repo = TemplateRepository(MagicMock())
