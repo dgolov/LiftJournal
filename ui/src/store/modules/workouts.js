@@ -43,6 +43,10 @@ function buildSetsFromHistory(history, fallbackCount) {
   return Array.from({ length: fallbackCount }, () => ({ id: uid(), weight: 0, reps: 0, completed: false, failed: false }))
 }
 
+function mapTemplateSets(sets) {
+  return sets.map(s => ({ id: uid(), weight: s.weight, reps: s.reps, completed: false, failed: false }))
+}
+
 export default {
   namespaced: true,
 
@@ -214,17 +218,29 @@ export default {
       commit('ADD_EXERCISE_TO_ACTIVE', { exercise, sets, history })
     },
 
-    // Loads every exercise from a saved template, prefilling sets from each
-    // exercise's own recent history (falling back to the template's target
-    // set count for exercises with no history yet) — same mechanism as
-    // addExerciseToActive, just looped across a whole template at once.
-    applyTemplate({ commit, getters }, template) {
+    // Loads every exercise from a saved template. `source` picks where the
+    // starting weight/reps come from: 'template' uses the numbers saved with
+    // the template itself, 'history' (default) re-derives them from each
+    // exercise's own recent history instead, falling back to the template's
+    // saved numbers for exercises with no history yet. Either way, history is
+    // still attached to every exercise so the per-exercise cycle-through-
+    // last-5-sessions button keeps working afterward regardless of source.
+    applyTemplate({ commit, getters }, { template, source = 'history' }) {
       commit('RESET_ACTIVE_WORKOUT')
       commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'title', value: template.title })
       commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'type', value: template.type })
       for (const ex of template.exercises) {
         const history = getters.exerciseHistoryOptions(ex.exerciseId)
-        const sets = buildSetsFromHistory(history, ex.targetSets || 3)
+        let sets
+        if (source === 'template' && ex.sets.length) {
+          sets = mapTemplateSets(ex.sets)
+        } else if (history.length) {
+          sets = buildSetsFromHistory(history, ex.sets.length || 3)
+        } else if (ex.sets.length) {
+          sets = mapTemplateSets(ex.sets)
+        } else {
+          sets = buildSetsFromHistory([], 3)
+        }
         commit('ADD_EXERCISE_TO_ACTIVE', {
           exercise: { id: ex.exerciseId, name: ex.exerciseName },
           sets,

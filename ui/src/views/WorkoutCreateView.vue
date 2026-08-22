@@ -330,8 +330,8 @@ function formatShortDate(dateStr) {
   return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
 }
 
-async function onApplyTemplate(template) {
-  await store.dispatch('workouts/applyTemplate', template)
+async function onApplyTemplate(template, source) {
+  await store.dispatch('workouts/applyTemplate', { template, source })
 }
 
 async function saveAsTemplate() {
@@ -343,7 +343,7 @@ async function saveAsTemplate() {
       exercises: activeWorkout.value.exercises.map(ex => ({
         exerciseId: ex.exerciseId,
         exerciseName: ex.exerciseName,
-        targetSets: ex.sets.length,
+        sets: ex.sets.map(s => ({ weight: s.weight, reps: s.reps })),
       })),
     })
     store.dispatch('ui/showToast', { message: 'Шаблон сохранён', type: 'success' })
