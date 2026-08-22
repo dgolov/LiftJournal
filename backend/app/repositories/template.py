@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.models import WorkoutTemplate, TemplateExercise
+from app.domain.models import WorkoutTemplate, TemplateExercise, TemplateSet
 
 
 class TemplateRepository:
@@ -12,7 +12,7 @@ class TemplateRepository:
         self.db = db
 
     def _eager(self):
-        return selectinload(WorkoutTemplate.exercises)
+        return selectinload(WorkoutTemplate.exercises).selectinload(TemplateExercise.sets)
 
     async def get_all_by_user(self, user_id: int) -> list[WorkoutTemplate]:
         result = await self.db.execute(
@@ -56,12 +56,16 @@ class TemplateRepository:
         await self.db.commit()
 
     def _build_exercises(self, exercises_data: list) -> list[TemplateExercise]:
-        return [
-            TemplateExercise(
+        result = []
+        for i, ex in enumerate(exercises_data):
+            te = TemplateExercise(
                 exercise_id=ex.exerciseId,
                 exercise_name=ex.exerciseName,
-                target_sets=ex.targetSets,
                 order=i,
             )
-            for i, ex in enumerate(exercises_data)
-        ]
+            te.sets = [
+                TemplateSet(weight=s.weight, reps=s.reps, order=j)
+                for j, s in enumerate(ex.sets)
+            ]
+            result.append(te)
+        return result
