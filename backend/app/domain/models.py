@@ -355,8 +355,9 @@ class WorkoutComment(Base):
 
 
 class WorkoutTemplate(Base):
-    """A reusable, dateless exercise list. Weights/reps are never stored here —
-    applying a template re-derives sets from the user's recent workout history."""
+    """A reusable exercise list with its own saved weights/reps (a snapshot from
+    whichever workout it was saved from). Applying a template lets the user pick
+    between these saved numbers and freshly re-derived ones from recent history."""
     __tablename__ = "workout_templates"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
@@ -384,7 +385,26 @@ class TemplateExercise(Base):
     )
     exercise_id: Mapped[str] = mapped_column(String, nullable=False)
     exercise_name: Mapped[str] = mapped_column(String(200), nullable=False)
-    target_sets: Mapped[int] = mapped_column(Integer, default=3)
     order: Mapped[int] = mapped_column(Integer, default=0)
 
     template: Mapped["WorkoutTemplate"] = relationship("WorkoutTemplate", back_populates="exercises")
+    sets: Mapped[list["TemplateSet"]] = relationship(
+        "TemplateSet",
+        back_populates="template_exercise",
+        cascade="all, delete-orphan",
+        order_by="TemplateSet.order",
+    )
+
+
+class TemplateSet(Base):
+    __tablename__ = "template_sets"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
+    template_exercise_id: Mapped[str] = mapped_column(
+        String, ForeignKey("template_exercises.id", ondelete="CASCADE"), nullable=False
+    )
+    weight: Mapped[float] = mapped_column(Float, default=0.0)
+    reps: Mapped[int] = mapped_column(Integer, default=0)
+    order: Mapped[int] = mapped_column(Integer, default=0)
+
+    template_exercise: Mapped["TemplateExercise"] = relationship("TemplateExercise", back_populates="sets")
