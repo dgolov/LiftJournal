@@ -75,6 +75,33 @@ async def test_create_custom_returns_dto(mock_db):
         equipment="Кабель",
         description="",
         created_by=1,
+        is_private=False,
+    )
+
+
+async def test_create_custom_private(mock_db):
+    saved = make_exercise(id="ex-priv", is_custom=True, is_private=True, is_approved=False)
+
+    with patch("app.services.exercise.ExerciseRepository") as MockRepo:
+        repo = AsyncMock()
+        MockRepo.return_value = repo
+        repo.create.return_value = saved
+
+        payload = ExerciseCreate(
+            name="My Own Move", muscleGroup="Грудь",
+            equipment="Гантели", isPrivate=True,
+        )
+        result = await ExerciseService(mock_db).create_custom(payload, user_id=1)
+
+    assert result.isPrivate is True
+    repo.create.assert_called_once_with(
+        name="My Own Move",
+        muscle_group="Грудь",
+        secondary_muscles=[],
+        equipment="Гантели",
+        description="",
+        created_by=1,
+        is_private=True,
     )
 
 

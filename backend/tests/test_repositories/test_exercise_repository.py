@@ -70,6 +70,7 @@ async def test_create_sets_is_custom_true(repo, mock_db):
         description="",
         is_custom=True,
         is_approved=False,
+        is_private=False,
         created_by=1,
     )
     mock_db.add.assert_called_once_with(instance)
