@@ -65,30 +65,38 @@ class AdminService:
         reconsiders) — approving is always a forward move, never blocked."""
         ex = await self._get_exercise_or_404(exercise_id)
         ex = await self.repo.approve_exercise(ex)
-        return self._exercise_to_dto(ex)
+        return self._exercise_to_dto(ex, await self._get_submitter(ex))
 
     async def revoke_exercise(self, exercise_id: str) -> AdminExerciseOut:
-        """Take an approved+public exercise back to creator-only visibility.
-        Unlike reject, this never deletes the row — workout history may still
-        reference it."""
+        """Take an approved+public exercise back off the public list. Lands on
+        "rejected" (not "private") so it can be reconsidered and re-approved
+        later via approve_exercise, rather than silently becoming the user's
+        own private choice. Unlike reject, this never deletes the row —
+        workout history may still reference it."""
         ex = await self._get_exercise_or_404(exercise_id)
         ex = await self.repo.revoke_exercise(ex)
-        return self._exercise_to_dto(ex)
+        return self._exercise_to_dto(ex, await self._get_submitter(ex))
 
     async def rename_exercise(self, exercise_id: str, name: str) -> AdminExerciseOut:
         ex = await self._get_exercise_or_404(exercise_id)
         ex = await self.repo.rename_exercise(ex, name)
-        return self._exercise_to_dto(ex)
+        return self._exercise_to_dto(ex, await self._get_submitter(ex))
+
+    async def _get_submitter(self, ex: Exercise) -> User | None:
+        return await self.repo.get_user_by_id(ex.created_by) if ex.created_by else None
 
     async def reject_exercise(self, exercise_id: str) -> None:
-        """Marks a pending submission as rejected — it stays in the database
-        (visible in the admin's "all" list and to its creator) rather than
-        being deleted, so a rejection is never just silently invisible."""
+        """Marks a pending or private submission as rejected — it stays in the
+        database (visible in the admin's "all" list and to its creator)
+        rather than being deleted, so a rejection is never just silently
+        invisible. Approved exercises go through revoke_exercise instead —
+        that's a distinct admin action even though it lands on the same
+        status."""
         ex = await self._get_exercise_or_404(exercise_id)
-        if ex.status != "pending":
+        if ex.status not in ("pending", "private"):
             raise HTTPException(
                 status_code=400,
-                detail="Можно отклонить только упражнение на модерации",
+                detail="Можно отклонить только упражнение на модерации или личное упражнение пользователя",
             )
         await self.repo.reject_exercise(ex)
 

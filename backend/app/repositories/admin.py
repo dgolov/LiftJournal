@@ -54,7 +54,7 @@ class AdminRepository:
         return exercise
 
     async def revoke_exercise(self, exercise: Exercise) -> Exercise:
-        exercise.status = "private"
+        exercise.status = "rejected"
         await self.db.commit()
         await self.db.refresh(exercise)
         return exercise
