@@ -17,8 +17,7 @@ class ExerciseService:
             equipment=e.equipment,
             description=e.description or "",
             isCustom=e.is_custom,
-            isApproved=e.is_approved,
-            isPrivate=e.is_private,
+            status=e.status,
         )
 
     async def list_exercises(self, user_id: int) -> list[ExerciseOut]:

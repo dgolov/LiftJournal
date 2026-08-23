@@ -1,8 +1,8 @@
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.schemas import AdminUserOut, AdminExerciseOut
-from app.domain.models import Exercise
+from app.api.schemas import AdminUserOut, AdminExerciseOut, AdminCycleOut
+from app.domain.models import Exercise, TrainingCycle
 from app.repositories.admin import AdminRepository
 
 
@@ -18,8 +18,7 @@ class AdminService:
             secondaryMuscles=e.secondary_muscles or [],
             equipment=e.equipment,
             description=e.description or "",
-            isApproved=e.is_approved,
-            isPrivate=e.is_private,
+            status=e.status,
             submittedByName=submitter.name if submitter else None,
             submittedByEmail=submitter.email if submitter else None,
         )
@@ -30,11 +29,15 @@ class AdminService:
             for u in await self.repo.get_all_users()
         ]
 
-    async def list_exercises(self, status: str = "pending") -> list[AdminExerciseOut]:
-        rows = await self.repo.get_exercises(pending_only=(status != "all"))
+    async def list_exercises(
+        self, status: str = "pending", search: str | None = None, muscle_group: str | None = None
+    ) -> list[AdminExerciseOut]:
+        rows = await self.repo.get_exercises(status=status, search=search, muscle_group=muscle_group)
         return [self._exercise_to_dto(ex, submitter) for ex, submitter in rows]
 
     async def approve_exercise(self, exercise_id: str) -> AdminExerciseOut:
+        """Allowed from pending (normal moderation) or rejected (admin
+        reconsiders) — approving is always a forward move, never blocked."""
         ex = await self._get_exercise_or_404(exercise_id)
         ex = await self.repo.approve_exercise(ex)
         return self._exercise_to_dto(ex)
@@ -53,16 +56,65 @@ class AdminService:
         return self._exercise_to_dto(ex)
 
     async def reject_exercise(self, exercise_id: str) -> None:
+        """Marks a pending submission as rejected — it stays in the database
+        (visible in the admin's "all" list and to its creator) rather than
+        being deleted, so a rejection is never just silently invisible."""
         ex = await self._get_exercise_or_404(exercise_id)
-        if ex.is_approved and not ex.is_private:
+        if ex.status != "pending":
             raise HTTPException(
                 status_code=400,
-                detail="Нельзя удалить опубликованное упражнение — используйте отзыв доступа",
+                detail="Можно отклонить только упражнение на модерации",
             )
-        await self.repo.delete_exercise(ex)
+        await self.repo.reject_exercise(ex)
 
     async def _get_exercise_or_404(self, exercise_id: str) -> Exercise:
         ex = await self.repo.get_exercise_by_id(exercise_id)
         if not ex:
             raise HTTPException(status_code=404, detail="Exercise not found")
         return ex
+
+    def _cycle_to_dto(self, c: TrainingCycle, submitter=None, workout_count: int = 0) -> AdminCycleOut:
+        return AdminCycleOut(
+            id=c.id,
+            title=c.title,
+            description=c.description or "",
+            authorName=c.author_name or "",
+            isPublic=c.is_public,
+            isApproved=c.is_approved,
+            workoutCount=workout_count,
+            createdAt=c.created_at,
+            submittedByName=submitter.name if submitter else None,
+            submittedByEmail=submitter.email if submitter else None,
+        )
+
+    async def list_cycles(self, status: str = "pending") -> list[AdminCycleOut]:
+        rows, counts = await self.repo.get_cycles(pending_only=(status != "all"))
+        return [self._cycle_to_dto(c, submitter, counts.get(c.id, 0)) for c, submitter in rows]
+
+    async def approve_cycle(self, cycle_id: str) -> AdminCycleOut:
+        c = await self._get_cycle_or_404(cycle_id)
+        c = await self.repo.approve_cycle(c)
+        return self._cycle_to_dto(c)
+
+    async def revoke_cycle(self, cycle_id: str) -> AdminCycleOut:
+        """Take a public+approved cycle back to creator-only. Unlike reject,
+        this never deletes the row — UserCycleRun cascades on cycle delete,
+        so removing a cycle with real runs would wipe that history."""
+        c = await self._get_cycle_or_404(cycle_id)
+        c = await self.repo.revoke_cycle(c)
+        return self._cycle_to_dto(c)
+
+    async def reject_cycle(self, cycle_id: str) -> None:
+        c = await self._get_cycle_or_404(cycle_id)
+        if c.is_public and c.is_approved:
+            raise HTTPException(
+                status_code=400,
+                detail="Нельзя удалить опубликованный цикл — используйте отзыв доступа",
+            )
+        await self.repo.delete_cycle(c)
+
+    async def _get_cycle_or_404(self, cycle_id: str) -> TrainingCycle:
+        c = await self.repo.get_cycle_by_id(cycle_id)
+        if not c:
+            raise HTTPException(status_code=404, detail="Cycle not found")
+        return c

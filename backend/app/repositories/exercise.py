@@ -9,12 +9,12 @@ class ExerciseRepository:
         self.db = db
 
     async def get_all(self, user_id: int) -> list[Exercise]:
-        # Approved + public exercises are visible to everyone; a pending or
-        # private exercise is visible only to the user who submitted it.
+        # An approved exercise is visible to everyone; anything else (pending,
+        # private, rejected) is visible only to the user who submitted it.
         result = await self.db.execute(
             select(Exercise)
             .where(or_(
-                (Exercise.is_approved.is_(True)) & (Exercise.is_private.is_(False)),
+                Exercise.status == "approved",
                 Exercise.created_by == user_id,
             ))
             .order_by(Exercise.name)
@@ -39,8 +39,7 @@ class ExerciseRepository:
             equipment=equipment,
             description=description,
             is_custom=True,
-            is_approved=False,
-            is_private=is_private,
+            status="private" if is_private else "pending",
             created_by=created_by,
         )
         self.db.add(exercise)

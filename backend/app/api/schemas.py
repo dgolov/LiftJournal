@@ -64,8 +64,7 @@ class ExerciseOut(BaseModel):
     equipment: str
     description: str
     isCustom: bool
-    isApproved: bool = True
-    isPrivate: bool = False
+    status: str = "approved"
 
 
 # ---------------------------------------------------------------------------
@@ -547,8 +546,7 @@ class AdminExerciseOut(BaseModel):
     secondaryMuscles: list[str]
     equipment: str
     description: str
-    isApproved: bool
-    isPrivate: bool
+    status: str
     submittedByName: Optional[str] = None
     submittedByEmail: Optional[str] = None
 

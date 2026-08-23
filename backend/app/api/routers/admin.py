@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.schemas import AdminUserOut, AdminExerciseOut, AdminExerciseUpdate
+from app.api.schemas import AdminUserOut, AdminExerciseOut, AdminExerciseUpdate, AdminCycleOut
 from app.core.database import get_db
 from app.core.security import get_current_admin
 from app.domain.models import User
@@ -20,11 +20,13 @@ async def list_users(
 
 @router.get("/exercises", response_model=list[AdminExerciseOut])
 async def list_exercises(
-    status: str = Query("pending", pattern="^(pending|all)$"),
+    status: str = Query("pending", pattern="^(pending|approved|private|rejected|all)$"),
+    search: str | None = None,
+    muscleGroup: str | None = None,
     admin: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
-    return await AdminService(db).list_exercises(status)
+    return await AdminService(db).list_exercises(status, search, muscleGroup)
 
 
 @router.post("/exercises/{exercise_id}/approve", response_model=AdminExerciseOut)
@@ -62,3 +64,39 @@ async def reject_exercise(
     db: AsyncSession = Depends(get_db),
 ):
     await AdminService(db).reject_exercise(exercise_id)
+
+
+@router.get("/cycles", response_model=list[AdminCycleOut])
+async def list_cycles(
+    status: str = Query("pending", pattern="^(pending|all)$"),
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    return await AdminService(db).list_cycles(status)
+
+
+@router.post("/cycles/{cycle_id}/approve", response_model=AdminCycleOut)
+async def approve_cycle(
+    cycle_id: str,
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    return await AdminService(db).approve_cycle(cycle_id)
+
+
+@router.post("/cycles/{cycle_id}/revoke", response_model=AdminCycleOut)
+async def revoke_cycle(
+    cycle_id: str,
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    return await AdminService(db).revoke_cycle(cycle_id)
+
+
+@router.delete("/cycles/{cycle_id}", status_code=204)
+async def reject_cycle(
+    cycle_id: str,
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    await AdminService(db).reject_cycle(cycle_id)
