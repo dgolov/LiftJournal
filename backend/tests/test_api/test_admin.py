@@ -4,7 +4,9 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from fastapi import HTTPException
 
-from app.api.schemas import AdminUserOut, AdminExerciseOut, AdminCycleOut
+from app.api.schemas import (
+    AdminUserOut, AdminExerciseOut, AdminCycleOut, AdminStatsOut, DailyCountOut, TopUserOut,
+)
 from tests.conftest import make_user
 
 
@@ -34,6 +36,16 @@ def _cycle_out(id="cyc-1", title="5/3/1", is_public=True, is_approved=False):
     )
 
 
+def _stats_out():
+    return AdminStatsOut(
+        totalUsers=5, newUsersLast7Days=2, totalWorkouts=50, workoutsLast7Days=3,
+        totalExercises=39, customExercises=1, pendingExercises=0,
+        totalCycles=2, publicCycles=2, pendingCycles=0,
+        dailyWorkouts=[DailyCountOut(date="2026-08-23", count=1)],
+        topUsers=[TopUserOut(id=2, name="Дмитрий", workoutCount=31)],
+    )
+
+
 async def test_list_users(client):
     with patch("app.api.routers.admin.AdminService") as MockSvc:
         svc = AsyncMock()
@@ -44,6 +56,58 @@ async def test_list_users(client):
 
     assert resp.status_code == 200
     assert len(resp.json()) == 2
+
+
+async def test_get_stats(client):
+    with patch("app.api.routers.admin.AdminService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.get_stats.return_value = _stats_out()
+
+        resp = await client.get("/api/admin/stats")
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["totalUsers"] == 5
+    assert body["topUsers"][0]["name"] == "Дмитрий"
+    assert body["dailyWorkouts"][0]["date"] == "2026-08-23"
+
+
+async def test_set_user_admin_grants(client):
+    with patch("app.api.routers.admin.AdminService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.set_user_admin.return_value = _user_out(2, is_admin=True)
+
+        resp = await client.patch("/api/admin/users/2", json={"isAdmin": True})
+
+    assert resp.status_code == 200
+    assert resp.json()["isAdmin"] is True
+    svc.set_user_admin.assert_called_once_with(2, True, 1)
+
+
+async def test_set_user_admin_self_demotion_returns_400(client):
+    with patch("app.api.routers.admin.AdminService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.set_user_admin.side_effect = HTTPException(
+            status_code=400, detail="Нельзя снять права администратора с самого себя"
+        )
+
+        resp = await client.patch("/api/admin/users/1", json={"isAdmin": False})
+
+    assert resp.status_code == 400
+
+
+async def test_set_user_admin_not_found(client):
+    with patch("app.api.routers.admin.AdminService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.set_user_admin.side_effect = HTTPException(status_code=404, detail="User not found")
+
+        resp = await client.patch("/api/admin/users/999", json={"isAdmin": True})
+
+    assert resp.status_code == 404
 
 
 async def test_list_exercises_pending(client):
@@ -272,6 +336,14 @@ class TestNonAdminAccess:
 
     async def test_users_hidden_from_non_admin(self, client):
         resp = await client.get("/api/admin/users")
+        assert resp.status_code == 404
+
+    async def test_set_user_admin_hidden_from_non_admin(self, client):
+        resp = await client.patch("/api/admin/users/1", json={"isAdmin": True})
+        assert resp.status_code == 404
+
+    async def test_stats_hidden_from_non_admin(self, client):
+        resp = await client.get("/api/admin/stats")
         assert resp.status_code == 404
 
     async def test_exercises_hidden_from_non_admin(self, client):

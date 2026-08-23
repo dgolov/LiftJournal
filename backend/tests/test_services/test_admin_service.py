@@ -1,3 +1,4 @@
+from datetime import date, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -29,6 +30,71 @@ class TestListUsers:
         assert result[0].id == 1
         assert result[0].isAdmin is True
         assert result[1].isAdmin is False
+
+
+class TestSetUserAdmin:
+    async def test_grants_admin(self, mock_db):
+        user = make_user(id=2, name="B", email="b@test.com", is_admin=False)
+        updated = make_user(id=2, name="B", email="b@test.com", is_admin=True)
+        with patch("app.services.admin.AdminRepository") as MockRepo:
+            repo = AsyncMock()
+            MockRepo.return_value = repo
+            repo.get_user_by_id.return_value = user
+            repo.set_user_admin.return_value = updated
+
+            result = await AdminService(mock_db).set_user_admin(2, True, current_admin_id=1)
+
+        assert result.isAdmin is True
+        repo.set_user_admin.assert_called_once_with(user, True)
+
+    async def test_revokes_admin_from_another_user(self, mock_db):
+        user = make_user(id=2, is_admin=True)
+        updated = make_user(id=2, is_admin=False)
+        with patch("app.services.admin.AdminRepository") as MockRepo:
+            repo = AsyncMock()
+            MockRepo.return_value = repo
+            repo.get_user_by_id.return_value = user
+            repo.set_user_admin.return_value = updated
+
+            result = await AdminService(mock_db).set_user_admin(2, False, current_admin_id=1)
+
+        assert result.isAdmin is False
+
+    async def test_refuses_self_demotion(self, mock_db):
+        with patch("app.services.admin.AdminRepository") as MockRepo:
+            repo = AsyncMock()
+            MockRepo.return_value = repo
+
+            with pytest.raises(HTTPException) as exc_info:
+                await AdminService(mock_db).set_user_admin(1, False, current_admin_id=1)
+
+        assert exc_info.value.status_code == 400
+        repo.get_user_by_id.assert_not_called()
+
+    async def test_allows_self_grant(self, mock_db):
+        """Granting yourself admin (already true, no-op in practice) isn't blocked
+        by the self-demotion guard — only removing your own admin status is."""
+        user = make_user(id=1, is_admin=True)
+        with patch("app.services.admin.AdminRepository") as MockRepo:
+            repo = AsyncMock()
+            MockRepo.return_value = repo
+            repo.get_user_by_id.return_value = user
+            repo.set_user_admin.return_value = user
+
+            result = await AdminService(mock_db).set_user_admin(1, True, current_admin_id=1)
+
+        assert result.isAdmin is True
+
+    async def test_not_found(self, mock_db):
+        with patch("app.services.admin.AdminRepository") as MockRepo:
+            repo = AsyncMock()
+            MockRepo.return_value = repo
+            repo.get_user_by_id.return_value = None
+
+            with pytest.raises(HTTPException) as exc_info:
+                await AdminService(mock_db).set_user_admin(999, True, current_admin_id=1)
+
+        assert exc_info.value.status_code == 404
 
 
 class TestListExercises:
@@ -343,3 +409,65 @@ class TestRejectCycle:
                 await AdminService(mock_db).reject_cycle("missing")
 
         assert exc_info.value.status_code == 404
+
+
+class TestGetStats:
+    async def _run(self, mock_db, stats_data):
+        with patch("app.services.admin.AdminRepository") as MockRepo, \
+             patch("app.services.admin.datetime") as MockDatetime:
+            MockDatetime.utcnow.return_value = datetime(2026, 8, 23)
+            repo = AsyncMock()
+            MockRepo.return_value = repo
+            repo.get_stats_data.return_value = stats_data
+
+            return await AdminService(mock_db).get_stats()
+
+    async def test_maps_counts(self, mock_db):
+        result = await self._run(mock_db, {
+            "total_users": 5, "new_users_7d": 2, "total_workouts": 50, "workouts_7d": 3,
+            "total_exercises": 39, "custom_exercises": 1, "pending_exercises": 0,
+            "total_cycles": 2, "public_cycles": 2, "pending_cycles": 0,
+            "daily_rows": [], "top_rows": [],
+        })
+
+        assert result.totalUsers == 5
+        assert result.newUsersLast7Days == 2
+        assert result.totalWorkouts == 50
+        assert result.workoutsLast7Days == 3
+        assert result.totalExercises == 39
+        assert result.customExercises == 1
+        assert result.pendingExercises == 0
+        assert result.totalCycles == 2
+        assert result.publicCycles == 2
+        assert result.pendingCycles == 0
+
+    async def test_daily_workouts_zero_fills_missing_days(self, mock_db):
+        result = await self._run(mock_db, {
+            "total_users": 0, "new_users_7d": 0, "total_workouts": 0, "workouts_7d": 0,
+            "total_exercises": 0, "custom_exercises": 0, "pending_exercises": 0,
+            "total_cycles": 0, "public_cycles": 0, "pending_cycles": 0,
+            "daily_rows": [(date(2026, 8, 21), 4), (date(2026, 8, 23), 1)],
+            "top_rows": [],
+        })
+
+        assert len(result.dailyWorkouts) == 14
+        assert result.dailyWorkouts[0].date == "2026-08-10"
+        assert result.dailyWorkouts[-1].date == "2026-08-23"
+        by_date = {d.date: d.count for d in result.dailyWorkouts}
+        assert by_date["2026-08-21"] == 4
+        assert by_date["2026-08-23"] == 1
+        assert by_date["2026-08-22"] == 0
+        assert by_date["2026-08-10"] == 0
+
+    async def test_top_users_mapped(self, mock_db):
+        result = await self._run(mock_db, {
+            "total_users": 0, "new_users_7d": 0, "total_workouts": 0, "workouts_7d": 0,
+            "total_exercises": 0, "custom_exercises": 0, "pending_exercises": 0,
+            "total_cycles": 0, "public_cycles": 0, "pending_cycles": 0,
+            "daily_rows": [], "top_rows": [(2, 31, "Дмитрий"), (3, 2, "Test")],
+        })
+
+        assert len(result.topUsers) == 2
+        assert result.topUsers[0].id == 2
+        assert result.topUsers[0].name == "Дмитрий"
+        assert result.topUsers[0].workoutCount == 31

@@ -1,3 +1,4 @@
+from datetime import date
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -33,6 +34,41 @@ class TestGetAllUsers:
         result = await repo.get_all_users()
 
         assert result == []
+
+
+class TestGetUserById:
+    async def test_found(self, repo, mock_db):
+        user = make_user(id=1)
+        mock_db.execute.return_value = scalar_result(user)
+
+        result = await repo.get_user_by_id(1)
+
+        assert result == user
+
+    async def test_not_found(self, repo, mock_db):
+        mock_db.execute.return_value = scalar_result(None)
+
+        result = await repo.get_user_by_id(999)
+
+        assert result is None
+
+
+class TestSetUserAdmin:
+    async def test_sets_is_admin_and_commits(self, repo, mock_db):
+        user = make_user(id=1, is_admin=False)
+
+        result = await repo.set_user_admin(user, True)
+
+        assert result.is_admin is True
+        mock_db.commit.assert_awaited_once()
+        mock_db.refresh.assert_awaited_once_with(user)
+
+    async def test_revokes_admin(self, repo, mock_db):
+        user = make_user(id=1, is_admin=True)
+
+        result = await repo.set_user_admin(user, False)
+
+        assert result.is_admin is False
 
 
 class TestGetExercises:
@@ -226,3 +262,65 @@ class TestDeleteCycle:
 
         mock_db.delete.assert_called_once_with(c)
         mock_db.commit.assert_called_once()
+
+
+class TestGetStatsData:
+    async def test_returns_counts_and_grouped_rows(self, repo, mock_db):
+        mock_db.scalar = AsyncMock(side_effect=[5, 2, 50, 3, 39, 1, 0, 2, 2, 0])
+
+        daily_mock = MagicMock()
+        daily_mock.all.return_value = [(date(2026, 8, 15), 3), (date(2026, 8, 17), 1)]
+
+        top_mock = MagicMock()
+        top_mock.all.return_value = [(2, 31), (3, 2)]
+
+        user2 = make_user(id=2, name="Дмитрий")
+        user3 = make_user(id=3, name="Test")
+        users_mock = scalars_result([user2, user3])
+
+        mock_db.execute = AsyncMock(side_effect=[daily_mock, top_mock, users_mock])
+
+        result = await repo.get_stats_data()
+
+        assert result["total_users"] == 5
+        assert result["new_users_7d"] == 2
+        assert result["total_workouts"] == 50
+        assert result["workouts_7d"] == 3
+        assert result["total_exercises"] == 39
+        assert result["custom_exercises"] == 1
+        assert result["pending_exercises"] == 0
+        assert result["total_cycles"] == 2
+        assert result["public_cycles"] == 2
+        assert result["pending_cycles"] == 0
+        assert result["daily_rows"] == [(date(2026, 8, 15), 3), (date(2026, 8, 17), 1)]
+        assert result["top_rows"] == [(2, 31, "Дмитрий"), (3, 2, "Test")]
+
+    async def test_no_workouts_skips_user_lookup(self, repo, mock_db):
+        mock_db.scalar = AsyncMock(side_effect=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+
+        daily_mock = MagicMock()
+        daily_mock.all.return_value = []
+        top_mock = MagicMock()
+        top_mock.all.return_value = []
+
+        mock_db.execute = AsyncMock(side_effect=[daily_mock, top_mock])
+
+        result = await repo.get_stats_data()
+
+        assert result["top_rows"] == []
+        assert mock_db.execute.await_count == 2
+
+    async def test_skips_top_row_with_no_matching_user(self, repo, mock_db):
+        mock_db.scalar = AsyncMock(side_effect=[1, 0, 1, 0, 0, 0, 0, 0, 0, 0])
+
+        daily_mock = MagicMock()
+        daily_mock.all.return_value = []
+        top_mock = MagicMock()
+        top_mock.all.return_value = [(99, 5)]
+        users_mock = scalars_result([])
+
+        mock_db.execute = AsyncMock(side_effect=[daily_mock, top_mock, users_mock])
+
+        result = await repo.get_stats_data()
+
+        assert result["top_rows"] == []
