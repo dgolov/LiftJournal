@@ -85,6 +85,10 @@ const adminService = {
     return request('PATCH', `/admin/users/${id}`, { isAdmin })
   },
 
+  resetPassword(id, newPassword) {
+    return request('POST', `/admin/users/${id}/reset-password`, { newPassword })
+  },
+
   fetchExercises({ status = 'pending', search = '', muscleGroup = '' } = {}) {
     const params = new URLSearchParams({ status })
     if (search) params.set('search', search)
