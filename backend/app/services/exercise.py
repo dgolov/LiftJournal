@@ -17,17 +17,19 @@ class ExerciseService:
             equipment=e.equipment,
             description=e.description or "",
             isCustom=e.is_custom,
+            isApproved=e.is_approved,
         )
 
-    async def list_exercises(self) -> list[ExerciseOut]:
-        return [self._to_dto(e) for e in await self.repo.get_all()]
+    async def list_exercises(self, user_id: int) -> list[ExerciseOut]:
+        return [self._to_dto(e) for e in await self.repo.get_all(user_id)]
 
-    async def create_custom(self, data: ExerciseCreate) -> ExerciseOut:
+    async def create_custom(self, data: ExerciseCreate, user_id: int) -> ExerciseOut:
         e = await self.repo.create(
             name=data.name,
             muscle_group=data.muscleGroup,
             secondary_muscles=data.secondaryMuscles,
             equipment=data.equipment,
             description=data.description,
+            created_by=user_id,
         )
         return self._to_dto(e)

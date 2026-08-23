@@ -63,6 +63,7 @@ class ExerciseOut(BaseModel):
     equipment: str
     description: str
     isCustom: bool
+    isApproved: bool = True
 
 
 # ---------------------------------------------------------------------------
