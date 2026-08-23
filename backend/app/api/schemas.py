@@ -263,6 +263,7 @@ class CycleListOut(BaseModel):
     author_name: str
     created_by: int
     is_public: bool
+    is_approved: bool = True
     created_at: datetime
     workout_count: int
 
@@ -274,6 +275,7 @@ class CycleDetailOut(BaseModel):
     author_name: str
     created_by: int
     is_public: bool
+    is_approved: bool = True
     created_at: datetime
     workouts: list[CycleWorkoutOut]
 
@@ -553,3 +555,42 @@ class AdminExerciseOut(BaseModel):
 
 class AdminExerciseUpdate(BaseModel):
     name: str
+
+
+class AdminCycleOut(BaseModel):
+    id: str
+    title: str
+    description: str
+    authorName: str
+    isPublic: bool
+    isApproved: bool
+    workoutCount: int
+    createdAt: datetime
+    submittedByName: Optional[str] = None
+    submittedByEmail: Optional[str] = None
+
+
+class DailyCountOut(BaseModel):
+    date: str
+    count: int
+
+
+class TopUserOut(BaseModel):
+    id: int
+    name: str
+    workoutCount: int
+
+
+class AdminStatsOut(BaseModel):
+    totalUsers: int
+    newUsersLast7Days: int
+    totalWorkouts: int
+    workoutsLast7Days: int
+    totalExercises: int
+    customExercises: int
+    pendingExercises: int
+    totalCycles: int
+    publicCycles: int
+    pendingCycles: int
+    dailyWorkouts: list[DailyCountOut]
+    topUsers: list[TopUserOut]

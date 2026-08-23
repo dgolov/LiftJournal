@@ -22,7 +22,8 @@ class CycleRepository:
         result = await self.db.execute(
             select(TrainingCycle)
             .where(
-                (TrainingCycle.is_public == True) | (TrainingCycle.created_by == user_id)  # noqa: E712
+                ((TrainingCycle.is_public == True) & (TrainingCycle.is_approved == True))  # noqa: E712
+                | (TrainingCycle.created_by == user_id)
             )
             .order_by(TrainingCycle.created_at.desc())
         )
@@ -57,6 +58,8 @@ class CycleRepository:
             description=description,
             author_name=author_name,
             is_public=is_public,
+            # A brand-new public cycle always starts pending moderation.
+            is_approved=not is_public,
             created_at=datetime.utcnow(),
         )
         cycle.workouts = self._build_workouts(workouts_data)
@@ -81,6 +84,11 @@ class CycleRepository:
         if author_name is not None:
             cycle.author_name = author_name
         if is_public is not None:
+            # Only a fresh transition to public (from not-already-live) resets
+            # moderation — re-saving an already public+approved cycle with
+            # is_public still true shouldn't force it back into the queue.
+            if is_public and not (cycle.is_public and cycle.is_approved):
+                cycle.is_approved = False
             cycle.is_public = is_public
         if workouts_data is not None:
             cycle.workouts = self._build_workouts(workouts_data)

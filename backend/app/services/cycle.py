@@ -21,6 +21,7 @@ class CycleService:
             author_name=c.author_name or "",
             created_by=c.created_by,
             is_public=c.is_public,
+            is_approved=c.is_approved,
             created_at=c.created_at,
             workouts=[
                 CycleWorkoutOut(
@@ -55,6 +56,7 @@ class CycleService:
                 author_name=c.author_name or "",
                 created_by=c.created_by,
                 is_public=c.is_public,
+                is_approved=c.is_approved,
                 created_at=c.created_at,
                 workout_count=counts.get(c.id, 0),
             )
@@ -65,7 +67,7 @@ class CycleService:
         c = await self.repo.get_by_id(cycle_id)
         if not c:
             raise HTTPException(status_code=404, detail="Цикл не найден")
-        if not c.is_public and c.created_by != user_id:
+        if not (c.is_public and c.is_approved) and c.created_by != user_id:
             raise HTTPException(status_code=403, detail="Нет доступа")
         return self._to_detail(c)
 
