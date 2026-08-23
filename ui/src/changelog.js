@@ -4,7 +4,7 @@
 export const CHANGELOG = [
   {
     version: '0.8.0',
-    date: '2026-08-22',
+    date: '2026-08-29',
     label: 'Удобства',
     entries: [
       { type: 'feature',        text: 'Добавлены шаблоны тренировок' },
