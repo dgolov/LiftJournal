@@ -12,15 +12,15 @@ class AdminRepository:
         result = await self.db.execute(select(User).order_by(User.id))
         return list(result.scalars().all())
 
-    async def get_pending_exercises(self):
+    async def get_exercises(self, *, pending_only: bool):
         """Each row is (Exercise, submitting User | None) — an outer join since
         created_by is nullable (built-in exercises have no submitter)."""
-        result = await self.db.execute(
-            select(Exercise, User)
-            .outerjoin(User, Exercise.created_by == User.id)
-            .where(Exercise.is_approved.is_(False))
-            .order_by(Exercise.name)
-        )
+        query = select(Exercise, User).outerjoin(User, Exercise.created_by == User.id)
+        if pending_only:
+            query = query.where(
+                (Exercise.is_approved.is_(False)) & (Exercise.is_private.is_(False))
+            )
+        result = await self.db.execute(query.order_by(Exercise.name))
         return result.all()
 
     async def get_exercise_by_id(self, exercise_id: str) -> Exercise | None:
@@ -29,6 +29,20 @@ class AdminRepository:
 
     async def approve_exercise(self, exercise: Exercise) -> Exercise:
         exercise.is_approved = True
+        exercise.is_private = False
+        await self.db.commit()
+        await self.db.refresh(exercise)
+        return exercise
+
+    async def revoke_exercise(self, exercise: Exercise) -> Exercise:
+        exercise.is_approved = False
+        exercise.is_private = True
+        await self.db.commit()
+        await self.db.refresh(exercise)
+        return exercise
+
+    async def rename_exercise(self, exercise: Exercise, name: str) -> Exercise:
+        exercise.name = name
         await self.db.commit()
         await self.db.refresh(exercise)
         return exercise

@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.schemas import AdminUserOut, AdminExerciseOut
+from app.api.schemas import AdminUserOut, AdminExerciseOut, AdminExerciseUpdate
 from app.core.database import get_db
 from app.core.security import get_current_admin
 from app.domain.models import User
@@ -18,12 +18,13 @@ async def list_users(
     return await AdminService(db).list_users()
 
 
-@router.get("/exercises/pending", response_model=list[AdminExerciseOut])
-async def list_pending_exercises(
+@router.get("/exercises", response_model=list[AdminExerciseOut])
+async def list_exercises(
+    status: str = Query("pending", pattern="^(pending|all)$"),
     admin: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
-    return await AdminService(db).list_pending_exercises()
+    return await AdminService(db).list_exercises(status)
 
 
 @router.post("/exercises/{exercise_id}/approve", response_model=AdminExerciseOut)
@@ -33,6 +34,25 @@ async def approve_exercise(
     db: AsyncSession = Depends(get_db),
 ):
     return await AdminService(db).approve_exercise(exercise_id)
+
+
+@router.post("/exercises/{exercise_id}/revoke", response_model=AdminExerciseOut)
+async def revoke_exercise(
+    exercise_id: str,
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    return await AdminService(db).revoke_exercise(exercise_id)
+
+
+@router.patch("/exercises/{exercise_id}", response_model=AdminExerciseOut)
+async def rename_exercise(
+    exercise_id: str,
+    payload: AdminExerciseUpdate,
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    return await AdminService(db).rename_exercise(exercise_id, payload.name)
 
 
 @router.delete("/exercises/{exercise_id}", status_code=204)
