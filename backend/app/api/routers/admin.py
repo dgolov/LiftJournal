@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.schemas import AdminUserOut, AdminExerciseOut, AdminExerciseUpdate, AdminCycleOut
+from app.api.schemas import (
+    AdminUserOut, AdminUserUpdate, AdminExerciseOut, AdminExerciseUpdate, AdminCycleOut, AdminStatsOut,
+)
 from app.core.database import get_db
 from app.core.security import get_current_admin
 from app.domain.models import User
@@ -16,6 +18,24 @@ async def list_users(
     db: AsyncSession = Depends(get_db),
 ):
     return await AdminService(db).list_users()
+
+
+@router.get("/stats", response_model=AdminStatsOut)
+async def get_stats(
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    return await AdminService(db).get_stats()
+
+
+@router.patch("/users/{user_id}", response_model=AdminUserOut)
+async def set_user_admin(
+    user_id: int,
+    payload: AdminUserUpdate,
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    return await AdminService(db).set_user_admin(user_id, payload.isAdmin, admin.id)
 
 
 @router.get("/exercises", response_model=list[AdminExerciseOut])

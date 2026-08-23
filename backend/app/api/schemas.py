@@ -539,6 +539,10 @@ class AdminUserOut(BaseModel):
     isAdmin: bool
 
 
+class AdminUserUpdate(BaseModel):
+    isAdmin: bool
+
+
 class AdminExerciseOut(BaseModel):
     id: str
     name: str

@@ -1,8 +1,12 @@
+from datetime import datetime, timedelta
+
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.schemas import AdminUserOut, AdminExerciseOut, AdminCycleOut
-from app.domain.models import Exercise, TrainingCycle
+from app.api.schemas import (
+    AdminUserOut, AdminExerciseOut, AdminCycleOut, AdminStatsOut, DailyCountOut, TopUserOut,
+)
+from app.domain.models import Exercise, TrainingCycle, User
 from app.repositories.admin import AdminRepository
 
 
@@ -28,6 +32,18 @@ class AdminService:
             AdminUserOut(id=u.id, email=u.email, name=u.name, isAdmin=u.is_admin)
             for u in await self.repo.get_all_users()
         ]
+
+    async def set_user_admin(self, user_id: int, is_admin: bool, current_admin_id: int) -> AdminUserOut:
+        if user_id == current_admin_id and not is_admin:
+            raise HTTPException(
+                status_code=400,
+                detail="Нельзя снять права администратора с самого себя",
+            )
+        user = await self.repo.get_user_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        user = await self.repo.set_user_admin(user, is_admin)
+        return AdminUserOut(id=user.id, email=user.email, name=user.name, isAdmin=user.is_admin)
 
     async def list_exercises(
         self, status: str = "pending", search: str | None = None, muscle_group: str | None = None
@@ -118,3 +134,30 @@ class AdminService:
         if not c:
             raise HTTPException(status_code=404, detail="Cycle not found")
         return c
+
+    async def get_stats(self) -> AdminStatsOut:
+        data = await self.repo.get_stats_data()
+
+        counts_by_date = {d.isoformat() if hasattr(d, "isoformat") else str(d): c for d, c in data["daily_rows"]}
+        today = datetime.utcnow().date()
+        daily = [
+            DailyCountOut(date=(today - timedelta(days=i)).isoformat(), count=counts_by_date.get((today - timedelta(days=i)).isoformat(), 0))
+            for i in range(13, -1, -1)
+        ]
+
+        top_users = [TopUserOut(id=uid, name=name, workoutCount=cnt) for uid, cnt, name in data["top_rows"]]
+
+        return AdminStatsOut(
+            totalUsers=data["total_users"],
+            newUsersLast7Days=data["new_users_7d"],
+            totalWorkouts=data["total_workouts"],
+            workoutsLast7Days=data["workouts_7d"],
+            totalExercises=data["total_exercises"],
+            customExercises=data["custom_exercises"],
+            pendingExercises=data["pending_exercises"],
+            totalCycles=data["total_cycles"],
+            publicCycles=data["public_cycles"],
+            pendingCycles=data["pending_cycles"],
+            dailyWorkouts=daily,
+            topUsers=top_users,
+        )
