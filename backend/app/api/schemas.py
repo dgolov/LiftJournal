@@ -53,6 +53,7 @@ class ExerciseCreate(BaseModel):
     secondaryMuscles: list[str] = []
     equipment: str
     description: str = ""
+    isPrivate: bool = False
 
 
 class ExerciseOut(BaseModel):
@@ -64,6 +65,7 @@ class ExerciseOut(BaseModel):
     description: str
     isCustom: bool
     isApproved: bool = True
+    isPrivate: bool = False
 
 
 # ---------------------------------------------------------------------------

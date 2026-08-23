@@ -9,11 +9,14 @@ class ExerciseRepository:
         self.db = db
 
     async def get_all(self, user_id: int) -> list[Exercise]:
-        # Approved exercises are visible to everyone; a still-pending custom
-        # exercise is visible only to the user who submitted it.
+        # Approved + public exercises are visible to everyone; a pending or
+        # private exercise is visible only to the user who submitted it.
         result = await self.db.execute(
             select(Exercise)
-            .where(or_(Exercise.is_approved.is_(True), Exercise.created_by == user_id))
+            .where(or_(
+                (Exercise.is_approved.is_(True)) & (Exercise.is_private.is_(False)),
+                Exercise.created_by == user_id,
+            ))
             .order_by(Exercise.name)
         )
         return list(result.scalars().all())
@@ -27,6 +30,7 @@ class ExerciseRepository:
         equipment: str,
         description: str,
         created_by: int,
+        is_private: bool = False,
     ) -> Exercise:
         exercise = Exercise(
             name=name,
@@ -36,6 +40,7 @@ class ExerciseRepository:
             description=description,
             is_custom=True,
             is_approved=False,
+            is_private=is_private,
             created_by=created_by,
         )
         self.db.add(exercise)

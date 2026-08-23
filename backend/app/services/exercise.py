@@ -18,6 +18,7 @@ class ExerciseService:
             description=e.description or "",
             isCustom=e.is_custom,
             isApproved=e.is_approved,
+            isPrivate=e.is_private,
         )
 
     async def list_exercises(self, user_id: int) -> list[ExerciseOut]:
@@ -31,5 +32,6 @@ class ExerciseService:
             equipment=data.equipment,
             description=data.description,
             created_by=user_id,
+            is_private=data.isPrivate,
         )
         return self._to_dto(e)
