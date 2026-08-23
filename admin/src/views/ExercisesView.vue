@@ -80,6 +80,17 @@
               Переименовать
             </button>
           </template>
+          <template v-else-if="ex.status === 'private'">
+            <button class="btn-primary text-xs px-3 py-1.5" :disabled="busyId === ex.id" @click="approve(ex)">
+              Одобрить
+            </button>
+            <button class="btn-outline text-xs px-3 py-1.5 hover:!bg-danger/10 hover:!text-danger hover:!border-danger/40" :disabled="busyId === ex.id" @click="reject(ex)">
+              Отклонить
+            </button>
+            <button class="btn-outline text-xs px-3 py-1.5" :disabled="busyId === ex.id" @click="openRename(ex)">
+              Переименовать
+            </button>
+          </template>
           <template v-else>
             <button class="btn-outline text-xs px-3 py-1.5" :disabled="busyId === ex.id" @click="openRename(ex)">
               Переименовать
@@ -115,6 +126,11 @@ const statusOptions = [
   { value: 'all', label: 'Все' },
 ]
 
+// "Личные" isn't a real backend status filter — it means "everything a user
+// submitted themselves" (any status), as opposed to built-in exercises.
+// Detected via submittedByName, which is only set for created_by != null rows.
+const CUSTOM_TAB = 'private'
+
 const exercises = ref([])
 const loading = ref(true)
 const error = ref('')
@@ -140,9 +156,11 @@ async function load() {
   loading.value = true
   error.value = ''
   try {
-    exercises.value = await adminService.fetchExercises({
-      status: status.value, search: search.value, muscleGroup: muscleGroup.value,
+    const isCustomTab = status.value === CUSTOM_TAB
+    const result = await adminService.fetchExercises({
+      status: isCustomTab ? 'all' : status.value, search: search.value, muscleGroup: muscleGroup.value,
     })
+    exercises.value = isCustomTab ? result.filter(e => e.submittedByName) : result
   } catch (e) {
     error.value = e.message
   } finally {
@@ -174,11 +192,18 @@ function onSearchInput() {
   searchDebounce = setTimeout(load, 300)
 }
 
+// "Все" and "Личные" both list exercises across every status, so an action
+// there updates the row in place; the other tabs are single-status queues
+// where an item leaves the list once its status no longer matches.
+function keepsVisibleAfterAction() {
+  return status.value === 'all' || status.value === CUSTOM_TAB
+}
+
 async function approve(ex) {
   busyId.value = ex.id
   try {
     const updated = await adminService.approveExercise(ex.id)
-    if (status.value === 'all') {
+    if (keepsVisibleAfterAction()) {
       const i = exercises.value.findIndex(e => e.id === ex.id)
       if (i !== -1) exercises.value[i] = updated
     } else {
@@ -192,11 +217,11 @@ async function approve(ex) {
 }
 
 async function revoke(ex) {
-  if (!confirm(`Снять «${ex.name}» с общего доступа? Упражнение останется видно только автору.`)) return
+  if (!confirm(`Снять «${ex.name}» с общего доступа? Упражнение перейдёт в отклонённые, его можно будет одобрить заново.`)) return
   busyId.value = ex.id
   try {
     const updated = await adminService.revokeExercise(ex.id)
-    if (status.value === 'all') {
+    if (keepsVisibleAfterAction()) {
       const i = exercises.value.findIndex(e => e.id === ex.id)
       if (i !== -1) exercises.value[i] = updated
     } else {
@@ -214,7 +239,7 @@ async function reject(ex) {
   busyId.value = ex.id
   try {
     await adminService.rejectExercise(ex.id)
-    if (status.value === 'all') {
+    if (keepsVisibleAfterAction()) {
       const i = exercises.value.findIndex(e => e.id === ex.id)
       if (i !== -1) exercises.value[i] = { ...exercises.value[i], status: 'rejected' }
     } else {
