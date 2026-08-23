@@ -16,10 +16,10 @@ def _user_out(id=1, email="a@test.com", name="A", is_admin=False):
     return AdminUserOut(id=id, email=email, name=name, isAdmin=is_admin)
 
 
-def _exercise_out(id="ex-1", name="Bench Press", is_approved=False):
+def _exercise_out(id="ex-1", name="Bench Press", is_approved=False, is_private=False):
     return AdminExerciseOut(
         id=id, name=name, muscleGroup="Грудь", secondaryMuscles=[],
-        equipment="Штанга", description="", isApproved=is_approved,
+        equipment="Штанга", description="", isApproved=is_approved, isPrivate=is_private,
         submittedByName="User", submittedByEmail="user@test.com",
     )
 
@@ -36,16 +36,34 @@ async def test_list_users(client):
     assert len(resp.json()) == 2
 
 
-async def test_list_pending_exercises(client):
+async def test_list_exercises_pending(client):
     with patch("app.api.routers.admin.AdminService") as MockSvc:
         svc = AsyncMock()
         MockSvc.return_value = svc
-        svc.list_pending_exercises.return_value = [_exercise_out()]
+        svc.list_exercises.return_value = [_exercise_out()]
 
-        resp = await client.get("/api/admin/exercises/pending")
+        resp = await client.get("/api/admin/exercises")
 
     assert resp.status_code == 200
     assert resp.json()[0]["id"] == "ex-1"
+    svc.list_exercises.assert_called_once_with("pending")
+
+
+async def test_list_exercises_all(client):
+    with patch("app.api.routers.admin.AdminService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.list_exercises.return_value = [_exercise_out(is_approved=True)]
+
+        resp = await client.get("/api/admin/exercises?status=all")
+
+    assert resp.status_code == 200
+    svc.list_exercises.assert_called_once_with("all")
+
+
+async def test_list_exercises_invalid_status_returns_422(client):
+    resp = await client.get("/api/admin/exercises?status=bogus")
+    assert resp.status_code == 422
 
 
 async def test_approve_exercise(client):
