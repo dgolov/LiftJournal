@@ -75,12 +75,20 @@ const adminService = {
     return request('GET', '/admin/users')
   },
 
-  fetchPendingExercises() {
-    return request('GET', '/admin/exercises/pending')
+  fetchExercises(status = 'pending') {
+    return request('GET', `/admin/exercises?status=${status}`)
   },
 
   approveExercise(id) {
     return request('POST', `/admin/exercises/${id}/approve`)
+  },
+
+  revokeExercise(id) {
+    return request('POST', `/admin/exercises/${id}/revoke`)
+  },
+
+  renameExercise(id, name) {
+    return request('PATCH', `/admin/exercises/${id}`, { name })
   },
 
   rejectExercise(id) {
