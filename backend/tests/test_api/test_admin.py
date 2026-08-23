@@ -110,6 +110,39 @@ async def test_set_user_admin_not_found(client):
     assert resp.status_code == 404
 
 
+async def test_reset_password(client):
+    with patch("app.api.routers.admin.AdminService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+
+        resp = await client.post("/api/admin/users/2/reset-password", json={"newPassword": "newpass123"})
+
+    assert resp.status_code == 204
+    svc.reset_password.assert_called_once_with(2, "newpass123")
+
+
+async def test_reset_password_too_short_returns_422(client):
+    with patch("app.api.routers.admin.AdminService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.reset_password.side_effect = HTTPException(status_code=422, detail="Пароль должен быть не короче 6 символов")
+
+        resp = await client.post("/api/admin/users/2/reset-password", json={"newPassword": "abc"})
+
+    assert resp.status_code == 422
+
+
+async def test_reset_password_not_found(client):
+    with patch("app.api.routers.admin.AdminService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.reset_password.side_effect = HTTPException(status_code=404, detail="User not found")
+
+        resp = await client.post("/api/admin/users/999/reset-password", json={"newPassword": "newpass123"})
+
+    assert resp.status_code == 404
+
+
 async def test_list_exercises_pending(client):
     with patch("app.api.routers.admin.AdminService") as MockSvc:
         svc = AsyncMock()
@@ -340,6 +373,10 @@ class TestNonAdminAccess:
 
     async def test_set_user_admin_hidden_from_non_admin(self, client):
         resp = await client.patch("/api/admin/users/1", json={"isAdmin": True})
+        assert resp.status_code == 404
+
+    async def test_reset_password_hidden_from_non_admin(self, client):
+        resp = await client.post("/api/admin/users/1/reset-password", json={"newPassword": "newpass123"})
         assert resp.status_code == 404
 
     async def test_stats_hidden_from_non_admin(self, client):

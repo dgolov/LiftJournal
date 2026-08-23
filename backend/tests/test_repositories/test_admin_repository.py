@@ -71,6 +71,16 @@ class TestSetUserAdmin:
         assert result.is_admin is False
 
 
+class TestSetPassword:
+    async def test_updates_hashed_password_and_commits(self, repo, mock_db):
+        user = make_user(id=1, hashed_password="$2b$12$oldhash")
+
+        await repo.set_password(user, "$2b$12$newhash")
+
+        assert user.hashed_password == "$2b$12$newhash"
+        mock_db.commit.assert_awaited_once()
+
+
 class TestGetExercises:
     async def test_pending_returns_rows_with_submitter(self, repo, mock_db):
         ex = make_exercise(id="ex-1", status="pending", created_by=1)

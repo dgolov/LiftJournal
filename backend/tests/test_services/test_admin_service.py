@@ -97,6 +97,44 @@ class TestSetUserAdmin:
         assert exc_info.value.status_code == 404
 
 
+class TestResetPassword:
+    async def test_success(self, mock_db):
+        user = make_user(id=2)
+        with patch("app.services.admin.AdminRepository") as MockRepo, \
+             patch("app.services.admin.hash_password") as mock_hash:
+            repo = AsyncMock()
+            MockRepo.return_value = repo
+            repo.get_user_by_id.return_value = user
+            mock_hash.return_value = "$2b$12$newhash"
+
+            await AdminService(mock_db).reset_password(2, "newpass123")
+
+        mock_hash.assert_called_once_with("newpass123")
+        repo.set_password.assert_called_once_with(user, "$2b$12$newhash")
+
+    async def test_too_short_returns_422(self, mock_db):
+        with patch("app.services.admin.AdminRepository") as MockRepo:
+            repo = AsyncMock()
+            MockRepo.return_value = repo
+
+            with pytest.raises(HTTPException) as exc_info:
+                await AdminService(mock_db).reset_password(2, "abc")
+
+        assert exc_info.value.status_code == 422
+        repo.get_user_by_id.assert_not_called()
+
+    async def test_not_found(self, mock_db):
+        with patch("app.services.admin.AdminRepository") as MockRepo:
+            repo = AsyncMock()
+            MockRepo.return_value = repo
+            repo.get_user_by_id.return_value = None
+
+            with pytest.raises(HTTPException) as exc_info:
+                await AdminService(mock_db).reset_password(999, "newpass123")
+
+        assert exc_info.value.status_code == 404
+
+
 class TestListExercises:
     async def test_includes_submitter_info(self, mock_db):
         ex = make_exercise(id="ex-1", name="Cable Fly", status="pending", created_by=5)
