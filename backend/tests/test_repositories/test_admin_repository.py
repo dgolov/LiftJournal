@@ -155,13 +155,13 @@ class TestApproveExercise:
 
 
 class TestRevokeExercise:
-    async def test_sets_status_private(self, repo, mock_db):
+    async def test_sets_status_rejected(self, repo, mock_db):
         ex = make_exercise(id="ex-1", status="approved")
         mock_db.refresh = AsyncMock()
 
         result = await repo.revoke_exercise(ex)
 
-        assert ex.status == "private"
+        assert ex.status == "rejected"
         mock_db.commit.assert_called_once()
         assert result is ex
 

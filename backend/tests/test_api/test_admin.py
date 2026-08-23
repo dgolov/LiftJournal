@@ -225,12 +225,12 @@ async def test_revoke_exercise(client):
     with patch("app.api.routers.admin.AdminService") as MockSvc:
         svc = AsyncMock()
         MockSvc.return_value = svc
-        svc.revoke_exercise.return_value = _exercise_out(status="private")
+        svc.revoke_exercise.return_value = _exercise_out(status="rejected")
 
         resp = await client.post("/api/admin/exercises/ex-1/revoke")
 
     assert resp.status_code == 200
-    assert resp.json()["status"] == "private"
+    assert resp.json()["status"] == "rejected"
 
 
 async def test_rename_exercise(client):

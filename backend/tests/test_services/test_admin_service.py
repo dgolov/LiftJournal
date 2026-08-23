@@ -201,6 +201,25 @@ class TestApproveExercise:
         assert result.status == "approved"
         repo.approve_exercise.assert_called_once_with(ex)
 
+    async def test_response_includes_submitter(self, mock_db):
+        """approve/revoke/rename responses must keep submittedByName —
+        otherwise the admin "Личные" tab loses its "Добавил: ..." line the
+        moment you act on a row, since it updates in place from this DTO."""
+        ex = make_exercise(id="ex-1", status="pending", created_by=5)
+        approved = make_exercise(id="ex-1", status="approved", created_by=5)
+        submitter = make_user(id=5, name="Alex", email="alex@test.com")
+        with patch("app.services.admin.AdminRepository") as MockRepo:
+            repo = AsyncMock()
+            MockRepo.return_value = repo
+            repo.get_exercise_by_id.return_value = ex
+            repo.approve_exercise.return_value = approved
+            repo.get_user_by_id.return_value = submitter
+
+            result = await AdminService(mock_db).approve_exercise("ex-1")
+
+        assert result.submittedByName == "Alex"
+        repo.get_user_by_id.assert_called_once_with(5)
+
     async def test_not_found(self, mock_db):
         with patch("app.services.admin.AdminRepository") as MockRepo:
             repo = AsyncMock()
@@ -216,7 +235,7 @@ class TestApproveExercise:
 class TestRevokeExercise:
     async def test_success(self, mock_db):
         ex = make_exercise(id="ex-1", status="approved")
-        revoked = make_exercise(id="ex-1", status="private")
+        revoked = make_exercise(id="ex-1", status="rejected")
         with patch("app.services.admin.AdminRepository") as MockRepo:
             repo = AsyncMock()
             MockRepo.return_value = repo
@@ -225,7 +244,7 @@ class TestRevokeExercise:
 
             result = await AdminService(mock_db).revoke_exercise("ex-1")
 
-        assert result.status == "private"
+        assert result.status == "rejected"
         repo.revoke_exercise.assert_called_once_with(ex)
 
     async def test_not_found(self, mock_db):
@@ -279,19 +298,18 @@ class TestRejectExercise:
 
         repo.reject_exercise.assert_called_once_with(ex)
 
-    async def test_refuses_to_reject_private_exercise(self, mock_db):
-        """Private exercises were never submitted for review — nothing to reject."""
+    async def test_success_for_private(self, mock_db):
+        """Admin can reject a user's private submission too, e.g. inappropriate
+        content the user tried to keep to themselves."""
         ex = make_exercise(id="ex-1", status="private")
         with patch("app.services.admin.AdminRepository") as MockRepo:
             repo = AsyncMock()
             MockRepo.return_value = repo
             repo.get_exercise_by_id.return_value = ex
 
-            with pytest.raises(HTTPException) as exc_info:
-                await AdminService(mock_db).reject_exercise("ex-1")
+            await AdminService(mock_db).reject_exercise("ex-1")
 
-        assert exc_info.value.status_code == 400
-        repo.reject_exercise.assert_not_called()
+        repo.reject_exercise.assert_called_once_with(ex)
 
     async def test_refuses_to_reject_approved_exercise(self, mock_db):
         ex = make_exercise(id="ex-1", status="approved")
