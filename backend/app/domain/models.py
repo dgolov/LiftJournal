@@ -22,6 +22,10 @@ class Exercise(Base):
     equipment: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str] = mapped_column(Text, default="")
     is_custom: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_approved: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_by: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
 
 
 class Workout(Base):
@@ -94,6 +98,7 @@ class User(Base):
     birth_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     avatar_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     theme: Mapped[str] = mapped_column(String(10), default="light")
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
 
     weight_log: Mapped[list["WeightEntry"]] = relationship(
         "WeightEntry", back_populates="user", cascade="all, delete-orphan"
