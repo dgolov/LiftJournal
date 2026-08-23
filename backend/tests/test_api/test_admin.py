@@ -1,9 +1,10 @@
+from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import HTTPException
 
-from app.api.schemas import AdminUserOut, AdminExerciseOut
+from app.api.schemas import AdminUserOut, AdminExerciseOut, AdminCycleOut
 from tests.conftest import make_user
 
 
@@ -16,10 +17,19 @@ def _user_out(id=1, email="a@test.com", name="A", is_admin=False):
     return AdminUserOut(id=id, email=email, name=name, isAdmin=is_admin)
 
 
-def _exercise_out(id="ex-1", name="Bench Press", is_approved=False, is_private=False):
+def _exercise_out(id="ex-1", name="Bench Press", status="pending"):
     return AdminExerciseOut(
         id=id, name=name, muscleGroup="Грудь", secondaryMuscles=[],
-        equipment="Штанга", description="", isApproved=is_approved, isPrivate=is_private,
+        equipment="Штанга", description="", status=status,
+        submittedByName="User", submittedByEmail="user@test.com",
+    )
+
+
+def _cycle_out(id="cyc-1", title="5/3/1", is_public=True, is_approved=False):
+    return AdminCycleOut(
+        id=id, title=title, description="", authorName="Jim Wendler",
+        isPublic=is_public, isApproved=is_approved, workoutCount=3,
+        createdAt=datetime(2026, 1, 1),
         submittedByName="User", submittedByEmail="user@test.com",
     )
 
@@ -46,19 +56,44 @@ async def test_list_exercises_pending(client):
 
     assert resp.status_code == 200
     assert resp.json()[0]["id"] == "ex-1"
-    svc.list_exercises.assert_called_once_with("pending")
+    svc.list_exercises.assert_called_once_with("pending", None, None)
+
+
+async def test_list_exercises_with_search_and_muscle_group(client):
+    with patch("app.api.routers.admin.AdminService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.list_exercises.return_value = [_exercise_out(status="approved")]
+
+        resp = await client.get("/api/admin/exercises?status=all&search=Bench&muscleGroup=%D0%93%D1%80%D1%83%D0%B4%D1%8C")
+
+    assert resp.status_code == 200
+    svc.list_exercises.assert_called_once_with("all", "Bench", "Грудь")
+
+
+async def test_list_exercises_rejected_status(client):
+    with patch("app.api.routers.admin.AdminService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.list_exercises.return_value = [_exercise_out(status="rejected")]
+
+        resp = await client.get("/api/admin/exercises?status=rejected")
+
+    assert resp.status_code == 200
+    assert resp.json()[0]["status"] == "rejected"
+    svc.list_exercises.assert_called_once_with("rejected", None, None)
 
 
 async def test_list_exercises_all(client):
     with patch("app.api.routers.admin.AdminService") as MockSvc:
         svc = AsyncMock()
         MockSvc.return_value = svc
-        svc.list_exercises.return_value = [_exercise_out(is_approved=True)]
+        svc.list_exercises.return_value = [_exercise_out(status="approved")]
 
         resp = await client.get("/api/admin/exercises?status=all")
 
     assert resp.status_code == 200
-    svc.list_exercises.assert_called_once_with("all")
+    svc.list_exercises.assert_called_once_with("all", None, None)
 
 
 async def test_list_exercises_invalid_status_returns_422(client):
@@ -70,12 +105,12 @@ async def test_approve_exercise(client):
     with patch("app.api.routers.admin.AdminService") as MockSvc:
         svc = AsyncMock()
         MockSvc.return_value = svc
-        svc.approve_exercise.return_value = _exercise_out(is_approved=True)
+        svc.approve_exercise.return_value = _exercise_out(status="approved")
 
         resp = await client.post("/api/admin/exercises/ex-1/approve")
 
     assert resp.status_code == 200
-    assert resp.json()["isApproved"] is True
+    assert resp.json()["status"] == "approved"
 
 
 async def test_approve_exercise_not_found(client):
@@ -93,12 +128,12 @@ async def test_revoke_exercise(client):
     with patch("app.api.routers.admin.AdminService") as MockSvc:
         svc = AsyncMock()
         MockSvc.return_value = svc
-        svc.revoke_exercise.return_value = _exercise_out(is_private=True)
+        svc.revoke_exercise.return_value = _exercise_out(status="private")
 
         resp = await client.post("/api/admin/exercises/ex-1/revoke")
 
     assert resp.status_code == 200
-    assert resp.json()["isPrivate"] is True
+    assert resp.json()["status"] == "private"
 
 
 async def test_rename_exercise(client):
@@ -143,6 +178,90 @@ async def test_reject_public_exercise_returns_400(client):
     assert resp.status_code == 400
 
 
+async def test_list_cycles_pending(client):
+    with patch("app.api.routers.admin.AdminService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.list_cycles.return_value = [_cycle_out()]
+
+        resp = await client.get("/api/admin/cycles")
+
+    assert resp.status_code == 200
+    assert resp.json()[0]["id"] == "cyc-1"
+    svc.list_cycles.assert_called_once_with("pending")
+
+
+async def test_list_cycles_all(client):
+    with patch("app.api.routers.admin.AdminService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.list_cycles.return_value = [_cycle_out(is_approved=True)]
+
+        resp = await client.get("/api/admin/cycles?status=all")
+
+    assert resp.status_code == 200
+    svc.list_cycles.assert_called_once_with("all")
+
+
+async def test_approve_cycle(client):
+    with patch("app.api.routers.admin.AdminService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.approve_cycle.return_value = _cycle_out(is_approved=True)
+
+        resp = await client.post("/api/admin/cycles/cyc-1/approve")
+
+    assert resp.status_code == 200
+    assert resp.json()["isApproved"] is True
+
+
+async def test_approve_cycle_not_found(client):
+    with patch("app.api.routers.admin.AdminService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.approve_cycle.side_effect = HTTPException(status_code=404, detail="Cycle not found")
+
+        resp = await client.post("/api/admin/cycles/missing/approve")
+
+    assert resp.status_code == 404
+
+
+async def test_revoke_cycle(client):
+    with patch("app.api.routers.admin.AdminService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.revoke_cycle.return_value = _cycle_out(is_public=False, is_approved=False)
+
+        resp = await client.post("/api/admin/cycles/cyc-1/revoke")
+
+    assert resp.status_code == 200
+    assert resp.json()["isPublic"] is False
+
+
+async def test_reject_cycle(client):
+    with patch("app.api.routers.admin.AdminService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.reject_cycle.return_value = None
+
+        resp = await client.delete("/api/admin/cycles/cyc-1")
+
+    assert resp.status_code == 204
+
+
+async def test_reject_public_cycle_returns_400(client):
+    with patch("app.api.routers.admin.AdminService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.reject_cycle.side_effect = HTTPException(
+            status_code=400, detail="Нельзя удалить опубликованный цикл"
+        )
+
+        resp = await client.delete("/api/admin/cycles/cyc-1")
+
+    assert resp.status_code == 400
+
+
 class TestNonAdminAccess:
     """Non-admin routes must 404, not 401/403 — the admin API should look
     like it doesn't exist at all to a regular authenticated user."""
@@ -173,4 +292,20 @@ class TestNonAdminAccess:
 
     async def test_reject_hidden_from_non_admin(self, client):
         resp = await client.delete("/api/admin/exercises/ex-1")
+        assert resp.status_code == 404
+
+    async def test_cycles_hidden_from_non_admin(self, client):
+        resp = await client.get("/api/admin/cycles")
+        assert resp.status_code == 404
+
+    async def test_approve_cycle_hidden_from_non_admin(self, client):
+        resp = await client.post("/api/admin/cycles/cyc-1/approve")
+        assert resp.status_code == 404
+
+    async def test_revoke_cycle_hidden_from_non_admin(self, client):
+        resp = await client.post("/api/admin/cycles/cyc-1/revoke")
+        assert resp.status_code == 404
+
+    async def test_reject_cycle_hidden_from_non_admin(self, client):
+        resp = await client.delete("/api/admin/cycles/cyc-1")
         assert resp.status_code == 404

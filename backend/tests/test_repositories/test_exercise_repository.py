@@ -69,13 +69,32 @@ async def test_create_sets_is_custom_true(repo, mock_db):
         equipment="Кабель",
         description="",
         is_custom=True,
-        is_approved=False,
-        is_private=False,
+        status="pending",
         created_by=1,
     )
     mock_db.add.assert_called_once_with(instance)
     mock_db.commit.assert_called_once()
     mock_db.refresh.assert_called_once_with(instance)
+
+
+async def test_create_private_sets_status_private(repo, mock_db):
+    mock_db.refresh = AsyncMock()
+
+    with patch("app.repositories.exercise.Exercise") as MockExercise:
+        instance = MagicMock()
+        MockExercise.return_value = instance
+
+        await repo.create(
+            name="My Own Move",
+            muscle_group="Ноги",
+            secondary_muscles=[],
+            equipment="Без оборудования",
+            description="",
+            created_by=1,
+            is_private=True,
+        )
+
+    assert MockExercise.call_args.kwargs["status"] == "private"
 
 
 @pytest.mark.parametrize("name,muscle_group,equipment", [
@@ -102,5 +121,5 @@ async def test_create_parametrized_exercises(repo, mock_db, name, muscle_group, 
     assert MockExercise.call_args.kwargs["name"] == name
     assert MockExercise.call_args.kwargs["muscle_group"] == muscle_group
     assert MockExercise.call_args.kwargs["is_custom"] is True
-    assert MockExercise.call_args.kwargs["is_approved"] is False
+    assert MockExercise.call_args.kwargs["status"] == "pending"
     assert MockExercise.call_args.kwargs["created_by"] == 1

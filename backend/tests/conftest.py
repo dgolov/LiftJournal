@@ -106,7 +106,7 @@ def make_exercise(
     id="ex-001", name="Bench Press", muscle_group="Грудь",
     secondary_muscles=None, equipment="Штанга",
     description="Классика", is_custom=False,
-    is_approved=True, created_by=None, is_private=False,
+    created_by=None, status="approved",
 ):
     e = MagicMock()
     e.id = id
@@ -116,9 +116,8 @@ def make_exercise(
     e.equipment = equipment
     e.description = description
     e.is_custom = is_custom
-    e.is_approved = is_approved
     e.created_by = created_by
-    e.is_private = is_private
+    e.status = status
     return e
 
 
