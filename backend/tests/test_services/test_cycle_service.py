@@ -13,11 +13,14 @@ def mock_db():
     return AsyncMock()
 
 
-def _cycle_with_workouts(created_by=1, is_public=True):
+def _cycle_with_workouts(created_by=1, is_public=True, is_approved=True):
     cs = make_cycle_set(id="cs-1", percent_1rm=80.0, reps=5, order=0)
     ce = make_cycle_exercise(id="ce-1", exercise_id="ex-001", exercise_name="Bench Press", sets=[cs])
     cw = make_cycle_workout(id="cw-1", cycle_id="cyc-1", workout_number=1, exercises=[ce])
-    return make_cycle(id="cyc-1", created_by=created_by, is_public=is_public, workouts=[cw])
+    return make_cycle(
+        id="cyc-1", created_by=created_by, is_public=is_public,
+        is_approved=is_approved, workouts=[cw],
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -92,6 +95,34 @@ async def test_get_cycle_private_other_user_forbidden(mock_db):
             await CycleService(mock_db).get_cycle("cyc-1", user_id=1)
 
     assert exc_info.value.status_code == 403
+
+
+async def test_get_cycle_pending_public_other_user_forbidden(mock_db):
+    """Marked public but not yet approved — must not be visible to anyone but the owner."""
+    c = _cycle_with_workouts(created_by=99, is_public=True, is_approved=False)
+
+    with patch("app.services.cycle.CycleRepository") as MockRepo:
+        repo = AsyncMock()
+        MockRepo.return_value = repo
+        repo.get_by_id.return_value = c
+
+        with pytest.raises(HTTPException) as exc_info:
+            await CycleService(mock_db).get_cycle("cyc-1", user_id=1)
+
+    assert exc_info.value.status_code == 403
+
+
+async def test_get_cycle_pending_public_owner_can_view(mock_db):
+    c = _cycle_with_workouts(created_by=1, is_public=True, is_approved=False)
+
+    with patch("app.services.cycle.CycleRepository") as MockRepo:
+        repo = AsyncMock()
+        MockRepo.return_value = repo
+        repo.get_by_id.return_value = c
+
+        result = await CycleService(mock_db).get_cycle("cyc-1", user_id=1)
+
+    assert result.id == "cyc-1"
 
 
 async def test_get_cycle_not_found(mock_db):

@@ -13,8 +13,9 @@ from app.api.routers import (
     planned_workouts, 
     achievements, 
     social, 
-    notifications, 
-    templates
+    notifications,
+    templates,
+    admin
 )
 from app.config import settings
 from app.core.database import async_session
@@ -42,6 +43,7 @@ app.include_router(achievements.router, prefix="/api/achievements", tags=["achie
 app.include_router(social.router, prefix="/api/social", tags=["social"])
 app.include_router(notifications.router, prefix="/api/notifications", tags=["notifications"])
 app.include_router(templates.router, prefix="/api/templates", tags=["templates"])
+app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 
 
 @app.websocket("/api/ws")

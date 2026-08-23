@@ -52,7 +52,7 @@ def make_user(
     hashed_password="$2b$12$fakehash",
     age=25, avatar_url=None,
     weight_log=None, goals=None, maxes=None,
-    birth_date=None, theme="light",
+    birth_date=None, theme="light", is_admin=False,
 ):
     u = MagicMock()
     u.id = id
@@ -61,6 +61,7 @@ def make_user(
     u.hashed_password = hashed_password
     u.age = age
     u.avatar_url = avatar_url
+    u.is_admin = is_admin
     u.weight_log = weight_log if weight_log is not None else []
     u.goals = goals if goals is not None else []
     u.maxes = maxes if maxes is not None else []
@@ -105,6 +106,7 @@ def make_exercise(
     id="ex-001", name="Bench Press", muscle_group="Грудь",
     secondary_muscles=None, equipment="Штанга",
     description="Классика", is_custom=False,
+    created_by=None, status="approved",
 ):
     e = MagicMock()
     e.id = id
@@ -114,6 +116,8 @@ def make_exercise(
     e.equipment = equipment
     e.description = description
     e.is_custom = is_custom
+    e.created_by = created_by
+    e.status = status
     return e
 
 
@@ -198,7 +202,7 @@ def make_cycle_workout(
 def make_cycle(
     id="cyc-1", created_by=1, title="5/3/1",
     description="Программа Вендлера", author_name="Jim Wendler",
-    is_public=True, created_at=None, workouts=None,
+    is_public=True, is_approved=True, created_at=None, workouts=None,
 ):
     c = MagicMock()
     c.id = id
@@ -207,6 +211,7 @@ def make_cycle(
     c.description = description
     c.author_name = author_name
     c.is_public = is_public
+    c.is_approved = is_approved
     c.created_at = created_at or datetime(2026, 1, 1)
     c.workouts = workouts if workouts is not None else []
     return c

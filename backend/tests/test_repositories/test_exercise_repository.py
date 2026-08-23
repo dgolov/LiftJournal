@@ -27,7 +27,7 @@ async def test_get_all_returns_list(repo, mock_db):
     ex2 = make_exercise(id="ex-002", name="Squat")
     mock_db.execute.return_value = scalars_result([ex1, ex2])
 
-    result = await repo.get_all()
+    result = await repo.get_all(user_id=1)
 
     assert len(result) == 2
     assert result[0].name == "Bench Press"
@@ -37,7 +37,7 @@ async def test_get_all_returns_list(repo, mock_db):
 async def test_get_all_empty(repo, mock_db):
     mock_db.execute.return_value = scalars_result([])
 
-    result = await repo.get_all()
+    result = await repo.get_all(user_id=1)
 
     assert result == []
 
@@ -59,6 +59,7 @@ async def test_create_sets_is_custom_true(repo, mock_db):
             secondary_muscles=[],
             equipment="Кабель",
             description="",
+            created_by=1,
         )
 
     MockExercise.assert_called_once_with(
@@ -68,10 +69,32 @@ async def test_create_sets_is_custom_true(repo, mock_db):
         equipment="Кабель",
         description="",
         is_custom=True,
+        status="pending",
+        created_by=1,
     )
     mock_db.add.assert_called_once_with(instance)
     mock_db.commit.assert_called_once()
     mock_db.refresh.assert_called_once_with(instance)
+
+
+async def test_create_private_sets_status_private(repo, mock_db):
+    mock_db.refresh = AsyncMock()
+
+    with patch("app.repositories.exercise.Exercise") as MockExercise:
+        instance = MagicMock()
+        MockExercise.return_value = instance
+
+        await repo.create(
+            name="My Own Move",
+            muscle_group="Ноги",
+            secondary_muscles=[],
+            equipment="Без оборудования",
+            description="",
+            created_by=1,
+            is_private=True,
+        )
+
+    assert MockExercise.call_args.kwargs["status"] == "private"
 
 
 @pytest.mark.parametrize("name,muscle_group,equipment", [
@@ -92,8 +115,11 @@ async def test_create_parametrized_exercises(repo, mock_db, name, muscle_group, 
             secondary_muscles=[],
             equipment=equipment,
             description="",
+            created_by=1,
         )
 
     assert MockExercise.call_args.kwargs["name"] == name
     assert MockExercise.call_args.kwargs["muscle_group"] == muscle_group
     assert MockExercise.call_args.kwargs["is_custom"] is True
+    assert MockExercise.call_args.kwargs["status"] == "pending"
+    assert MockExercise.call_args.kwargs["created_by"] == 1
