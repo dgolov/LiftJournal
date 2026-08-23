@@ -1,18 +1,31 @@
 <template>
   <div>
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-xl font-bold text-gray-900 dark:text-white">Упражнения</h2>
-      <div class="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5">
-        <button
-          :class="['px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
-            status === 'pending' ? 'bg-white dark:bg-gray-700 shadow-sm text-primary' : 'text-gray-500']"
-          @click="setStatus('pending')"
-        >На модерации</button>
-        <button
-          :class="['px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
-            status === 'all' ? 'bg-white dark:bg-gray-700 shadow-sm text-primary' : 'text-gray-500']"
-          @click="setStatus('all')"
-        >Все</button>
+    <div class="flex flex-col gap-3 mb-4">
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Упражнения</h2>
+        <div class="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 flex-wrap">
+          <button
+            v-for="opt in statusOptions"
+            :key="opt.value"
+            :class="['px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
+              status === opt.value ? 'bg-white dark:bg-gray-700 shadow-sm text-primary' : 'text-gray-500']"
+            @click="setStatus(opt.value)"
+          >{{ opt.label }}</button>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 flex-wrap">
+        <input
+          v-model="search"
+          type="text"
+          placeholder="Поиск по названию..."
+          class="input max-w-xs"
+          @input="onSearchInput"
+        />
+        <select v-model="muscleGroup" class="input max-w-[200px]" @change="load">
+          <option value="">Все группы мышц</option>
+          <option v-for="mg in muscleGroups" :key="mg" :value="mg">{{ mg }}</option>
+        </select>
       </div>
     </div>
 
@@ -20,7 +33,7 @@
     <p v-else-if="error" class="text-sm text-danger">{{ error }}</p>
 
     <div v-else-if="!exercises.length" class="card p-12 text-center text-gray-400 text-sm">
-      {{ status === 'pending' ? 'Нет упражнений, ожидающих одобрения' : 'Нет упражнений' }}
+      Ничего не найдено
     </div>
 
     <div v-else class="space-y-3">
@@ -43,7 +56,7 @@
           </p>
         </div>
         <div class="flex flex-col gap-2 flex-shrink-0">
-          <template v-if="!ex.isApproved && !ex.isPrivate">
+          <template v-if="ex.status === 'pending'">
             <button class="btn-primary text-xs px-3 py-1.5" :disabled="busyId === ex.id" @click="approve(ex)">
               Одобрить
             </button>
@@ -51,12 +64,20 @@
               Отклонить
             </button>
           </template>
-          <template v-else-if="ex.isApproved && !ex.isPrivate">
+          <template v-else-if="ex.status === 'approved'">
             <button class="btn-outline text-xs px-3 py-1.5" :disabled="busyId === ex.id" @click="openRename(ex)">
               Переименовать
             </button>
             <button class="btn-outline text-xs px-3 py-1.5 hover:!bg-danger/10 hover:!text-danger hover:!border-danger/40" :disabled="busyId === ex.id" @click="revoke(ex)">
               Снять с доступа
+            </button>
+          </template>
+          <template v-else-if="ex.status === 'rejected'">
+            <button class="btn-primary text-xs px-3 py-1.5" :disabled="busyId === ex.id" @click="approve(ex)">
+              Одобрить
+            </button>
+            <button class="btn-outline text-xs px-3 py-1.5" :disabled="busyId === ex.id" @click="openRename(ex)">
+              Переименовать
             </button>
           </template>
           <template v-else>
@@ -86,18 +107,32 @@
 import { ref, onMounted } from 'vue'
 import adminService from '@/services/adminService.js'
 
+const statusOptions = [
+  { value: 'pending', label: 'На модерации' },
+  { value: 'approved', label: 'Одобренные' },
+  { value: 'private', label: 'Личные' },
+  { value: 'rejected', label: 'Отклонённые' },
+  { value: 'all', label: 'Все' },
+]
+
 const exercises = ref([])
 const loading = ref(true)
 const error = ref('')
 const busyId = ref(null)
 const status = ref('pending')
+const search = ref('')
+const muscleGroup = ref('')
+const muscleGroups = ref([])
 
 const renaming = ref(null)
 const renameValue = ref('')
 
+let searchDebounce = null
+
 function statusBadge(ex) {
-  if (ex.isPrivate) return { label: 'Личное', class: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400' }
-  if (!ex.isApproved) return { label: 'На модерации', class: 'bg-warning/15 text-warning' }
+  if (ex.status === 'private') return { label: 'Личное', class: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400' }
+  if (ex.status === 'rejected') return { label: 'Отклонено', class: 'bg-danger/15 text-danger' }
+  if (ex.status === 'pending') return { label: 'На модерации', class: 'bg-warning/15 text-warning' }
   return { label: 'Публичное', class: 'bg-success/15 text-success' }
 }
 
@@ -105,7 +140,9 @@ async function load() {
   loading.value = true
   error.value = ''
   try {
-    exercises.value = await adminService.fetchExercises(status.value)
+    exercises.value = await adminService.fetchExercises({
+      status: status.value, search: search.value, muscleGroup: muscleGroup.value,
+    })
   } catch (e) {
     error.value = e.message
   } finally {
@@ -113,18 +150,40 @@ async function load() {
   }
 }
 
-onMounted(load)
+async function loadMuscleGroups() {
+  try {
+    const all = await adminService.fetchExercises({ status: 'all' })
+    muscleGroups.value = [...new Set(all.map(e => e.muscleGroup))].sort((a, b) => a.localeCompare(b, 'ru'))
+  } catch {
+    // non-critical — filter dropdown just stays empty
+  }
+}
+
+onMounted(() => {
+  load()
+  loadMuscleGroups()
+})
 
 function setStatus(s) {
   status.value = s
   load()
 }
 
+function onSearchInput() {
+  clearTimeout(searchDebounce)
+  searchDebounce = setTimeout(load, 300)
+}
+
 async function approve(ex) {
   busyId.value = ex.id
   try {
-    await adminService.approveExercise(ex.id)
-    exercises.value = exercises.value.filter(e => e.id !== ex.id)
+    const updated = await adminService.approveExercise(ex.id)
+    if (status.value === 'all') {
+      const i = exercises.value.findIndex(e => e.id === ex.id)
+      if (i !== -1) exercises.value[i] = updated
+    } else {
+      exercises.value = exercises.value.filter(e => e.id !== ex.id)
+    }
   } catch (e) {
     error.value = e.message
   } finally {
@@ -137,11 +196,11 @@ async function revoke(ex) {
   busyId.value = ex.id
   try {
     const updated = await adminService.revokeExercise(ex.id)
-    if (status.value === 'pending') {
-      exercises.value = exercises.value.filter(e => e.id !== ex.id)
-    } else {
+    if (status.value === 'all') {
       const i = exercises.value.findIndex(e => e.id === ex.id)
       if (i !== -1) exercises.value[i] = updated
+    } else {
+      exercises.value = exercises.value.filter(e => e.id !== ex.id)
     }
   } catch (e) {
     error.value = e.message
@@ -151,11 +210,16 @@ async function revoke(ex) {
 }
 
 async function reject(ex) {
-  if (!confirm(`Отклонить и удалить упражнение «${ex.name}»?`)) return
+  if (!confirm(`Отклонить упражнение «${ex.name}»?`)) return
   busyId.value = ex.id
   try {
     await adminService.rejectExercise(ex.id)
-    exercises.value = exercises.value.filter(e => e.id !== ex.id)
+    if (status.value === 'all') {
+      const i = exercises.value.findIndex(e => e.id === ex.id)
+      if (i !== -1) exercises.value[i] = { ...exercises.value[i], status: 'rejected' }
+    } else {
+      exercises.value = exercises.value.filter(e => e.id !== ex.id)
+    }
   } catch (e) {
     error.value = e.message
   } finally {

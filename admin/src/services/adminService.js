@@ -3,24 +3,30 @@ import { reactive } from 'vue'
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 const TOKEN_KEY = 'gym_admin_token'
 const NAME_KEY = 'gym_admin_name'
+const USER_ID_KEY = 'gym_admin_user_id'
 
 export const authState = reactive({
   token: localStorage.getItem(TOKEN_KEY) || null,
   name: localStorage.getItem(NAME_KEY) || null,
+  userId: localStorage.getItem(USER_ID_KEY) ? Number(localStorage.getItem(USER_ID_KEY)) : null,
 })
 
-function setAuth(token, name) {
+function setAuth(token, name, userId) {
   authState.token = token
   authState.name = name
+  authState.userId = userId
   localStorage.setItem(TOKEN_KEY, token)
   localStorage.setItem(NAME_KEY, name)
+  localStorage.setItem(USER_ID_KEY, String(userId))
 }
 
 export function logout() {
   authState.token = null
   authState.name = null
+  authState.userId = null
   localStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem(NAME_KEY)
+  localStorage.removeItem(USER_ID_KEY)
 }
 
 async function parseErrorMessage(res) {
@@ -67,7 +73,7 @@ const adminService = {
     if (!data.isAdmin) {
       throw new Error('Этот аккаунт не является администратором')
     }
-    setAuth(data.access_token, data.name)
+    setAuth(data.access_token, data.name, data.user_id)
     return data
   },
 
@@ -75,8 +81,15 @@ const adminService = {
     return request('GET', '/admin/users')
   },
 
-  fetchExercises(status = 'pending') {
-    return request('GET', `/admin/exercises?status=${status}`)
+  setUserAdmin(id, isAdmin) {
+    return request('PATCH', `/admin/users/${id}`, { isAdmin })
+  },
+
+  fetchExercises({ status = 'pending', search = '', muscleGroup = '' } = {}) {
+    const params = new URLSearchParams({ status })
+    if (search) params.set('search', search)
+    if (muscleGroup) params.set('muscleGroup', muscleGroup)
+    return request('GET', `/admin/exercises?${params.toString()}`)
   },
 
   approveExercise(id) {
@@ -93,6 +106,26 @@ const adminService = {
 
   rejectExercise(id) {
     return request('DELETE', `/admin/exercises/${id}`)
+  },
+
+  fetchCycles(status = 'pending') {
+    return request('GET', `/admin/cycles?status=${status}`)
+  },
+
+  approveCycle(id) {
+    return request('POST', `/admin/cycles/${id}/approve`)
+  },
+
+  revokeCycle(id) {
+    return request('POST', `/admin/cycles/${id}/revoke`)
+  },
+
+  rejectCycle(id) {
+    return request('DELETE', `/admin/cycles/${id}`)
+  },
+
+  fetchStats() {
+    return request('GET', '/admin/stats')
   },
 }
 

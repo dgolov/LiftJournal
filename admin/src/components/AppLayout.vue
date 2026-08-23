@@ -7,6 +7,11 @@
         </span>
         <nav class="flex items-center gap-1">
           <RouterLink
+            to="/dashboard"
+            class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+            :class="$route.name === 'dashboard' ? 'bg-primary/10 text-primary' : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'"
+          >Дашборд</RouterLink>
+          <RouterLink
             to="/users"
             class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
             :class="$route.name === 'users' ? 'bg-primary/10 text-primary' : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'"
@@ -16,6 +21,11 @@
             class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
             :class="$route.name === 'exercises' ? 'bg-primary/10 text-primary' : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'"
           >Упражнения</RouterLink>
+          <RouterLink
+            to="/cycles"
+            class="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+            :class="$route.name === 'cycles' ? 'bg-primary/10 text-primary' : 'text-gray-500 hover:text-gray-800 dark:hover:text-gray-200'"
+          >Циклы</RouterLink>
         </nav>
         <div class="ml-auto flex items-center gap-3 text-sm text-gray-500">
           <span>{{ authState.name }}</span>
