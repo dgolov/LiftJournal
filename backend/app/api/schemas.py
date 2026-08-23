@@ -523,3 +523,26 @@ class WorkoutCommentOut(BaseModel):
     text: str
     createdAt: datetime
     isOwn: bool = False
+
+
+# ---------------------------------------------------------------------------
+# Admin
+# ---------------------------------------------------------------------------
+
+class AdminUserOut(BaseModel):
+    id: int
+    email: Optional[str] = None
+    name: str
+    isAdmin: bool
+
+
+class AdminExerciseOut(BaseModel):
+    id: str
+    name: str
+    muscleGroup: str
+    secondaryMuscles: list[str]
+    equipment: str
+    description: str
+    isApproved: bool
+    submittedByName: Optional[str] = None
+    submittedByEmail: Optional[str] = None
