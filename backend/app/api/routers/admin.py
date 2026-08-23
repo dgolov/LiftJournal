@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas import (
-    AdminUserOut, AdminUserUpdate, AdminExerciseOut, AdminExerciseUpdate, AdminCycleOut, AdminStatsOut,
+    AdminUserOut, AdminUserUpdate, AdminPasswordReset, AdminExerciseOut, AdminExerciseUpdate,
+    AdminCycleOut, AdminStatsOut,
 )
 from app.core.database import get_db
 from app.core.security import get_current_admin
@@ -36,6 +37,16 @@ async def set_user_admin(
     db: AsyncSession = Depends(get_db),
 ):
     return await AdminService(db).set_user_admin(user_id, payload.isAdmin, admin.id)
+
+
+@router.post("/users/{user_id}/reset-password", status_code=204)
+async def reset_password(
+    user_id: int,
+    payload: AdminPasswordReset,
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    await AdminService(db).reset_password(user_id, payload.newPassword)
 
 
 @router.get("/exercises", response_model=list[AdminExerciseOut])

@@ -24,6 +24,10 @@ class AdminRepository:
         await self.db.refresh(user)
         return user
 
+    async def set_password(self, user: User, hashed_password: str) -> None:
+        user.hashed_password = hashed_password
+        await self.db.commit()
+
     async def get_exercises(
         self, *, status: str = "pending", search: str | None = None, muscle_group: str | None = None
     ):

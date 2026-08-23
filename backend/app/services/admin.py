@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.schemas import (
     AdminUserOut, AdminExerciseOut, AdminCycleOut, AdminStatsOut, DailyCountOut, TopUserOut,
 )
+from app.core.security import hash_password
 from app.domain.models import Exercise, TrainingCycle, User
 from app.repositories.admin import AdminRepository
 
@@ -44,6 +45,14 @@ class AdminService:
             raise HTTPException(status_code=404, detail="User not found")
         user = await self.repo.set_user_admin(user, is_admin)
         return AdminUserOut(id=user.id, email=user.email, name=user.name, isAdmin=user.is_admin)
+
+    async def reset_password(self, user_id: int, new_password: str) -> None:
+        if len(new_password) < 6:
+            raise HTTPException(status_code=422, detail="Пароль должен быть не короче 6 символов")
+        user = await self.repo.get_user_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        await self.repo.set_password(user, hash_password(new_password))
 
     async def list_exercises(
         self, status: str = "pending", search: str | None = None, muscle_group: str | None = None

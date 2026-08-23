@@ -543,6 +543,10 @@ class AdminUserUpdate(BaseModel):
     isAdmin: bool
 
 
+class AdminPasswordReset(BaseModel):
+    newPassword: str
+
+
 class AdminExerciseOut(BaseModel):
     id: str
     name: str
