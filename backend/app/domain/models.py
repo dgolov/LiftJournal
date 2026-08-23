@@ -150,6 +150,7 @@ class TrainingCycle(Base):
     description: Mapped[str] = mapped_column(Text, default="")
     author_name: Mapped[str] = mapped_column(String(200), default="")
     is_public: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_approved: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     workouts: Mapped[list["CycleWorkout"]] = relationship(
