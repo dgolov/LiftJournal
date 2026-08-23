@@ -203,7 +203,7 @@ def make_cycle_workout(
 def make_cycle(
     id="cyc-1", created_by=1, title="5/3/1",
     description="Программа Вендлера", author_name="Jim Wendler",
-    is_public=True, created_at=None, workouts=None,
+    is_public=True, is_approved=True, created_at=None, workouts=None,
 ):
     c = MagicMock()
     c.id = id
@@ -212,6 +212,7 @@ def make_cycle(
     c.description = description
     c.author_name = author_name
     c.is_public = is_public
+    c.is_approved = is_approved
     c.created_at = created_at or datetime(2026, 1, 1)
     c.workouts = workouts if workouts is not None else []
     return c
