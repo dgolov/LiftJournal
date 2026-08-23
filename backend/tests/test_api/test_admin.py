@@ -89,6 +89,36 @@ async def test_approve_exercise_not_found(client):
     assert resp.status_code == 404
 
 
+async def test_revoke_exercise(client):
+    with patch("app.api.routers.admin.AdminService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.revoke_exercise.return_value = _exercise_out(is_private=True)
+
+        resp = await client.post("/api/admin/exercises/ex-1/revoke")
+
+    assert resp.status_code == 200
+    assert resp.json()["isPrivate"] is True
+
+
+async def test_rename_exercise(client):
+    with patch("app.api.routers.admin.AdminService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.rename_exercise.return_value = _exercise_out(name="New Name")
+
+        resp = await client.patch("/api/admin/exercises/ex-1", json={"name": "New Name"})
+
+    assert resp.status_code == 200
+    assert resp.json()["name"] == "New Name"
+    svc.rename_exercise.assert_called_once_with("ex-1", "New Name")
+
+
+async def test_rename_exercise_missing_name_returns_422(client):
+    resp = await client.patch("/api/admin/exercises/ex-1", json={})
+    assert resp.status_code == 422
+
+
 async def test_reject_exercise(client):
     with patch("app.api.routers.admin.AdminService") as MockSvc:
         svc = AsyncMock()
@@ -98,6 +128,19 @@ async def test_reject_exercise(client):
         resp = await client.delete("/api/admin/exercises/ex-1")
 
     assert resp.status_code == 204
+
+
+async def test_reject_public_exercise_returns_400(client):
+    with patch("app.api.routers.admin.AdminService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.reject_exercise.side_effect = HTTPException(
+            status_code=400, detail="Нельзя удалить опубликованное упражнение"
+        )
+
+        resp = await client.delete("/api/admin/exercises/ex-1")
+
+    assert resp.status_code == 400
 
 
 class TestNonAdminAccess:
@@ -112,12 +155,20 @@ class TestNonAdminAccess:
         resp = await client.get("/api/admin/users")
         assert resp.status_code == 404
 
-    async def test_pending_exercises_hidden_from_non_admin(self, client):
-        resp = await client.get("/api/admin/exercises/pending")
+    async def test_exercises_hidden_from_non_admin(self, client):
+        resp = await client.get("/api/admin/exercises")
         assert resp.status_code == 404
 
     async def test_approve_hidden_from_non_admin(self, client):
         resp = await client.post("/api/admin/exercises/ex-1/approve")
+        assert resp.status_code == 404
+
+    async def test_revoke_hidden_from_non_admin(self, client):
+        resp = await client.post("/api/admin/exercises/ex-1/revoke")
+        assert resp.status_code == 404
+
+    async def test_rename_hidden_from_non_admin(self, client):
+        resp = await client.patch("/api/admin/exercises/ex-1", json={"name": "X"})
         assert resp.status_code == 404
 
     async def test_reject_hidden_from_non_admin(self, client):
