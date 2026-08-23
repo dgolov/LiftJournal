@@ -546,5 +546,10 @@ class AdminExerciseOut(BaseModel):
     equipment: str
     description: str
     isApproved: bool
+    isPrivate: bool
     submittedByName: Optional[str] = None
     submittedByEmail: Optional[str] = None
+
+
+class AdminExerciseUpdate(BaseModel):
+    name: str
