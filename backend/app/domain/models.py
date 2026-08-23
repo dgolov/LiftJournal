@@ -22,8 +22,7 @@ class Exercise(Base):
     equipment: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str] = mapped_column(Text, default="")
     is_custom: Mapped[bool] = mapped_column(Boolean, default=False)
-    is_approved: Mapped[bool] = mapped_column(Boolean, default=True)
-    is_private: Mapped[bool] = mapped_column(Boolean, default=False)
+    status: Mapped[str] = mapped_column(String(20), default="approved")
     created_by: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
