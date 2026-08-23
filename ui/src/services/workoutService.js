@@ -127,6 +127,7 @@ const workoutService = {
       secondaryMuscles: exercise.secondaryMuscles || [],
       equipment: exercise.equipment,
       description: exercise.description || '',
+      isPrivate: exercise.isPrivate || false,
     })
   },
 
