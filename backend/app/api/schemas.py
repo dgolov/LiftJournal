@@ -40,6 +40,7 @@ class TokenOut(BaseModel):
     token_type: str = "bearer"
     user_id: int
     name: str
+    isAdmin: bool = False
 
 
 # ---------------------------------------------------------------------------
@@ -186,6 +187,7 @@ class UserOut(BaseModel):
     birthDate: Optional[date] = None
     avatarUrl: Optional[str]
     theme: str = "light"
+    isAdmin: bool = False
     weightLog: list[WeightEntryOut]
     goals: list[GoalOut]
     maxes: list[UserMaxOut] = []
