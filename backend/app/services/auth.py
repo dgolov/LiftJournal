@@ -22,6 +22,7 @@ class AuthService:
             access_token=create_access_token(user.id),
             user_id=user.id,
             name=user.name,
+            isAdmin=user.is_admin,
         )
 
     async def login(self, email: str, password: str) -> TokenOut:
@@ -32,4 +33,5 @@ class AuthService:
             access_token=create_access_token(user.id),
             user_id=user.id,
             name=user.name,
+            isAdmin=user.is_admin,
         )
