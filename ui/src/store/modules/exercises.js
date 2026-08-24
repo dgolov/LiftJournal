@@ -32,13 +32,16 @@ export default {
     muscleGroups: state => [...new Set(state.library.map(e => e.muscleGroup))].sort((a, b) => a.localeCompare(b, 'ru')),
     equipmentTypes: state => [...new Set(state.library.map(e => e.equipment))].sort((a, b) => a.localeCompare(b, 'ru')),
 
-    // Cross-reference workouts state to compute progress
-    progressForExercise: (state, _getters, rootState) => exerciseId => {
+    // Cross-reference workouts state to compute progress. `range` optionally
+    // narrows to { from, to } (inclusive ISO date strings) for period stats.
+    progressForExercise: (state, _getters, rootState) => (exerciseId, range = {}) => {
       const exercise = state.library.find(e => e.id === exerciseId)
       const isCardio = exercise?.muscleGroup === 'Кардио'
       const sessions = []
       const workouts = rootState.workouts.workouts
       workouts.forEach(workout => {
+        if (range.from && workout.date < range.from) return
+        if (range.to && workout.date > range.to) return
         const ex = workout.exercises.find(e => e.exerciseId === exerciseId)
         if (!ex || !ex.sets.length) return
         const sets = ex.sets.filter(s => !s.failed)
@@ -64,10 +67,10 @@ export default {
       return sessions.sort((a, b) => a.date.localeCompare(b.date))
     },
 
-    personalRecord: (state, getters) => exerciseId => {
+    personalRecord: (state, getters) => (exerciseId, range = {}) => {
       const exercise = state.library.find(e => e.id === exerciseId)
       const isCardio = exercise?.muscleGroup === 'Кардио'
-      const progress = getters.progressForExercise(exerciseId)
+      const progress = getters.progressForExercise(exerciseId, range)
       if (!progress.length) return null
       if (isCardio) {
         let bestDuration = 0, bestDurationDate = null
