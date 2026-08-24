@@ -201,6 +201,7 @@
       </div>
     </div>
 
+    <SkipOrRescheduleModal v-model="showSkipConfirm" :plan="todaysPlan" />
   </div>
 </template>
 
@@ -209,6 +210,7 @@ import { computed, ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { Flame, Dumbbell, TrendingUp, Trophy, ClipboardList, Plus, ChevronRight, BarChart2, CalendarClock, Play, Ban } from 'lucide-vue-next'
+import SkipOrRescheduleModal from '@/components/workout/SkipOrRescheduleModal.vue'
 
 const store = useStore()
 const router = useRouter()
@@ -248,19 +250,15 @@ const todayStr = toDateStr(today)
 const todaysPlan = computed(() =>
   store.state.planned.plannedWorkouts.find(p => p.status === 'planned' && p.scheduledDate === todayStr)
 )
+const showSkipConfirm = ref(false)
 
 async function startTodaysPlan() {
   await store.dispatch('workouts/startWorkoutFromPlan', todaysPlan.value)
   router.push('/workouts/new')
 }
 
-async function skipTodaysPlan() {
-  try {
-    await store.dispatch('planned/skipPlannedWorkout', todaysPlan.value.id)
-    store.dispatch('ui/showToast', { message: 'Тренировка пропущена', type: 'info' })
-  } catch (e) {
-    store.dispatch('ui/showToast', { message: 'Ошибка: ' + e.message, type: 'error' })
-  }
+function skipTodaysPlan() {
+  showSkipConfirm.value = true
 }
 
 // Current streak (consecutive days ending today or yesterday)
