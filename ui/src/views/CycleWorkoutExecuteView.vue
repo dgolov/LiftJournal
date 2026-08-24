@@ -2,12 +2,12 @@
   <div class="max-w-2xl">
     <!-- Header -->
     <div class="flex items-center gap-3 mb-6">
-      <button class="p-2 rounded-xl hover:bg-gray-100 text-gray-500" @click="$router.back()">
+      <button class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors" @click="$router.back()">
         <ChevronLeft class="w-5 h-5" />
       </button>
       <div class="flex-1">
         <p class="text-xs text-gray-400 font-medium">{{ cycleName }}</p>
-        <h2 class="text-xl font-bold text-gray-900">{{ workout?.title }}</h2>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ workout?.title }}</h2>
       </div>
       <div class="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-full">
         <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0"></span>
@@ -18,26 +18,26 @@
     <div v-if="workout" class="space-y-4">
       <!-- Exercises -->
       <div v-for="ex in workout.exercises" :key="ex.exerciseId" class="card p-4">
-        <h3 class="font-semibold text-gray-900 mb-3">{{ ex.exerciseName }}</h3>
+        <h3 class="font-semibold text-gray-900 dark:text-white mb-3">{{ ex.exerciseName }}</h3>
         <div class="space-y-2">
           <button
             v-for="(set, i) in ex.sets"
             :key="set.id"
             :class="['w-full flex items-center gap-3 p-2.5 rounded-xl border-2 transition-all text-left',
               localCompleted.has(set.id)
-                ? 'border-green-400 bg-green-50'
-                : 'border-gray-100 hover:border-primary/40']"
+                ? 'border-green-400 bg-green-50 dark:bg-green-900/10'
+                : 'border-gray-100 dark:border-gray-800 hover:border-primary/40']"
             @click="toggleSet(set.id)"
           >
             <span :class="['w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold flex-shrink-0 transition-colors',
-              localCompleted.has(set.id) ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 text-gray-300']">
+              localCompleted.has(set.id) ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 dark:border-gray-600 text-gray-300 dark:text-gray-500']">
               {{ localCompleted.has(set.id) ? '✓' : i + 1 }}
             </span>
-            <span class="font-semibold text-gray-800">
+            <span class="font-semibold text-gray-800 dark:text-gray-100">
               {{ set.weight > 0 ? set.weight + ' кг' : 'Б/в' }}
             </span>
             <span class="text-gray-400">×</span>
-            <span class="text-gray-700">{{ set.reps }} повт.</span>
+            <span class="text-gray-700 dark:text-gray-300">{{ set.reps }} повт.</span>
             <span v-if="localCompleted.has(set.id)" class="ml-auto text-xs text-green-600 font-medium">выполнен</span>
           </button>
         </div>
