@@ -10,6 +10,7 @@ export const CHANGELOG = [
       { type: 'feature',        text: 'Добавлены шаблоны тренировок' },
       { type: 'improvement',    text: 'Улучшение отчетов по тренировкам' },
       { type: 'improvement',    text: 'Добавлена загрузка страницы' },
+      { type: 'improvement',    text: 'Добавлена статистика упражнений по периодам' },
     ],
   },
   {
