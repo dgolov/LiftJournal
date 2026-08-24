@@ -26,6 +26,14 @@
             class="px-3 py-1.5 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary/90 transition-colors"
             @click.stop="startPlan"
           >Начать</button>
+          <button
+            v-if="plan.status === 'planned'"
+            class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
+            title="Отменить / перенести"
+            @click.stop="showSkipConfirm = true"
+          >
+            <Ban class="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
     </div>
@@ -40,22 +48,26 @@
       </BaseButton>
     </template>
   </BaseModal>
+
+  <SkipOrRescheduleModal v-model="showSkipConfirm" :plan="plan" />
 </template>
 
 <script setup>
 import { computed, ref } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { Pencil } from 'lucide-vue-next'
+import { Pencil, Ban } from 'lucide-vue-next'
 import SwipeDeleteWrapper from '@/components/ui/SwipeDeleteWrapper.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
+import SkipOrRescheduleModal from '@/components/workout/SkipOrRescheduleModal.vue'
 
 const props = defineProps({ plan: { type: Object, required: true } })
 
 const store = useStore()
 const router = useRouter()
 const showConfirm = ref(false)
+const showSkipConfirm = ref(false)
 const deleting = ref(false)
 
 const statusMap = {
