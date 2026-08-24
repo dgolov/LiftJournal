@@ -16,11 +16,29 @@
       </div>
     </div>
 
+    <!-- Period selector -->
+    <div class="flex items-center gap-2 flex-wrap mb-6">
+      <div class="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5">
+        <button
+          v-for="opt in periodOptions" :key="opt.value"
+          :class="['px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
+            period === opt.value ? 'bg-white dark:bg-gray-700 shadow-sm text-primary' : 'text-gray-500']"
+          @click="period = opt.value"
+        >{{ opt.label }}</button>
+      </div>
+      <template v-if="period === 'custom'">
+        <input type="date" v-model="customFrom" class="input py-1.5 text-xs w-auto" />
+        <span class="text-gray-400 text-xs">—</span>
+        <input type="date" v-model="customTo" class="input py-1.5 text-xs w-auto" />
+      </template>
+    </div>
+
     <!-- PR Card (strength) -->
     <div v-if="pr && !isCardio" class="card p-4 mb-6 border-l-4 border-yellow-400">
       <div class="flex items-center gap-2 mb-3">
         <Trophy class="w-6 h-6 text-yellow-500" />
         <p class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Личные рекорды</p>
+        <span v-if="period !== 'all'" class="text-xs text-gray-400 normal-case font-normal">· {{ periodLabel }}</span>
       </div>
       <div class="grid grid-cols-3 gap-3">
         <div class="text-center">
@@ -46,6 +64,7 @@
       <div class="flex items-center gap-2 mb-3">
         <Trophy class="w-6 h-6 text-yellow-500" />
         <p class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Личный рекорд</p>
+        <span v-if="period !== 'all'" class="text-xs text-gray-400 normal-case font-normal">· {{ periodLabel }}</span>
       </div>
       <div class="text-center">
         <p class="text-xs text-gray-400 mb-0.5">Лучшая сессия</p>
@@ -54,9 +73,17 @@
       </div>
     </div>
 
+    <!-- No data in selected period, but exercise has history overall -->
+    <div v-if="!pr && period !== 'all' && hasAnyHistory" class="card p-4 mb-6 text-center text-sm text-gray-400">
+      Нет данных за выбранный период ({{ periodLabel }})
+    </div>
+
     <!-- Chart -->
     <div class="card p-4 mb-6">
-      <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Прогресс</h3>
+      <div class="flex items-center gap-2 mb-4">
+        <h3 class="font-semibold text-gray-900 dark:text-white">Прогресс</h3>
+        <span v-if="period !== 'all'" class="text-xs text-gray-400">· {{ periodLabel }}</span>
+      </div>
       <ProgressChart :data="progress" :is-cardio="isCardio" />
     </div>
 
@@ -73,8 +100,9 @@
             <option :value="50">50 / стр.</option>
             <option :value="100">100 / стр.</option>
           </select>
-          <!-- Toggle filters -->
+          <!-- Toggle filters (volume only — date range is handled by the period selector above) -->
           <button
+            v-if="!isCardio"
             :class="['flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors',
               showFilters ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-primary']"
             @click="showFilters = !showFilters"
@@ -85,18 +113,8 @@
       </div>
 
       <!-- Filter panel -->
-      <div v-if="showFilters" class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 mb-4 space-y-3">
+      <div v-if="showFilters && !isCardio" class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 mb-4 space-y-3">
         <div class="flex gap-3">
-          <div class="flex-1">
-            <label class="label text-xs">От</label>
-            <input type="date" v-model="filterDateFrom" class="input py-1.5 text-xs" />
-          </div>
-          <div class="flex-1">
-            <label class="label text-xs">До</label>
-            <input type="date" v-model="filterDateTo" class="input py-1.5 text-xs" />
-          </div>
-        </div>
-        <div v-if="!isCardio" class="flex gap-3">
           <div class="flex-1">
             <label class="label text-xs">Тоннаж от (кг)</label>
             <input type="number" v-model.number="filterVolumeMin" min="0" placeholder="0" class="input py-1.5 text-xs" />
@@ -224,7 +242,7 @@
         </p>
       </template>
 
-      <BaseEmptyState v-else title="Нет данных" :description="hasFilters ? 'Попробуйте изменить фильтры' : 'Добавьте это упражнение в тренировку, чтобы отслеживать прогресс'">
+      <BaseEmptyState v-else title="Нет данных" :description="emptyStateDescription">
         <template #icon><BarChart3 class="w-12 h-12" /></template>
       </BaseEmptyState>
     </div>
@@ -247,8 +265,51 @@ const store = useStore()
 
 const exercise = computed(() => store.getters['exercises/exerciseById'](route.params.id))
 const isCardio = computed(() => exercise.value?.muscleGroup === 'Кардио')
-const progress = computed(() => store.getters['exercises/progressForExercise'](route.params.id))
-const pr = computed(() => store.getters['exercises/personalRecord'](route.params.id))
+
+// ── Period selector (month / year / all-time / custom range) ──────────────────
+const periodOptions = [
+  { value: 'month', label: 'Месяц' },
+  { value: 'year', label: 'Год' },
+  { value: 'all', label: 'Всё время' },
+  { value: 'custom', label: 'Свой период' },
+]
+const period = ref('all')
+const customFrom = ref('')
+const customTo = ref('')
+
+function isoDaysAgo(days) {
+  const d = new Date()
+  d.setDate(d.getDate() - days)
+  return d.toISOString().slice(0, 10)
+}
+
+const periodRange = computed(() => {
+  if (period.value === 'month') return { from: isoDaysAgo(30) }
+  if (period.value === 'year') return { from: isoDaysAgo(365) }
+  if (period.value === 'custom') {
+    const range = {}
+    if (customFrom.value) range.from = customFrom.value
+    if (customTo.value) range.to = customTo.value
+    return range
+  }
+  return {}
+})
+
+const periodLabel = computed(() => {
+  if (period.value === 'month') return 'месяц'
+  if (period.value === 'year') return 'год'
+  if (period.value === 'custom') {
+    if (customFrom.value && customTo.value) return `${formatDate(customFrom.value)} – ${formatDate(customTo.value)}`
+    if (customFrom.value) return `с ${formatDate(customFrom.value)}`
+    if (customTo.value) return `по ${formatDate(customTo.value)}`
+    return 'свой период'
+  }
+  return 'всё время'
+})
+
+const progress = computed(() => store.getters['exercises/progressForExercise'](route.params.id, periodRange.value))
+const pr = computed(() => store.getters['exercises/personalRecord'](route.params.id, periodRange.value))
+const hasAnyHistory = computed(() => store.getters['exercises/progressForExercise'](route.params.id).length > 0)
 
 // ── Sort-able column header component ─────────────────────────────────────────
 const SortTh = {
@@ -292,30 +353,23 @@ function setSort(key) {
     sortDir.value = 'desc'
   }
 }
-const filterDateFrom = ref('')
-const filterDateTo = ref('')
 const filterVolumeMin = ref(null)
 const filterVolumeMax = ref(null)
 
 const hasFilters = computed(() =>
-  filterDateFrom.value || filterDateTo.value ||
   filterVolumeMin.value != null || filterVolumeMax.value != null
 )
 
 function resetFilters() {
-  filterDateFrom.value = ''
-  filterDateTo.value = ''
   filterVolumeMin.value = null
   filterVolumeMax.value = null
 }
 
-// Reset page when filters/sort change
-watch([sortKey, sortDir, pageSize, filterDateFrom, filterDateTo, filterVolumeMin, filterVolumeMax], () => { page.value = 1 })
+// Reset page when filters/sort/period change
+watch([sortKey, sortDir, pageSize, filterVolumeMin, filterVolumeMax, period, customFrom, customTo], () => { page.value = 1 })
 
 const filteredSessions = computed(() => {
   let list = [...progress.value]
-  if (filterDateFrom.value) list = list.filter(s => s.date >= filterDateFrom.value)
-  if (filterDateTo.value)   list = list.filter(s => s.date <= filterDateTo.value)
   if (!isCardio.value) {
     if (filterVolumeMin.value != null) list = list.filter(s => s.totalVolume >= filterVolumeMin.value)
     if (filterVolumeMax.value != null) list = list.filter(s => s.totalVolume <= filterVolumeMax.value)
@@ -339,6 +393,12 @@ const totalPages = computed(() => Math.ceil(filteredSessions.value.length / page
 const paginatedSessions = computed(() => {
   const start = (page.value - 1) * pageSize.value
   return filteredSessions.value.slice(start, start + pageSize.value)
+})
+
+const emptyStateDescription = computed(() => {
+  if (hasFilters.value) return 'Попробуйте изменить фильтры'
+  if (period.value !== 'all' && hasAnyHistory.value) return `Нет сессий за выбранный период (${periodLabel.value})`
+  return 'Добавьте это упражнение в тренировку, чтобы отслеживать прогресс'
 })
 
 const avgVolume = computed(() => {
