@@ -96,6 +96,14 @@ const adminService = {
     return request('GET', `/admin/exercises?${params.toString()}`)
   },
 
+  createExercise(data) {
+    return request('POST', '/admin/exercises', data)
+  },
+
+  deleteExercisePermanently(id) {
+    return request('DELETE', `/admin/exercises/${id}/permanent`)
+  },
+
   approveExercise(id) {
     return request('POST', `/admin/exercises/${id}/approve`)
   },

@@ -3,14 +3,17 @@
     <div class="flex flex-col gap-3 mb-4">
       <div class="flex items-center justify-between gap-3 flex-wrap">
         <h2 class="text-xl font-bold text-gray-900 dark:text-white">Упражнения</h2>
-        <div class="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 flex-wrap">
-          <button
-            v-for="opt in statusOptions"
-            :key="opt.value"
-            :class="['px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
-              status === opt.value ? 'bg-white dark:bg-gray-700 shadow-sm text-primary' : 'text-gray-500']"
-            @click="setStatus(opt.value)"
-          >{{ opt.label }}</button>
+        <div class="flex items-center gap-3 flex-wrap">
+          <div class="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 flex-wrap">
+            <button
+              v-for="opt in statusOptions"
+              :key="opt.value"
+              :class="['px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
+                status === opt.value ? 'bg-white dark:bg-gray-700 shadow-sm text-primary' : 'text-gray-500']"
+              @click="setStatus(opt.value)"
+            >{{ opt.label }}</button>
+          </div>
+          <button class="btn-primary text-sm px-3 py-1.5 flex-shrink-0" @click="openCreate">+ Добавить упражнение</button>
         </div>
       </div>
 
@@ -96,6 +99,59 @@
               Переименовать
             </button>
           </template>
+          <button
+            class="btn-outline text-xs px-3 py-1.5 hover:!bg-danger/10 hover:!text-danger hover:!border-danger/40"
+            :disabled="busyId === ex.id"
+            title="Удалить безвозвратно"
+            @click="deletePermanently(ex)"
+          >
+            Удалить
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create modal -->
+    <div v-if="creating" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" @click.self="creating = false">
+      <div class="card p-5 w-full max-w-md space-y-3">
+        <h3 class="font-semibold text-gray-900 dark:text-white">Добавить упражнение</h3>
+        <p class="text-xs text-gray-400">Появится сразу у всех пользователей, без модерации.</p>
+        <div>
+          <label class="label text-xs">Название</label>
+          <input v-model="newExercise.name" class="input" placeholder="Например: Болгарские сплит-приседания" />
+        </div>
+        <div class="flex gap-3">
+          <div class="flex-1">
+            <label class="label text-xs">Группа мышц</label>
+            <select v-model="newExercise.muscleGroup" class="input">
+              <option value="">Выберите...</option>
+              <option v-for="mg in MUSCLE_GROUPS" :key="mg" :value="mg">{{ mg }}</option>
+            </select>
+          </div>
+          <div class="flex-1">
+            <label class="label text-xs">Оборудование</label>
+            <select v-model="newExercise.equipment" class="input">
+              <option value="">Выберите...</option>
+              <option v-for="eq in EQUIPMENT_TYPES" :key="eq" :value="eq">{{ eq }}</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="label text-xs">Доп. мышцы (через запятую, необязательно)</label>
+          <input v-model="newExercise.secondaryMusclesText" class="input" placeholder="Трицепс, Плечи" />
+        </div>
+        <div>
+          <label class="label text-xs">Описание</label>
+          <textarea v-model="newExercise.description" rows="2" class="input resize-none" placeholder="Как выполнять упражнение..." />
+        </div>
+        <p v-if="createError" class="text-sm text-danger">{{ createError }}</p>
+        <div class="flex justify-end gap-2 pt-1">
+          <button class="btn-outline text-sm px-3 py-1.5" @click="creating = false">Отмена</button>
+          <button
+            class="btn-primary text-sm px-3 py-1.5"
+            :disabled="!newExercise.name.trim() || !newExercise.muscleGroup || !newExercise.equipment || creatingBusy"
+            @click="submitCreate"
+          >Добавить</button>
         </div>
       </div>
     </div>
@@ -126,6 +182,14 @@ const statusOptions = [
   { value: 'all', label: 'Все' },
 ]
 
+const MUSCLE_GROUPS = [
+  'Грудь', 'Спина', 'Плечи', 'Бицепс', 'Трицепс',
+  'Пресс', 'Квадрицепс', 'Бицепс бедра', 'Икры', 'Ягодицы', 'Кардио',
+]
+const EQUIPMENT_TYPES = [
+  'Штанга', 'Гантели', 'Тренажёр', 'Собственный вес', 'Гиря', 'Блок', 'Беговая дорожка',
+]
+
 // "Личные" isn't a real backend status filter — it means "everything a user
 // submitted themselves" (any status), as opposed to built-in exercises.
 // Detected via submittedByName, which is only set for created_by != null rows.
@@ -142,6 +206,14 @@ const muscleGroups = ref([])
 
 const renaming = ref(null)
 const renameValue = ref('')
+
+const creating = ref(false)
+const creatingBusy = ref(false)
+const createError = ref('')
+function blankExercise() {
+  return { name: '', muscleGroup: '', equipment: '', secondaryMusclesText: '', description: '' }
+}
+const newExercise = ref(blankExercise())
 
 let searchDebounce = null
 
@@ -190,6 +262,52 @@ function setStatus(s) {
 function onSearchInput() {
   clearTimeout(searchDebounce)
   searchDebounce = setTimeout(load, 300)
+}
+
+function openCreate() {
+  newExercise.value = blankExercise()
+  createError.value = ''
+  creating.value = true
+}
+
+async function submitCreate() {
+  createError.value = ''
+  creatingBusy.value = true
+  try {
+    const secondaryMuscles = newExercise.value.secondaryMusclesText
+      .split(',').map(s => s.trim()).filter(Boolean)
+    const created = await adminService.createExercise({
+      name: newExercise.value.name.trim(),
+      muscleGroup: newExercise.value.muscleGroup,
+      equipment: newExercise.value.equipment,
+      secondaryMuscles,
+      description: newExercise.value.description.trim(),
+    })
+    creating.value = false
+    if (status.value === 'all' || status.value === 'approved') {
+      exercises.value = [...exercises.value, created].sort((a, b) => a.name.localeCompare(b.name, 'ru'))
+    }
+    if (!muscleGroups.value.includes(created.muscleGroup)) {
+      muscleGroups.value = [...muscleGroups.value, created.muscleGroup].sort((a, b) => a.localeCompare(b, 'ru'))
+    }
+  } catch (e) {
+    createError.value = e.message
+  } finally {
+    creatingBusy.value = false
+  }
+}
+
+async function deletePermanently(ex) {
+  if (!confirm(`Удалить упражнение «${ex.name}» безвозвратно? Это действие нельзя отменить.`)) return
+  busyId.value = ex.id
+  try {
+    await adminService.deleteExercisePermanently(ex.id)
+    exercises.value = exercises.value.filter(e => e.id !== ex.id)
+  } catch (e) {
+    error.value = e.message
+  } finally {
+    busyId.value = null
+  }
 }
 
 // "Все" and "Личные" both list exercises across every status, so an action
