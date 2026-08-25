@@ -151,32 +151,7 @@
       </template>
     </BaseModal>
 
-    <!-- Skip confirm modal (recurring) -->
-    <BaseModal v-model="showSkipConfirm" title="Пропустить тренировку?" max-width="sm">
-      <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">«{{ toSkip?.title }}»</p>
-      <div class="space-y-2">
-        <button
-          :class="['w-full text-left px-4 py-3 rounded-xl border-2 transition-colors text-sm',
-            skipScope === 'one' ? 'border-primary bg-primary/5' : 'border-gray-200 dark:border-gray-700']"
-          @click="skipScope = 'one'"
-        >
-          <p class="font-medium text-gray-900 dark:text-white">Только эту тренировку</p>
-          <p class="text-xs text-gray-400 mt-0.5">{{ toSkip?.scheduledDate }}</p>
-        </button>
-        <button
-          :class="['w-full text-left px-4 py-3 rounded-xl border-2 transition-colors text-sm',
-            skipScope === 'all' ? 'border-orange-400 bg-orange-50 dark:bg-orange-900/10' : 'border-gray-200 dark:border-gray-700']"
-          @click="skipScope = 'all'"
-        >
-          <p class="font-medium text-gray-900 dark:text-white">Эту и все следующие</p>
-          <p class="text-xs text-gray-400 mt-0.5">Пропустит все запланированные повторения</p>
-        </button>
-      </div>
-      <template #footer>
-        <BaseButton variant="ghost" @click="showSkipConfirm = false">Отмена</BaseButton>
-        <BaseButton @click="doSkip">Пропустить</BaseButton>
-      </template>
-    </BaseModal>
+    <SkipOrRescheduleModal v-model="showSkipConfirm" :plan="toSkip" />
   </div>
 </template>
 
@@ -189,6 +164,7 @@ import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import SwipeDeleteWrapper from '@/components/ui/SwipeDeleteWrapper.vue'
+import SkipOrRescheduleModal from '@/components/workout/SkipOrRescheduleModal.vue'
 
 const store = useStore()
 const router = useRouter()
@@ -200,7 +176,6 @@ const toDelete = ref(null)
 const deleteScope = ref('one')
 const showSkipConfirm = ref(false)
 const toSkip = ref(null)
-const skipScope = ref('one')
 
 const tabs = [
   { value: 'planned', label: 'Предстоящие', icon: markRaw(Clock), activeClass: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300' },
@@ -283,35 +258,8 @@ async function startPlan(plan) {
 }
 
 function skipPlan(plan) {
-  if (plan.recurrenceGroupId) {
-    toSkip.value = plan
-    skipScope.value = 'one'
-    showSkipConfirm.value = true
-  } else {
-    doSkipOne(plan)
-  }
-}
-
-async function doSkipOne(plan) {
-  try {
-    await store.dispatch('planned/skipPlannedWorkout', plan.id)
-    store.dispatch('ui/showToast', { message: 'Тренировка пропущена', type: 'info' })
-  } catch (e) {
-    store.dispatch('ui/showToast', { message: 'Ошибка: ' + e.message, type: 'error' })
-  }
-}
-
-async function doSkip() {
-  try {
-    if (skipScope.value === 'all') {
-      await store.dispatch('planned/skipUpcomingRecurring', toSkip.value)
-      store.dispatch('ui/showToast', { message: 'Все следующие пропущены', type: 'info' })
-    } else {
-      await doSkipOne(toSkip.value)
-    }
-  } finally {
-    showSkipConfirm.value = false
-  }
+  toSkip.value = plan
+  showSkipConfirm.value = true
 }
 
 function deletePlan(plan) {

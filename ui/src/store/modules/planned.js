@@ -63,6 +63,10 @@ export default {
       return dispatch('updatePlannedWorkout', { id, status: 'skipped' })
     },
 
+    async reschedulePlannedWorkout({ dispatch }, { id, scheduledDate }) {
+      return dispatch('updatePlannedWorkout', { id, scheduledDate, status: 'planned' })
+    },
+
     async completePlannedWorkout({ dispatch }, { id, completedWorkoutId }) {
       return dispatch('updatePlannedWorkout', { id, status: 'completed', completedWorkoutId })
     },
