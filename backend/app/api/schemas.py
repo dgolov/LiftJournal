@@ -559,6 +559,14 @@ class AdminExerciseOut(BaseModel):
     submittedByEmail: Optional[str] = None
 
 
+class AdminExerciseCreate(BaseModel):
+    name: str
+    muscleGroup: str
+    secondaryMuscles: list[str] = []
+    equipment: str
+    description: str = ""
+
+
 class AdminExerciseUpdate(BaseModel):
     name: str
 
