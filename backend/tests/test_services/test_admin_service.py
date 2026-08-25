@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from fastapi import HTTPException
 
+from app.api.schemas import AdminExerciseCreate
 from app.services.admin import AdminService
 from tests.conftest import make_user, make_exercise, make_cycle
 
@@ -184,6 +185,52 @@ class TestListExercises:
             await AdminService(mock_db).list_exercises("all", "Bench", "Грудь")
 
         repo.get_exercises.assert_called_once_with(status="all", search="Bench", muscle_group="Грудь")
+
+
+class TestCreateExercise:
+    async def test_success(self, mock_db):
+        created = make_exercise(id="ex-1", name="Zottman Curl", status="approved", is_custom=False)
+        with patch("app.services.admin.AdminRepository") as MockRepo:
+            repo = AsyncMock()
+            MockRepo.return_value = repo
+            repo.create_exercise.return_value = created
+
+            payload = AdminExerciseCreate(
+                name=" Zottman Curl ", muscleGroup="Бицепс", equipment="Гантели", description=" curl ",
+            )
+            result = await AdminService(mock_db).create_exercise(payload)
+
+        assert result.id == "ex-1"
+        assert result.status == "approved"
+        repo.create_exercise.assert_called_once_with(
+            name="Zottman Curl", muscle_group="Бицепс", secondary_muscles=[],
+            equipment="Гантели", description="curl",
+        )
+
+
+class TestDeleteExercise:
+    async def test_success(self, mock_db):
+        ex = make_exercise(id="ex-1")
+        with patch("app.services.admin.AdminRepository") as MockRepo:
+            repo = AsyncMock()
+            MockRepo.return_value = repo
+            repo.get_exercise_by_id.return_value = ex
+
+            await AdminService(mock_db).delete_exercise("ex-1")
+
+        repo.delete_exercise.assert_called_once_with(ex)
+
+    async def test_not_found(self, mock_db):
+        with patch("app.services.admin.AdminRepository") as MockRepo:
+            repo = AsyncMock()
+            MockRepo.return_value = repo
+            repo.get_exercise_by_id.return_value = None
+
+            with pytest.raises(HTTPException) as exc_info:
+                await AdminService(mock_db).delete_exercise("missing")
+
+        assert exc_info.value.status_code == 404
+        repo.delete_exercise.assert_not_called()
 
 
 class TestApproveExercise:

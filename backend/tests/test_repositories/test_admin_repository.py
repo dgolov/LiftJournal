@@ -10,6 +10,7 @@ from tests.conftest import make_user, make_exercise, make_cycle, scalar_result, 
 @pytest.fixture
 def mock_db():
     db = AsyncMock()
+    db.add = MagicMock()
     db.delete = AsyncMock()
     return db
 
@@ -131,6 +132,39 @@ class TestGetExerciseById:
         result = await repo.get_exercise_by_id("missing")
 
         assert result is None
+
+
+class TestCreateExercise:
+    async def test_adds_approved_non_custom_exercise(self, repo, mock_db):
+        mock_db.refresh = AsyncMock()
+
+        result = await repo.create_exercise(
+            name="Zottman Curl", muscle_group="Бицепс", secondary_muscles=["Предплечья"],
+            equipment="Гантели", description="Curl variant",
+        )
+
+        mock_db.add.assert_called_once()
+        added = mock_db.add.call_args[0][0]
+        assert added is result
+        assert result.name == "Zottman Curl"
+        assert result.muscle_group == "Бицепс"
+        assert result.secondary_muscles == ["Предплечья"]
+        assert result.equipment == "Гантели"
+        assert result.description == "Curl variant"
+        assert result.is_custom is False
+        assert result.status == "approved"
+        assert result.created_by is None
+        mock_db.commit.assert_called_once()
+
+
+class TestDeleteExercise:
+    async def test_deletes_and_commits(self, repo, mock_db):
+        ex = make_exercise(id="ex-1")
+
+        await repo.delete_exercise(ex)
+
+        mock_db.delete.assert_called_once_with(ex)
+        mock_db.commit.assert_called_once()
 
 
 class TestApproveExercise:

@@ -198,6 +198,49 @@ async def test_list_exercises_invalid_status_returns_422(client):
     assert resp.status_code == 422
 
 
+async def test_create_exercise(client):
+    with patch("app.api.routers.admin.AdminService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.create_exercise.return_value = _exercise_out(id="ex-new", name="Zottman Curl", status="approved")
+
+        resp = await client.post("/api/admin/exercises", json={
+            "name": "Zottman Curl", "muscleGroup": "Бицепс", "equipment": "Гантели",
+        })
+
+    assert resp.status_code == 201
+    assert resp.json()["name"] == "Zottman Curl"
+    assert resp.json()["status"] == "approved"
+
+
+async def test_create_exercise_missing_fields_returns_422(client):
+    resp = await client.post("/api/admin/exercises", json={"name": "X"})
+    assert resp.status_code == 422
+
+
+async def test_delete_exercise_permanent(client):
+    with patch("app.api.routers.admin.AdminService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.delete_exercise.return_value = None
+
+        resp = await client.delete("/api/admin/exercises/ex-1/permanent")
+
+    assert resp.status_code == 204
+    svc.delete_exercise.assert_called_once_with("ex-1")
+
+
+async def test_delete_exercise_permanent_not_found(client):
+    with patch("app.api.routers.admin.AdminService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.delete_exercise.side_effect = HTTPException(status_code=404, detail="Exercise not found")
+
+        resp = await client.delete("/api/admin/exercises/missing/permanent")
+
+    assert resp.status_code == 404
+
+
 async def test_approve_exercise(client):
     with patch("app.api.routers.admin.AdminService") as MockSvc:
         svc = AsyncMock()
@@ -401,6 +444,16 @@ class TestNonAdminAccess:
 
     async def test_reject_hidden_from_non_admin(self, client):
         resp = await client.delete("/api/admin/exercises/ex-1")
+        assert resp.status_code == 404
+
+    async def test_create_exercise_hidden_from_non_admin(self, client):
+        resp = await client.post("/api/admin/exercises", json={
+            "name": "X", "muscleGroup": "Грудь", "equipment": "Штанга",
+        })
+        assert resp.status_code == 404
+
+    async def test_delete_exercise_permanent_hidden_from_non_admin(self, client):
+        resp = await client.delete("/api/admin/exercises/ex-1/permanent")
         assert resp.status_code == 404
 
     async def test_cycles_hidden_from_non_admin(self, client):
