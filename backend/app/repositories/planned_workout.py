@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import date, datetime
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,7 +14,24 @@ class PlannedWorkoutRepository:
     def _eager(self):
         return selectinload(PlannedWorkout.exercises).selectinload(PlannedExercise.sets)
 
+    async def expire_overdue(self, user_id: int) -> None:
+        """A 'planned' entry whose date has passed without being completed
+        becomes 'skipped' — it never just vanishes from view, and re-checking
+        on every list fetch means it happens the moment the user is next
+        looking (no cron job needed)."""
+        await self.db.execute(
+            update(PlannedWorkout)
+            .where(
+                PlannedWorkout.user_id == user_id,
+                PlannedWorkout.status == "planned",
+                PlannedWorkout.scheduled_date < date.today(),
+            )
+            .values(status="skipped")
+        )
+        await self.db.commit()
+
     async def get_all_by_user(self, user_id: int) -> list[PlannedWorkout]:
+        await self.expire_overdue(user_id)
         result = await self.db.execute(
             select(PlannedWorkout)
             .options(self._eager())
