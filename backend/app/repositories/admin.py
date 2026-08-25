@@ -47,6 +47,27 @@ class AdminRepository:
         result = await self.db.execute(select(Exercise).where(Exercise.id == exercise_id))
         return result.scalar_one_or_none()
 
+    async def create_exercise(
+        self, *, name: str, muscle_group: str, secondary_muscles: list[str], equipment: str, description: str
+    ) -> Exercise:
+        """Admin-added exercises are treated like built-in library entries —
+        no moderation, no owner — rather than a "custom" submission."""
+        exercise = Exercise(
+            name=name, muscle_group=muscle_group, secondary_muscles=secondary_muscles,
+            equipment=equipment, description=description, is_custom=False, status="approved",
+        )
+        self.db.add(exercise)
+        await self.db.commit()
+        await self.db.refresh(exercise)
+        return exercise
+
+    async def delete_exercise(self, exercise: Exercise) -> None:
+        """Hard delete — unlike reject, permanently removes the row. Safe:
+        WorkoutExercise stores exercise_id as a plain string with the name
+        already snapshotted, and CycleExercise's FK is ON DELETE SET NULL."""
+        await self.db.delete(exercise)
+        await self.db.commit()
+
     async def approve_exercise(self, exercise: Exercise) -> Exercise:
         exercise.status = "approved"
         await self.db.commit()
