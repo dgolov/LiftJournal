@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas import (
-    AdminUserOut, AdminUserUpdate, AdminPasswordReset, AdminExerciseOut, AdminExerciseUpdate,
-    AdminCycleOut, AdminStatsOut,
+    AdminUserOut, AdminUserUpdate, AdminPasswordReset, AdminExerciseOut, AdminExerciseCreate,
+    AdminExerciseUpdate, AdminCycleOut, AdminStatsOut,
 )
 from app.core.database import get_db
 from app.core.security import get_current_admin
@@ -60,6 +60,15 @@ async def list_exercises(
     return await AdminService(db).list_exercises(status, search, muscleGroup)
 
 
+@router.post("/exercises", response_model=AdminExerciseOut, status_code=201)
+async def create_exercise(
+    payload: AdminExerciseCreate,
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    return await AdminService(db).create_exercise(payload)
+
+
 @router.post("/exercises/{exercise_id}/approve", response_model=AdminExerciseOut)
 async def approve_exercise(
     exercise_id: str,
@@ -95,6 +104,15 @@ async def reject_exercise(
     db: AsyncSession = Depends(get_db),
 ):
     await AdminService(db).reject_exercise(exercise_id)
+
+
+@router.delete("/exercises/{exercise_id}/permanent", status_code=204)
+async def delete_exercise(
+    exercise_id: str,
+    admin: User = Depends(get_current_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    await AdminService(db).delete_exercise(exercise_id)
 
 
 @router.get("/cycles", response_model=list[AdminCycleOut])
