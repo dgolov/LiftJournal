@@ -43,7 +43,7 @@
           <div
             v-for="d in stats.dailyWorkouts"
             :key="d.date"
-            class="flex-1 flex flex-col items-center justify-end gap-1 group relative"
+            class="flex-1 h-full flex flex-col items-center justify-end gap-1 group relative"
           >
             <span class="text-[10px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">{{ d.count }}</span>
             <div
