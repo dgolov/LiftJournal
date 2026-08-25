@@ -286,10 +286,19 @@ const typeDotMap = {
 }
 function typeColorDot(type) { return typeDotMap[type] || 'bg-gray-400' }
 
+// Planned-workout dot color depends on its own status, not just "there's a
+// plan here" — otherwise a skipped plan looks identical to an upcoming one.
+const plannedDotMap = {
+  planned: 'bg-amber-400',
+  completed: 'bg-green-500',
+  skipped: 'bg-gray-400',
+}
+function plannedColorDot(status) { return plannedDotMap[status] || 'bg-amber-400' }
+
 function dayDots(day) {
   const dots = []
   for (const w of (workoutsByDate.value[day.dateStr] || [])) dots.push(typeColorDot(w.type))
-  for (const p of (plannedByDate.value[day.dateStr] || [])) dots.push('bg-amber-400')
+  for (const p of (plannedByDate.value[day.dateStr] || [])) dots.push(plannedColorDot(p.status))
   return dots
 }
 
@@ -297,14 +306,19 @@ function dayClass(day) {
   const base = 'flex flex-col items-center justify-center py-2 rounded-xl transition-all min-h-[44px] select-none'
   const isSelected = day.dateStr === selectedDate.value
   const isToday = day.dateStr === todayStr
+  const dayPlans = plannedByDate.value[day.dateStr] || []
   const hasWorkout = !!workoutsByDate.value[day.dateStr]?.length
-  const hasPlanned = !!plannedByDate.value[day.dateStr]?.length
+  const hasUpcomingPlanned = dayPlans.some(p => p.status === 'planned')
+  const hasCompletedPlanned = dayPlans.some(p => p.status === 'completed')
+  const hasSkippedPlanned = dayPlans.some(p => p.status === 'skipped')
 
   if (isSelected) return `${base} bg-primary text-white shadow-sm`
   if (!day.isCurrentMonth) return `${base} opacity-25 text-gray-400 cursor-default`
   if (isToday) return `${base} ring-2 ring-primary ring-inset text-primary font-bold`
   if (hasWorkout) return `${base} bg-primary/10 dark:bg-primary/20 text-gray-900 dark:text-white font-medium hover:bg-primary/20`
-  if (hasPlanned) return `${base} bg-amber-50 dark:bg-amber-900/20 text-gray-700 dark:text-gray-300 hover:bg-amber-100 dark:hover:bg-amber-900/30`
+  if (hasUpcomingPlanned) return `${base} bg-amber-50 dark:bg-amber-900/20 text-gray-700 dark:text-gray-300 hover:bg-amber-100 dark:hover:bg-amber-900/30`
+  if (hasCompletedPlanned) return `${base} bg-green-50 dark:bg-green-900/20 text-gray-700 dark:text-gray-300 hover:bg-green-100 dark:hover:bg-green-900/30`
+  if (hasSkippedPlanned) return `${base} bg-gray-100 dark:bg-gray-800/60 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800`
   return `${base} text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800`
 }
 
