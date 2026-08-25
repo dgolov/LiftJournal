@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas import (
-    AdminUserOut, AdminExerciseOut, AdminCycleOut, AdminStatsOut, DailyCountOut, TopUserOut,
+    AdminUserOut, AdminExerciseOut, AdminExerciseCreate, AdminCycleOut, AdminStatsOut, DailyCountOut, TopUserOut,
 )
 from app.core.security import hash_password
 from app.domain.models import Exercise, TrainingCycle, User
@@ -59,6 +59,20 @@ class AdminService:
     ) -> list[AdminExerciseOut]:
         rows = await self.repo.get_exercises(status=status, search=search, muscle_group=muscle_group)
         return [self._exercise_to_dto(ex, submitter) for ex, submitter in rows]
+
+    async def create_exercise(self, data: AdminExerciseCreate) -> AdminExerciseOut:
+        ex = await self.repo.create_exercise(
+            name=data.name.strip(),
+            muscle_group=data.muscleGroup,
+            secondary_muscles=data.secondaryMuscles,
+            equipment=data.equipment,
+            description=data.description.strip(),
+        )
+        return self._exercise_to_dto(ex)
+
+    async def delete_exercise(self, exercise_id: str) -> None:
+        ex = await self._get_exercise_or_404(exercise_id)
+        await self.repo.delete_exercise(ex)
 
     async def approve_exercise(self, exercise_id: str) -> AdminExerciseOut:
         """Allowed from pending (normal moderation) or rejected (admin
