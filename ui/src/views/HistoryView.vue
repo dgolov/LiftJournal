@@ -30,7 +30,7 @@
     </div>
 
     <!-- Granularity toggle -->
-    <div class="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 mb-5 w-fit">
+    <div v-if="!selectedDate" class="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 mb-5 w-fit">
       <button
         v-for="g in granularityOptions" :key="g.value"
         :class="['px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
@@ -40,7 +40,7 @@
     </div>
 
     <!-- Period stats (shared) -->
-    <div class="grid grid-cols-3 gap-3 mb-5">
+    <div v-if="!selectedDate" class="grid grid-cols-3 gap-3 mb-5">
       <div class="card p-3 text-center">
         <div class="text-xl font-bold text-primary">{{ periodWorkouts.length }}</div>
         <div class="text-xs text-gray-400 mt-0.5">тренировок</div>
@@ -56,7 +56,7 @@
     </div>
 
     <!-- Period navigation -->
-    <div class="flex items-center gap-2 mb-5">
+    <div v-if="!selectedDate" class="flex items-center gap-2 mb-5">
       <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400" @click="prevPeriod">
         <ChevronLeft class="w-4 h-4" />
       </button>
@@ -69,7 +69,7 @@
     </div>
 
     <!-- CALENDAR VIEW -->
-    <template v-if="viewMode === 'calendar'">
+    <template v-if="viewMode === 'calendar' && !selectedDate">
       <!-- Month grid -->
       <template v-if="granularity === 'month'">
         <div class="grid grid-cols-7 mb-1.5">
@@ -150,35 +150,42 @@
         </div>
       </template>
 
-      <!-- Selected day panel -->
-      <div v-if="selectedDate" class="mt-4">
-        <div class="flex items-center gap-2 mb-3">
-          <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 capitalize">{{ selectedDateLabel }}</span>
-          <div class="flex-1 h-px bg-gray-100 dark:bg-gray-800" />
-          <button
-            v-if="selectedDate >= todayStr"
-            class="text-xs px-2.5 py-1 rounded-lg bg-primary text-white font-medium hover:bg-primary/90 transition-colors flex items-center gap-1"
-            @click="planForDay(selectedDate)"
-          >
-            <Plus class="w-3 h-3" /> Запланировать
-          </button>
-          <button
-            v-else
-            class="text-xs px-2.5 py-1 rounded-lg bg-gray-700 text-white font-medium hover:bg-gray-600 transition-colors flex items-center gap-1"
-            @click="addWorkoutForDay(selectedDate)"
-          >
-            <Plus class="w-3 h-3" /> Добавить тренировку
-          </button>
-          <button class="text-gray-300 hover:text-gray-500 transition-colors ml-1" @click="selectedDate = null"><X class="w-4 h-4" /></button>
-        </div>
+    </template>
 
-        <div v-if="selectedDayWorkouts.length || selectedDayPlanned.length" class="space-y-3">
-          <WorkoutCard v-for="w in selectedDayWorkouts" :key="w.id" :workout="w" />
-          <PlanCard v-for="p in selectedDayPlanned" :key="p.id" :plan="p" />
-        </div>
-        <div v-else class="card p-6 text-center text-sm text-gray-400">В этот день ничего нет</div>
+    <!-- DAY DRILL-DOWN -->
+    <template v-else-if="viewMode === 'calendar' && selectedDate">
+      <button
+        class="flex items-center gap-1 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors -ml-1 mb-3"
+        @click="selectedDate = null"
+      >
+        <ChevronLeft class="w-4 h-4" /> Назад к календарю
+      </button>
+
+      <div class="flex items-center justify-between gap-3 mb-5">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white capitalize truncate">{{ selectedDateLabel }}</h3>
+        <button
+          v-if="selectedDate >= todayStr"
+          class="text-sm px-3 py-2 rounded-lg bg-primary text-white font-medium hover:bg-primary/90 transition-colors flex items-center gap-1.5 flex-shrink-0"
+          @click="planForDay(selectedDate)"
+        >
+          <Plus class="w-4 h-4" /> Запланировать
+        </button>
+        <button
+          v-else
+          class="text-sm px-3 py-2 rounded-lg bg-gray-700 text-white font-medium hover:bg-gray-600 transition-colors flex items-center gap-1.5 flex-shrink-0"
+          @click="addWorkoutForDay(selectedDate)"
+        >
+          <Plus class="w-4 h-4" /> Добавить тренировку
+        </button>
       </div>
 
+      <div v-if="selectedDayWorkouts.length || selectedDayPlanned.length" class="space-y-3">
+        <WorkoutCard v-for="w in selectedDayWorkouts" :key="w.id" :workout="w" />
+        <PlanCard v-for="p in selectedDayPlanned" :key="p.id" :plan="p" />
+      </div>
+      <BaseEmptyState v-else title="В этот день ничего нет" description="Запланируйте тренировку или добавьте прошедшую">
+        <template #icon><CalendarDays class="w-12 h-12" /></template>
+      </BaseEmptyState>
     </template>
 
     <!-- LIST VIEW -->
@@ -229,7 +236,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { CalendarDays, List, ChevronLeft, ChevronRight, Activity, X, Clock, CheckCircle2, Ban, Plus, Download } from 'lucide-vue-next'
+import { CalendarDays, List, ChevronLeft, ChevronRight, Activity, Plus, Download } from 'lucide-vue-next'
 import WorkoutCard from '@/components/workout/WorkoutCard.vue'
 import PlanCard from '@/components/workout/PlanCard.vue'
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
