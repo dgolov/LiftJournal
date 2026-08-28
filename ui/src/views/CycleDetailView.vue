@@ -30,6 +30,9 @@
             @click="viewMode = 'table'"
           >Таблица</button>
         </div>
+        <button class="btn btn-outline text-sm flex items-center gap-1.5" @click="showScheduleModal = true">
+          <CalendarPlus class="w-4 h-4" /> Запланировать
+        </button>
         <RouterLink v-if="isOwner" :to="`/cycles/${cycle.id}/edit`" class="btn btn-outline text-sm">
           Редактировать
         </RouterLink>
@@ -232,6 +235,8 @@
       <BaseButton @click="confirmStartWorkout">Начать</BaseButton>
     </template>
   </BaseModal>
+
+  <ScheduleCycleModal v-model="showScheduleModal" :cycle="cycle" />
   </div>
 </template>
 
@@ -239,9 +244,10 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useStore } from 'vuex'
-import { ChevronLeft, AlertTriangle, Play } from 'lucide-vue-next'
+import { ChevronLeft, AlertTriangle, Play, CalendarPlus } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
+import ScheduleCycleModal from '@/components/workout/ScheduleCycleModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -258,6 +264,7 @@ const startingWorkout = ref(null) // cycle_workout_id being started
 const showStartModal = ref(false)
 const pendingWorkoutId = ref(null)
 const workoutNotes = ref('')
+const showScheduleModal = ref(false)
 
 const cycle = computed(() => store.state.cycles.currentCycle)
 const currentRun = computed(() => store.state.cycles.currentRun)
