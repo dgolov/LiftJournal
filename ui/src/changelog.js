@@ -5,12 +5,14 @@ export const CHANGELOG = [
   {
     version: '0.8.0',
     date: '2026-08-29',
-    label: 'Удобства',
+    label: 'Шаблоны и циклирование',
     entries: [
       { type: 'feature',        text: 'Добавлены шаблоны тренировок' },
-      { type: 'improvement',    text: 'Улучшение отчетов по тренировкам' },
-      { type: 'improvement',    text: 'Добавлена загрузка страницы' },
+      { type: 'feature',        text: 'Добавлена связь циклов с планированием' },
+      { type: 'improvement',    text: 'Улучшение экспорта отчетов по тренировкам' },
+      { type: 'improvement',    text: 'Добавлена загрузка страниц' },
       { type: 'improvement',    text: 'Добавлена статистика упражнений по периодам' },
+      { type: 'improvement',    text: 'Улучшение ui календаря' },
     ],
   },
   {
