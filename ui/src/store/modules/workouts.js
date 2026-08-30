@@ -36,6 +36,17 @@ function emptyWorkout() {
   }
 }
 
+function buildSetsFromHistory(history, fallbackCount) {
+  if (history.length) {
+    return history[0].sets.map(s => ({ id: uid(), weight: s.weight, reps: s.reps, completed: false, failed: false }))
+  }
+  return Array.from({ length: fallbackCount }, () => ({ id: uid(), weight: 0, reps: 0, completed: false, failed: false }))
+}
+
+function mapTemplateSets(sets) {
+  return sets.map(s => ({ id: uid(), weight: s.weight, reps: s.reps, completed: false, failed: false }))
+}
+
 export default {
   namespaced: true,
 
@@ -203,15 +214,53 @@ export default {
   actions: {
     addExerciseToActive({ commit, getters }, exercise) {
       const history = getters.exerciseHistoryOptions(exercise.id)
-      const sets = history.length
-        ? history[0].sets.map(s => ({ id: uid(), weight: s.weight, reps: s.reps, completed: false, failed: false }))
-        : [{ id: uid(), weight: 0, reps: 0, completed: false, failed: false }]
+      const sets = buildSetsFromHistory(history, 1)
       commit('ADD_EXERCISE_TO_ACTIVE', { exercise, sets, history })
     },
 
+    // Loads every exercise from a saved template. `source` picks where the
+    // starting weight/reps come from: 'template' uses the numbers saved with
+    // the template itself, 'history' (default) re-derives them from each
+    // exercise's own recent history instead, falling back to the template's
+    // saved numbers for exercises with no history yet. Either way, history is
+    // still attached to every exercise so the per-exercise cycle-through-
+    // last-5-sessions button keeps working afterward regardless of source.
+    applyTemplate({ commit, getters }, { template, source = 'history' }) {
+      commit('RESET_ACTIVE_WORKOUT')
+      commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'title', value: template.title })
+      commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'type', value: template.type })
+      for (const ex of template.exercises) {
+        const history = getters.exerciseHistoryOptions(ex.exerciseId)
+        let sets
+        if (source === 'template' && ex.sets.length) {
+          sets = mapTemplateSets(ex.sets)
+        } else if (history.length) {
+          sets = buildSetsFromHistory(history, ex.sets.length || 3)
+        } else if (ex.sets.length) {
+          sets = mapTemplateSets(ex.sets)
+        } else {
+          sets = buildSetsFromHistory([], 3)
+        }
+        commit('ADD_EXERCISE_TO_ACTIVE', {
+          exercise: { id: ex.exerciseId, name: ex.exerciseName },
+          sets,
+          history,
+        })
+      }
+    },
+
     async initWorkouts({ commit }) {
-      const workouts = await workoutService.fetchWorkouts()
-      commit('SET_WORKOUTS', workouts)
+      try {
+        const workouts = await workoutService.fetchWorkouts()
+        commit('SET_WORKOUTS', workouts)
+        localStorage.setItem('gym_cache_workouts', JSON.stringify(workouts))
+      } catch (e) {
+        if (e?.isNetworkError) {
+          const cached = localStorage.getItem('gym_cache_workouts')
+          if (cached) commit('SET_WORKOUTS', JSON.parse(cached))
+        }
+        throw e
+      }
     },
 
     startWorkout({ commit, state }) {

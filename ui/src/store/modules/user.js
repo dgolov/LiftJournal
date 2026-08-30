@@ -1,11 +1,13 @@
 import workoutService from '@/services/workoutService.js'
 
+const THEME_KEY = 'gym_theme'
+
 export default {
   namespaced: true,
 
   state: () => ({
     profile: { name: '', birthDate: null, avatarUrl: null },
-    theme: 'light',
+    theme: localStorage.getItem(THEME_KEY) || 'light',
     weightLog: [],
     goals: [],
     maxes: [],   // { exercise_name, weight_kg, recorded_at }
@@ -28,9 +30,11 @@ export default {
       state.weightLog = user.weightLog
       state.goals = user.goals
       state.maxes = user.maxes || []
+      localStorage.setItem(THEME_KEY, state.theme)
     },
     SET_THEME(state, theme) {
       state.theme = theme
+      localStorage.setItem(THEME_KEY, theme)
     },
     UPSERT_MAX(state, max) {
       const idx = state.maxes.findIndex(m => m.exercise_name === max.exercise_name)
@@ -60,8 +64,17 @@ export default {
 
   actions: {
     async initUser({ commit }) {
-      const user = await workoutService.fetchUser()
-      commit('SET_USER', user)
+      try {
+        const user = await workoutService.fetchUser()
+        commit('SET_USER', user)
+        localStorage.setItem('gym_cache_user', JSON.stringify(user))
+      } catch (e) {
+        if (e?.isNetworkError) {
+          const cached = localStorage.getItem('gym_cache_user')
+          if (cached) commit('SET_USER', JSON.parse(cached))
+        }
+        throw e
+      }
     },
 
     async updateProfile({ commit }, profile) {

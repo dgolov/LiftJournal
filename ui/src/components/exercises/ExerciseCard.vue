@@ -7,6 +7,9 @@
       <h3 class="font-semibold text-gray-900 dark:text-white text-sm leading-tight">{{ exercise.name }}</h3>
       <BaseBadge v-if="exercise.isCustom" color="purple" class="flex-shrink-0">Своё</BaseBadge>
     </div>
+    <div v-if="exercise.status === 'private'" class="mb-2">
+      <BaseBadge color="gray">Личное</BaseBadge>
+    </div>
     <div class="flex flex-wrap gap-1 mb-3">
       <BaseBadge color="indigo">{{ exercise.muscleGroup }}</BaseBadge>
       <BaseBadge color="gray">{{ exercise.equipment }}</BaseBadge>

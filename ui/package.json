@@ -1,6 +1,6 @@
 {
   "name": "gym-diary",
-  "version": "0.7.1",
+  "version": "0.8.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "chart.js": "^4.4.4",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
     "lucide-vue-next": "^1.0.0",
     "vue": "^3.4.0",
     "vue-chartjs": "^5.3.1",

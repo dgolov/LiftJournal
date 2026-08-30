@@ -110,6 +110,32 @@ async def test_create_cycle_adds_and_commits(repo, mock_db):
     mock_db.commit.assert_called_once()
 
 
+async def test_create_public_cycle_starts_pending(repo, mock_db):
+    mock_db.execute.return_value = scalar_result(make_cycle(id="cyc-new"))
+
+    await repo.create(
+        created_by=1, title="5/3/1", description="",
+        author_name="", is_public=True, workouts_data=[],
+    )
+
+    added = mock_db.add.call_args[0][0]
+    assert added.is_public is True
+    assert added.is_approved is False
+
+
+async def test_create_non_public_cycle_starts_approved(repo, mock_db):
+    mock_db.execute.return_value = scalar_result(make_cycle(id="cyc-new"))
+
+    await repo.create(
+        created_by=1, title="Private plan", description="",
+        author_name="", is_public=False, workouts_data=[],
+    )
+
+    added = mock_db.add.call_args[0][0]
+    assert added.is_public is False
+    assert added.is_approved is True
+
+
 # ---------------------------------------------------------------------------
 # update
 # ---------------------------------------------------------------------------
@@ -133,6 +159,45 @@ async def test_update_skips_none_fields(repo, mock_db):
 
     assert c.title == "Keep"
     assert c.is_public is True
+
+
+async def test_update_marking_public_resets_approval(repo, mock_db):
+    c = make_cycle(id="cyc-1", is_public=False, is_approved=True)
+    mock_db.execute.return_value = scalar_result(c)
+
+    await repo.update(c, is_public=True)
+
+    assert c.is_public is True
+    assert c.is_approved is False
+
+
+async def test_update_re_saving_already_public_approved_stays_approved(repo, mock_db):
+    c = make_cycle(id="cyc-1", is_public=True, is_approved=True)
+    mock_db.execute.return_value = scalar_result(c)
+
+    await repo.update(c, is_public=True, title="Renamed")
+
+    assert c.is_public is True
+    assert c.is_approved is True
+
+
+async def test_update_re_marking_still_pending_cycle_public_stays_pending(repo, mock_db):
+    c = make_cycle(id="cyc-1", is_public=True, is_approved=False)
+    mock_db.execute.return_value = scalar_result(c)
+
+    await repo.update(c, is_public=True)
+
+    assert c.is_approved is False
+
+
+async def test_update_making_private_does_not_touch_approval(repo, mock_db):
+    c = make_cycle(id="cyc-1", is_public=True, is_approved=True)
+    mock_db.execute.return_value = scalar_result(c)
+
+    await repo.update(c, is_public=False)
+
+    assert c.is_public is False
+    assert c.is_approved is True
 
 
 # ---------------------------------------------------------------------------

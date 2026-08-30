@@ -8,27 +8,30 @@
           <ChevronLeft class="w-5 h-5" />
         </button>
         <template v-if="!isEditing && isOwner">
-          <div class="ml-auto flex items-center gap-1">
+          <div class="ml-auto flex items-center flex-wrap justify-end gap-1">
             <button
-              class="p-2 rounded-xl hover:bg-primary/10 text-primary transition-colors"
-              title="Повторить тренировку"
+              class="flex items-center gap-1 px-2 h-8 rounded-lg text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
               @click="repeatWorkout"
             >
-              <RefreshCw class="w-5 h-5" />
+              <RefreshCw class="w-3.5 h-3.5" /> Повторить
             </button>
             <button
-              class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
-              title="Экспорт"
+              class="flex items-center gap-1 px-2 h-8 rounded-lg text-xs font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              @click="templateName = workout.title; showSaveTemplate = true"
+            >
+              <LayoutTemplate class="w-3.5 h-3.5" /> Шаблон
+            </button>
+            <button
+              class="flex items-center gap-1 px-2 h-8 rounded-lg text-xs font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               @click="exportModalOpen = true"
             >
-              <Download class="w-5 h-5" />
+              <Download class="w-3.5 h-3.5" /> Экспорт
             </button>
             <button
-              class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
-              title="Редактировать"
+              class="flex items-center gap-1 px-2 h-8 rounded-lg text-xs font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               @click="startEdit"
             >
-              <Pencil class="w-5 h-5" />
+              <Pencil class="w-3.5 h-3.5" /> Изменить
             </button>
           </div>
         </template>
@@ -294,15 +297,26 @@
   </div>
 
   <ExportModal v-model="exportModalOpen" :workouts="workout ? [workout] : []" lock-period />
+
+  <BaseModal v-model="showSaveTemplate" title="Сохранить как шаблон" max-width="sm">
+    <BaseInput v-model="templateName" label="Название шаблона" placeholder="Например: Push day" />
+    <template #footer>
+      <BaseButton variant="ghost" @click="showSaveTemplate = false">Отмена</BaseButton>
+      <BaseButton :disabled="!templateName.trim()" :loading="savingTemplate" @click="saveAsTemplate">Сохранить</BaseButton>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup>
 import { computed, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
-import { ChevronLeft, Pencil, X, Plus, RefreshCw, Trash2, Heart, MessageCircle, Send, Download, GripVertical } from 'lucide-vue-next'
+import { ChevronLeft, Pencil, X, Plus, RefreshCw, Trash2, Heart, MessageCircle, Send, Download, GripVertical, LayoutTemplate } from 'lucide-vue-next'
 import draggable from 'vuedraggable'
 import ExportModal from '@/components/ui/ExportModal.vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import StepperInput from '@/components/ui/StepperInput.vue'
 import ExercisePicker from '@/components/workout/ExercisePicker.vue'
@@ -430,6 +444,9 @@ const saving = ref(false)
 const draft = ref(null)
 const exportModalOpen = ref(false)
 const showPicker = ref(false)
+const showSaveTemplate = ref(false)
+const templateName = ref('')
+const savingTemplate = ref(false)
 
 const draftAddedIds = computed(() =>
   draft.value ? new Set(draft.value.exercises.map(e => e.exerciseId)) : new Set()
@@ -463,6 +480,28 @@ function onBack() {
 async function repeatWorkout() {
   await store.dispatch('workouts/startWorkoutFromHistory', workout.value)
   router.push('/workouts/new')
+}
+
+async function saveAsTemplate() {
+  savingTemplate.value = true
+  try {
+    await store.dispatch('templates/createTemplate', {
+      title: templateName.value.trim(),
+      type: workout.value.type,
+      exercises: workout.value.exercises.map(ex => ({
+        exerciseId: ex.exerciseId,
+        exerciseName: ex.exerciseName,
+        sets: ex.sets.filter(s => !s.failed).map(s => ({ weight: s.weight, reps: s.reps })),
+      })),
+    })
+    store.dispatch('ui/showToast', { message: 'Шаблон сохранён', type: 'success' })
+    showSaveTemplate.value = false
+    templateName.value = ''
+  } catch (e) {
+    store.dispatch('ui/showToast', { message: 'Ошибка: ' + e.message, type: 'error' })
+  } finally {
+    savingTemplate.value = false
+  }
 }
 
 

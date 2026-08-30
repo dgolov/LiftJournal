@@ -24,7 +24,7 @@
               <span v-if="cycle.created_by === currentUserId" class="text-xs text-primary font-medium">Мой</span>
             </div>
             <h3 class="font-semibold text-gray-900 dark:text-white">{{ cycle.title }}</h3>
-            <p v-if="cycle.description" class="text-sm text-gray-500 mt-0.5 line-clamp-1">{{ cycle.description }}</p>
+            <p v-if="cycle.description" class="text-sm text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-1">{{ cycle.description }}</p>
             <p class="text-xs text-gray-400 mt-1">{{ cycle.workout_count }} тренировок</p>
           </div>
           <button
@@ -44,7 +44,7 @@
     </BaseEmptyState>
 
     <BaseModal v-model="showConfirm" title="Удалить цикл?" max-width="sm">
-      <p class="text-sm text-gray-600">«{{ toDelete?.title }}» будет удалён безвозвратно.</p>
+      <p class="text-sm text-gray-600 dark:text-gray-400">«{{ toDelete?.title }}» будет удалён безвозвратно.</p>
       <template #footer>
         <BaseButton variant="ghost" @click="showConfirm = false">Отмена</BaseButton>
         <BaseButton variant="danger" @click="doDelete">Удалить</BaseButton>

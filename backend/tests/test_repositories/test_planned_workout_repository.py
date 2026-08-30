@@ -38,6 +38,14 @@ def _make_exercise_in(exercise_id="ex-1", name="Bench Press", sets=None):
     return ex
 
 
+class TestExpireOverdue:
+    async def test_executes_update_and_commits(self, mock_db):
+        await PlannedWorkoutRepository(mock_db).expire_overdue(user_id=1)
+
+        mock_db.execute.assert_awaited_once()
+        mock_db.commit.assert_called_once()
+
+
 class TestGetAllByUser:
     async def test_returns_list(self, mock_db):
         plans = [_make_plan("p-1"), _make_plan("p-2")]
@@ -53,6 +61,16 @@ class TestGetAllByUser:
         result = await PlannedWorkoutRepository(mock_db).get_all_by_user(user_id=1)
 
         assert result == []
+
+    async def test_expires_overdue_before_listing(self, mock_db):
+        """Overdue 'planned' entries must flip to 'skipped' before the list
+        is read back, so a stale status never round-trips to the client."""
+        mock_db.execute.return_value = scalars_result([])
+
+        await PlannedWorkoutRepository(mock_db).get_all_by_user(user_id=1)
+
+        assert mock_db.execute.await_count == 2
+        assert mock_db.commit.call_count >= 1
 
 
 class TestGetById:

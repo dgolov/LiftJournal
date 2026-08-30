@@ -69,6 +69,21 @@
       <BaseButton class="w-full flex items-center justify-center gap-2" :disabled="!canProceed" @click="beginWorkout">
         Начать тренировку <Play class="w-4 h-4" />
       </BaseButton>
+      <BaseButton
+        v-if="recentWorkouts.length"
+        variant="outline"
+        class="w-full flex items-center justify-center gap-2"
+        @click="showRepeatPicker = true"
+      >
+        <RefreshCw class="w-4 h-4" /> Повторить тренировку
+      </BaseButton>
+      <BaseButton
+        variant="outline"
+        class="w-full flex items-center justify-center gap-2"
+        @click="showTemplatePicker = true"
+      >
+        <LayoutTemplate class="w-4 h-4" /> Загрузить шаблон
+      </BaseButton>
     </div>
 
     <!-- Step 2: Exercises -->
@@ -80,6 +95,14 @@
             <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse flex-shrink-0"></span>
             <span class="font-mono font-bold text-primary text-sm">{{ elapsedFormatted }}</span>
           </div>
+          <button
+            v-if="activeWorkout.exercises.length"
+            class="p-2 rounded-lg text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors"
+            title="Сохранить как шаблон"
+            @click="templateName = activeWorkout.title; showSaveTemplate = true"
+          >
+            <LayoutTemplate class="w-4 h-4" />
+          </button>
           <BaseButton variant="outline" size="sm" @click="showPicker = true">+ Добавить</BaseButton>
         </div>
       </div>
@@ -156,14 +179,43 @@
 
     <ExercisePicker v-model="showPicker" />
     <RestTimerBar />
+
+    <BaseModal v-model="showRepeatPicker" title="Повторить тренировку" max-width="md" :fullscreen="true">
+      <div class="space-y-1 -mx-2 px-2">
+        <button
+          v-for="w in recentWorkouts"
+          :key="w.id"
+          class="w-full text-left px-3 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-3"
+          @click="repeatWorkout(w)"
+        >
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ w.title || 'Без названия' }}</p>
+            <p class="text-xs text-gray-400">{{ formatShortDate(w.date) }} · {{ w.type }} · {{ w.exercises.length }} упр.</p>
+          </div>
+        </button>
+      </div>
+      <template #footer>
+        <BaseButton variant="ghost" @click="showRepeatPicker = false">Закрыть</BaseButton>
+      </template>
+    </BaseModal>
+
+    <TemplatePicker v-model="showTemplatePicker" @apply="onApplyTemplate" />
+
+    <BaseModal v-model="showSaveTemplate" title="Сохранить как шаблон" max-width="sm">
+      <BaseInput v-model="templateName" label="Название шаблона" placeholder="Например: Push day" />
+      <template #footer>
+        <BaseButton variant="ghost" @click="showSaveTemplate = false">Отмена</BaseButton>
+        <BaseButton :disabled="!templateName.trim()" :loading="savingTemplate" @click="saveAsTemplate">Сохранить</BaseButton>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { ChevronLeft, Dumbbell, Play, X } from 'lucide-vue-next'
+import { ChevronLeft, Dumbbell, Play, X, RefreshCw, LayoutTemplate } from 'lucide-vue-next'
 import draggable from 'vuedraggable'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
@@ -172,6 +224,7 @@ import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import ExerciseBlock from '@/components/workout/ExerciseBlock.vue'
 import ExercisePicker from '@/components/workout/ExercisePicker.vue'
+import TemplatePicker from '@/components/workout/TemplatePicker.vue'
 import RestTimerBar from '@/components/workout/RestTimerBar.vue'
 import { WORKOUT_TYPES } from '@/services/mockData.js'
 
@@ -186,10 +239,20 @@ const steps = [1, 2, 3]
 const showPicker = ref(false)
 const saving = ref(false)
 const showCancelConfirm = ref(false)
+const showRepeatPicker = ref(false)
+const showTemplatePicker = ref(false)
+const showSaveTemplate = ref(false)
+const templateName = ref('')
+const savingTemplate = ref(false)
 const workoutTypes = WORKOUT_TYPES
+
+onMounted(() => {
+  if (!store.state.workouts.workouts.length) store.dispatch('workouts/initWorkouts')
+})
 
 const activeWorkout = computed(() => store.state.workouts.activeWorkout)
 const canProceed = computed(() => activeWorkout.value.title.trim().length > 0)
+const recentWorkouts = computed(() => store.getters['workouts/allWorkouts'].slice(0, 10))
 const totalSets = computed(() =>
   activeWorkout.value.exercises.reduce((n, ex) => n + ex.sets.length, 0)
 )
@@ -255,6 +318,42 @@ function cancelWorkout() {
 function beginWorkout() {
   store.dispatch('workouts/startWorkout')
   step.value++
+}
+
+async function repeatWorkout(w) {
+  await store.dispatch('workouts/startWorkoutFromHistory', w)
+  showRepeatPicker.value = false
+}
+
+function formatShortDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00')
+  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+}
+
+async function onApplyTemplate(template, source) {
+  await store.dispatch('workouts/applyTemplate', { template, source })
+}
+
+async function saveAsTemplate() {
+  savingTemplate.value = true
+  try {
+    await store.dispatch('templates/createTemplate', {
+      title: templateName.value.trim(),
+      type: activeWorkout.value.type,
+      exercises: activeWorkout.value.exercises.map(ex => ({
+        exerciseId: ex.exerciseId,
+        exerciseName: ex.exerciseName,
+        sets: ex.sets.map(s => ({ weight: s.weight, reps: s.reps })),
+      })),
+    })
+    store.dispatch('ui/showToast', { message: 'Шаблон сохранён', type: 'success' })
+    showSaveTemplate.value = false
+    templateName.value = ''
+  } catch (e) {
+    store.dispatch('ui/showToast', { message: 'Ошибка: ' + e.message, type: 'error' })
+  } finally {
+    savingTemplate.value = false
+  }
 }
 
 async function save() {

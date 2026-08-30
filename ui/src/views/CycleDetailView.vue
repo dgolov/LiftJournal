@@ -9,10 +9,10 @@
         </button>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 flex-wrap mb-1">
-            <span :class="['text-xs px-2 py-0.5 rounded-full font-medium', cycle.is_public ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500']">
+            <span :class="['text-xs px-2 py-0.5 rounded-full font-medium', cycle.is_public ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400']">
               {{ cycle.is_public ? 'Публичный' : 'Приватный' }}
             </span>
-            <span v-if="cycle.author_name" class="text-xs text-gray-500">{{ cycle.author_name }}</span>
+            <span v-if="cycle.author_name" class="text-xs text-gray-500 dark:text-gray-400">{{ cycle.author_name }}</span>
           </div>
           <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ cycle.title }}</h2>
           <p v-if="cycle.description" class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ cycle.description }}</p>
@@ -30,6 +30,9 @@
             @click="viewMode = 'table'"
           >Таблица</button>
         </div>
+        <button class="btn btn-outline text-sm flex items-center gap-1.5" @click="showScheduleModal = true">
+          <CalendarPlus class="w-4 h-4" /> Запланировать
+        </button>
         <RouterLink v-if="isOwner" :to="`/cycles/${cycle.id}/edit`" class="btn btn-outline text-sm">
           Редактировать
         </RouterLink>
@@ -222,7 +225,7 @@
 
   <!-- Start workout modal -->
   <BaseModal v-model="showStartModal" title="Начать тренировку">
-    <p class="text-sm text-gray-500 mb-3">Упражнения из цикла будут предзаполнены. Можно добавить подсобные упражнения прямо в тренировке.</p>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Упражнения из цикла будут предзаполнены. Можно добавить подсобные упражнения прямо в тренировке.</p>
     <div>
       <label class="label">Заметки (необязательно)</label>
       <textarea v-model="workoutNotes" rows="2" class="input resize-none" placeholder="Самочувствие, план..."/>
@@ -232,6 +235,8 @@
       <BaseButton @click="confirmStartWorkout">Начать</BaseButton>
     </template>
   </BaseModal>
+
+  <ScheduleCycleModal v-model="showScheduleModal" :cycle="cycle" />
   </div>
 </template>
 
@@ -239,9 +244,10 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { useStore } from 'vuex'
-import { ChevronLeft, AlertTriangle, Play } from 'lucide-vue-next'
+import { ChevronLeft, AlertTriangle, Play, CalendarPlus } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
+import ScheduleCycleModal from '@/components/workout/ScheduleCycleModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -258,6 +264,7 @@ const startingWorkout = ref(null) // cycle_workout_id being started
 const showStartModal = ref(false)
 const pendingWorkoutId = ref(null)
 const workoutNotes = ref('')
+const showScheduleModal = ref(false)
 
 const cycle = computed(() => store.state.cycles.currentCycle)
 const currentRun = computed(() => store.state.cycles.currentRun)

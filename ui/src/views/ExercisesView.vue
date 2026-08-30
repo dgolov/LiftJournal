@@ -46,6 +46,27 @@
           <label class="label">Описание</label>
           <textarea v-model="newEx.description" rows="2" class="input resize-none" placeholder="Как выполнять упражнение..." />
         </div>
+        <div>
+          <label class="label">Видимость</label>
+          <div class="flex gap-2">
+            <button
+              type="button"
+              :class="['flex-1 py-2 rounded-lg text-sm font-medium border transition-colors',
+                !newEx.isPrivate ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400']"
+              @click="newEx.isPrivate = false"
+            >Показать всем</button>
+            <button
+              type="button"
+              :class="['flex-1 py-2 rounded-lg text-sm font-medium border transition-colors',
+                newEx.isPrivate ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400']"
+              @click="newEx.isPrivate = true"
+            >Только мне</button>
+          </div>
+          <p class="text-xs text-gray-400 mt-1.5">
+            <template v-if="newEx.isPrivate">Будет видно только вам, без проверки модератором.</template>
+            <template v-else>Появится у всех после проверки модератором. До этого видно только вам.</template>
+          </p>
+        </div>
       </div>
       <template #footer>
         <BaseButton variant="ghost" @click="showAddModal = false">Отмена</BaseButton>
@@ -82,15 +103,19 @@ const equipmentTypes = computed(() => store.getters['exercises/equipmentTypes'])
 const filter = computed(() => store.state.exercises.filter)
 const hasFilter = computed(() => filter.value.search || filter.value.muscleGroup || filter.value.equipment)
 
-const newEx = reactive({ name: '', muscleGroup: '', equipment: '', description: '' })
+const newEx = reactive({ name: '', muscleGroup: '', equipment: '', description: '', isPrivate: true })
 
 function setFilter(key, value) { store.commit('exercises/SET_FILTER', { key, value }) }
 function resetFilter() { store.commit('exercises/RESET_FILTER') }
 
 async function addExercise() {
+  const wasPrivate = newEx.isPrivate
   await store.dispatch('exercises/addCustomExercise', { ...newEx })
-  store.dispatch('ui/showToast', { message: 'Упражнение добавлено!', type: 'success' })
-  Object.assign(newEx, { name: '', muscleGroup: '', equipment: '', description: '' })
+  store.dispatch('ui/showToast', {
+    message: wasPrivate ? 'Упражнение добавлено!' : 'Упражнение отправлено на модерацию',
+    type: 'success',
+  })
+  Object.assign(newEx, { name: '', muscleGroup: '', equipment: '', description: '', isPrivate: true })
   showAddModal.value = false
 }
 </script>

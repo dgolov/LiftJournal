@@ -3,7 +3,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from jose import JWTError, jwt
 from sqlalchemy import select
 
-from app.api.routers import auth, exercises, workouts, cycles, cycle_runs, users, planned_workouts, achievements, social, notifications
+from app.api.routers import (
+    auth, 
+    exercises, 
+    workouts, 
+    cycles, 
+    cycle_runs, 
+    users, 
+    planned_workouts, 
+    achievements, 
+    social, 
+    notifications,
+    templates,
+    admin
+)
 from app.config import settings
 from app.core.database import async_session
 from app.core.ws_manager import manager
@@ -29,6 +42,8 @@ app.include_router(planned_workouts.router, prefix="/api/planned-workouts", tags
 app.include_router(achievements.router, prefix="/api/achievements", tags=["achievements"])
 app.include_router(social.router, prefix="/api/social", tags=["social"])
 app.include_router(notifications.router, prefix="/api/notifications", tags=["notifications"])
+app.include_router(templates.router, prefix="/api/templates", tags=["templates"])
+app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
 
 
 @app.websocket("/api/ws")

@@ -2,10 +2,10 @@
   <div class="max-w-4xl">
     <!-- Header -->
     <div class="flex items-center gap-3 mb-6">
-      <button class="p-2 rounded-xl hover:bg-gray-100 text-gray-500" @click="$router.back()">
+      <button class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors" @click="$router.back()">
         <ChevronLeft class="w-5 h-5" />
       </button>
-      <h2 class="text-xl font-bold text-gray-900">{{ isEdit ? 'Редактировать цикл' : 'Новый цикл' }}</h2>
+      <h2 class="text-xl font-bold text-gray-900 dark:text-white">{{ isEdit ? 'Редактировать цикл' : 'Новый цикл' }}</h2>
     </div>
 
     <!-- Meta -->
@@ -20,7 +20,7 @@
       </div>
       <label class="flex items-center gap-3 cursor-pointer">
         <input type="checkbox" v-model="form.is_public" class="w-4 h-4 rounded text-primary" />
-        <span class="text-sm font-medium text-gray-700">Сделать цикл публичным (доступен всем пользователям)</span>
+        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Сделать цикл публичным (доступен всем пользователям)</span>
       </label>
     </div>
 
@@ -28,7 +28,7 @@
     <div class="card p-5 mb-4">
       <div class="flex items-center justify-between mb-3">
         <div>
-          <h3 class="font-semibold text-gray-900">Упражнения в цикле</h3>
+          <h3 class="font-semibold text-gray-900 dark:text-white">Упражнения в цикле</h3>
           <p class="text-xs text-gray-400 mt-0.5">Определите список упражнений — они станут столбцами таблицы</p>
         </div>
         <BaseButton variant="outline" size="sm" @click="addExerciseCol">Добавить</BaseButton>
@@ -39,7 +39,7 @@
             class="flex-1 input text-left truncate"
             @click="openPicker(ci)"
           >
-            <span v-if="col.name" class="text-gray-800">{{ col.name }}</span>
+            <span v-if="col.name" class="text-gray-800 dark:text-gray-100">{{ col.name }}</span>
             <span v-else class="text-gray-400 text-sm">Выбрать упражнение...</span>
           </button>
           <button
@@ -55,9 +55,9 @@
 
     <!-- Workouts table -->
     <div class="card mb-4">
-      <div class="flex items-center justify-between p-4 border-b border-gray-100">
+      <div class="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800">
         <div>
-          <h3 class="font-semibold text-gray-900">Тренировки</h3>
+          <h3 class="font-semibold text-gray-900 dark:text-white">Тренировки</h3>
           <p class="text-xs text-gray-400 mt-0.5">Каждая строка — одна тренировка в цикле</p>
         </div>
         <BaseButton variant="outline" size="sm" @click="addWorkout">Добавить строку</BaseButton>
@@ -66,17 +66,17 @@
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
-            <tr class="bg-gray-50 border-b border-gray-100">
-              <th class="text-left px-3 py-2 text-xs font-semibold text-gray-500 w-12">#</th>
+            <tr class="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-800">
+              <th class="text-left px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 w-12">#</th>
               <th
                 v-for="col in exerciseCols"
                 :key="col.name || col.id"
-                class="text-left px-3 py-2 text-xs font-semibold text-gray-700 min-w-[220px]"
+                class="text-left px-3 py-2 text-xs font-semibold text-gray-700 dark:text-gray-200 min-w-[320px]"
               >{{ col.name || '—' }}</th>
               <th class="w-8"></th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-50">
+          <tbody class="divide-y divide-gray-50 dark:divide-gray-800/60">
             <tr v-for="(workout, wi) in form.workouts" :key="wi" class="align-top">
               <td class="px-3 py-2 text-gray-400 font-bold text-xs pt-3">{{ wi + 1 }}</td>
               <td v-for="(col, ci) in exerciseCols" :key="ci" class="px-2 py-2">
@@ -128,10 +128,10 @@
       </div>
 
       <!-- Bulk add workouts -->
-      <div class="p-4 border-t border-gray-100 flex flex-wrap items-center gap-3">
-        <span class="text-sm text-gray-600">Добавить сразу</span>
+      <div class="p-4 border-t border-gray-100 dark:border-gray-800 flex flex-wrap items-center gap-3">
+        <span class="text-sm text-gray-600 dark:text-gray-400">Добавить сразу</span>
         <input v-model.number="bulkCount" type="number" min="1" max="50" class="input w-20 text-center text-sm" inputmode="numeric" />
-        <span class="text-sm text-gray-600">тренировок</span>
+        <span class="text-sm text-gray-600 dark:text-gray-400">тренировок</span>
         <BaseButton variant="outline" @click="bulkAdd">Добавить</BaseButton>
       </div>
     </div>
@@ -161,7 +161,7 @@
           class="w-full text-left px-3 py-2.5 rounded-xl hover:bg-primary/5 transition-colors border border-transparent hover:border-primary/20"
           @click="selectExercise(ex)"
         >
-          <div class="font-medium text-gray-800 text-sm">{{ ex.name }}</div>
+          <div class="font-medium text-gray-800 dark:text-gray-100 text-sm">{{ ex.name }}</div>
           <div class="text-xs text-gray-400 mt-0.5">{{ ex.muscleGroup }} · {{ ex.equipment }}</div>
         </button>
         <p v-if="!filteredPickerExercises.length" class="text-center text-sm text-gray-400 py-6">Ничего не найдено</p>

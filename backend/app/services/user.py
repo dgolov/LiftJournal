@@ -22,6 +22,7 @@ class UserService:
             birthDate=u.birth_date,
             avatarUrl=u.avatar_url,
             theme=u.theme if u.theme else "light",
+            isAdmin=u.is_admin,
             weightLog=sorted(
                 [WeightEntryOut(date=e.date, kg=e.kg) for e in u.weight_log],
                 key=lambda x: x.date,

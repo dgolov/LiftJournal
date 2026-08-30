@@ -22,7 +22,7 @@ async def test_list_exercises_returns_empty_list(mock_db):
         MockRepo.return_value = repo
         repo.get_all.return_value = []
 
-        result = await ExerciseService(mock_db).list_exercises()
+        result = await ExerciseService(mock_db).list_exercises(user_id=1)
 
     assert result == []
 
@@ -36,7 +36,7 @@ async def test_list_exercises_returns_dtos(mock_db):
         MockRepo.return_value = repo
         repo.get_all.return_value = [ex1, ex2]
 
-        result = await ExerciseService(mock_db).list_exercises()
+        result = await ExerciseService(mock_db).list_exercises(user_id=1)
 
     assert len(result) == 2
     assert result[0].id == "ex-001"
@@ -64,7 +64,7 @@ async def test_create_custom_returns_dto(mock_db):
             name="Cable Fly", muscleGroup="Грудь",
             equipment="Кабель", description="",
         )
-        result = await ExerciseService(mock_db).create_custom(payload)
+        result = await ExerciseService(mock_db).create_custom(payload, user_id=1)
 
     assert result.id == "ex-new"
     assert result.isCustom is True
@@ -74,6 +74,34 @@ async def test_create_custom_returns_dto(mock_db):
         secondary_muscles=[],
         equipment="Кабель",
         description="",
+        created_by=1,
+        is_private=False,
+    )
+
+
+async def test_create_custom_private(mock_db):
+    saved = make_exercise(id="ex-priv", is_custom=True, status="private")
+
+    with patch("app.services.exercise.ExerciseRepository") as MockRepo:
+        repo = AsyncMock()
+        MockRepo.return_value = repo
+        repo.create.return_value = saved
+
+        payload = ExerciseCreate(
+            name="My Own Move", muscleGroup="Грудь",
+            equipment="Гантели", isPrivate=True,
+        )
+        result = await ExerciseService(mock_db).create_custom(payload, user_id=1)
+
+    assert result.status == "private"
+    repo.create.assert_called_once_with(
+        name="My Own Move",
+        muscle_group="Грудь",
+        secondary_muscles=[],
+        equipment="Гантели",
+        description="",
+        created_by=1,
+        is_private=True,
     )
 
 

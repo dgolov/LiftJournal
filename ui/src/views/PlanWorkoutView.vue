@@ -86,7 +86,18 @@
     <div class="mb-4">
       <div class="flex items-center justify-between mb-3">
         <h3 class="font-semibold text-gray-900 dark:text-white">Упражнения</h3>
-        <BaseButton variant="outline" size="sm" @click="showPicker = true">+ Добавить</BaseButton>
+        <div class="flex items-center gap-2">
+          <button
+            v-if="form.exercises.length"
+            class="p-2 rounded-lg text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors"
+            title="Сохранить как шаблон"
+            @click="templateName = form.title; showSaveTemplate = true"
+          >
+            <LayoutTemplate class="w-4 h-4" />
+          </button>
+          <BaseButton variant="outline" size="sm" @click="showTemplatePicker = true">Шаблон</BaseButton>
+          <BaseButton variant="outline" size="sm" @click="showPicker = true">+ Добавить</BaseButton>
+        </div>
       </div>
 
       <draggable
@@ -200,6 +211,16 @@
       :added-ids="addedExerciseIds"
       @pick="addExercise"
     />
+
+    <TemplatePicker v-model="showTemplatePicker" @apply="onApplyTemplate" />
+
+    <BaseModal v-model="showSaveTemplate" title="Сохранить как шаблон" max-width="sm">
+      <BaseInput v-model="templateName" label="Название шаблона" placeholder="Например: Push day" />
+      <template #footer>
+        <BaseButton variant="ghost" @click="showSaveTemplate = false">Отмена</BaseButton>
+        <BaseButton :disabled="!templateName.trim()" :loading="savingTemplate" @click="saveAsTemplate">Сохранить</BaseButton>
+      </template>
+    </BaseModal>
   </div>
 </template>
 
@@ -207,13 +228,15 @@
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter, useRoute } from 'vue-router'
-import { ChevronLeft, Dumbbell, Trash2, X, RotateCw, GripVertical } from 'lucide-vue-next'
+import { ChevronLeft, Dumbbell, Trash2, X, RotateCw, GripVertical, LayoutTemplate } from 'lucide-vue-next'
 import draggable from 'vuedraggable'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
 import StepperInput from '@/components/ui/StepperInput.vue'
 import ExercisePicker from '@/components/workout/ExercisePicker.vue'
+import TemplatePicker from '@/components/workout/TemplatePicker.vue'
 import { WORKOUT_TYPES } from '@/services/mockData.js'
 
 const store = useStore()
@@ -223,6 +246,10 @@ const route = useRoute()
 const isEdit = computed(() => !!route.params.id)
 const showPicker = ref(false)
 const saving = ref(false)
+const showTemplatePicker = ref(false)
+const showSaveTemplate = ref(false)
+const templateName = ref('')
+const savingTemplate = ref(false)
 const workoutTypes = WORKOUT_TYPES
 
 function tomorrow() {
@@ -271,6 +298,58 @@ function addExercise(exercise) {
 
 function removeExercise(exIdx) {
   form.value.exercises.splice(exIdx, 1)
+}
+
+// source: 'template' uses the numbers saved with the template itself, 'history'
+// (default) re-derives them from each exercise's own recent history instead,
+// falling back to the template's saved numbers where there's no history yet.
+// history is attached either way so the per-exercise cycle button still works.
+function onApplyTemplate(template, source = 'history') {
+  form.value.title = template.title
+  form.value.type = template.type
+  form.value.exercises = template.exercises.map(ex => {
+    const history = store.getters['workouts/exerciseHistoryOptions'](ex.exerciseId)
+    const mapTemplateSets = () => ex.sets.map(s => ({ id: uid(), weight: s.weight, reps: s.reps }))
+    let sets
+    if (source === 'template' && ex.sets.length) {
+      sets = mapTemplateSets()
+    } else if (history.length) {
+      sets = history[0].sets.map(s => ({ id: uid(), weight: s.weight, reps: s.reps }))
+    } else if (ex.sets.length) {
+      sets = mapTemplateSets()
+    } else {
+      sets = Array.from({ length: 3 }, () => ({ id: uid(), weight: 0, reps: 0 }))
+    }
+    return {
+      exerciseId: ex.exerciseId,
+      exerciseName: ex.exerciseName,
+      sets,
+      history,
+      historyIndex: 0,
+    }
+  })
+}
+
+async function saveAsTemplate() {
+  savingTemplate.value = true
+  try {
+    await store.dispatch('templates/createTemplate', {
+      title: templateName.value.trim(),
+      type: form.value.type,
+      exercises: form.value.exercises.map(ex => ({
+        exerciseId: ex.exerciseId,
+        exerciseName: ex.exerciseName,
+        sets: ex.sets.map(s => ({ weight: s.weight, reps: s.reps })),
+      })),
+    })
+    store.dispatch('ui/showToast', { message: 'Шаблон сохранён', type: 'success' })
+    showSaveTemplate.value = false
+    templateName.value = ''
+  } catch (e) {
+    store.dispatch('ui/showToast', { message: 'Ошибка: ' + e.message, type: 'error' })
+  } finally {
+    savingTemplate.value = false
+  }
 }
 
 function cycleHistory(exIdx) {

@@ -22,6 +22,10 @@ class Exercise(Base):
     equipment: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str] = mapped_column(Text, default="")
     is_custom: Mapped[bool] = mapped_column(Boolean, default=False)
+    status: Mapped[str] = mapped_column(String(20), default="approved")
+    created_by: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
 
 
 class Workout(Base):
@@ -94,6 +98,8 @@ class User(Base):
     birth_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     avatar_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     theme: Mapped[str] = mapped_column(String(10), default="light")
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     weight_log: Mapped[list["WeightEntry"]] = relationship(
         "WeightEntry", back_populates="user", cascade="all, delete-orphan"
@@ -144,6 +150,7 @@ class TrainingCycle(Base):
     description: Mapped[str] = mapped_column(Text, default="")
     author_name: Mapped[str] = mapped_column(String(200), default="")
     is_public: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_approved: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     workouts: Mapped[list["CycleWorkout"]] = relationship(
@@ -352,3 +359,59 @@ class WorkoutComment(Base):
     workout_id: Mapped[str] = mapped_column(String, ForeignKey("workouts.id", ondelete="CASCADE"), nullable=False, index=True)
     text: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class WorkoutTemplate(Base):
+    """A reusable exercise list with its own saved weights/reps (a snapshot from
+    whichever workout it was saved from). Applying a template lets the user pick
+    between these saved numbers and freshly re-derived ones from recent history."""
+    __tablename__ = "workout_templates"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    type: Mapped[str] = mapped_column(String(50), nullable=False, default="Силовая")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    exercises: Mapped[list["TemplateExercise"]] = relationship(
+        "TemplateExercise",
+        back_populates="template",
+        cascade="all, delete-orphan",
+        order_by="TemplateExercise.order",
+    )
+
+
+class TemplateExercise(Base):
+    __tablename__ = "template_exercises"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
+    template_id: Mapped[str] = mapped_column(
+        String, ForeignKey("workout_templates.id", ondelete="CASCADE"), nullable=False
+    )
+    exercise_id: Mapped[str] = mapped_column(String, nullable=False)
+    exercise_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    order: Mapped[int] = mapped_column(Integer, default=0)
+
+    template: Mapped["WorkoutTemplate"] = relationship("WorkoutTemplate", back_populates="exercises")
+    sets: Mapped[list["TemplateSet"]] = relationship(
+        "TemplateSet",
+        back_populates="template_exercise",
+        cascade="all, delete-orphan",
+        order_by="TemplateSet.order",
+    )
+
+
+class TemplateSet(Base):
+    __tablename__ = "template_sets"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=gen_uuid)
+    template_exercise_id: Mapped[str] = mapped_column(
+        String, ForeignKey("template_exercises.id", ondelete="CASCADE"), nullable=False
+    )
+    weight: Mapped[float] = mapped_column(Float, default=0.0)
+    reps: Mapped[int] = mapped_column(Integer, default=0)
+    order: Mapped[int] = mapped_column(Integer, default=0)
+
+    template_exercise: Mapped["TemplateExercise"] = relationship("TemplateExercise", back_populates="sets")

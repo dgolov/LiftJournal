@@ -40,6 +40,7 @@ class TokenOut(BaseModel):
     token_type: str = "bearer"
     user_id: int
     name: str
+    isAdmin: bool = False
 
 
 # ---------------------------------------------------------------------------
@@ -52,6 +53,7 @@ class ExerciseCreate(BaseModel):
     secondaryMuscles: list[str] = []
     equipment: str
     description: str = ""
+    isPrivate: bool = False
 
 
 class ExerciseOut(BaseModel):
@@ -62,6 +64,7 @@ class ExerciseOut(BaseModel):
     equipment: str
     description: str
     isCustom: bool
+    status: str = "approved"
 
 
 # ---------------------------------------------------------------------------
@@ -186,6 +189,7 @@ class UserOut(BaseModel):
     birthDate: Optional[date] = None
     avatarUrl: Optional[str]
     theme: str = "light"
+    isAdmin: bool = False
     weightLog: list[WeightEntryOut]
     goals: list[GoalOut]
     maxes: list[UserMaxOut] = []
@@ -258,6 +262,7 @@ class CycleListOut(BaseModel):
     author_name: str
     created_by: int
     is_public: bool
+    is_approved: bool = True
     created_at: datetime
     workout_count: int
 
@@ -269,6 +274,7 @@ class CycleDetailOut(BaseModel):
     author_name: str
     created_by: int
     is_public: bool
+    is_approved: bool = True
     created_at: datetime
     workouts: list[CycleWorkoutOut]
 
@@ -355,6 +361,53 @@ class PlannedWorkoutOut(BaseModel):
     completedWorkoutId: Optional[str]
     createdAt: datetime
     exercises: list[PlannedExerciseOut]
+
+
+# ---------------------------------------------------------------------------
+# Workout templates
+# ---------------------------------------------------------------------------
+
+class TemplateSetIn(BaseModel):
+    weight: float = 0.0
+    reps: int = 0
+
+
+class TemplateSetOut(BaseModel):
+    id: str
+    weight: float
+    reps: int
+
+
+class TemplateExerciseIn(BaseModel):
+    exerciseId: str
+    exerciseName: str
+    sets: list[TemplateSetIn] = []
+
+
+class TemplateExerciseOut(BaseModel):
+    exerciseId: str
+    exerciseName: str
+    sets: list[TemplateSetOut]
+
+
+class WorkoutTemplateCreate(BaseModel):
+    title: str
+    type: str = "Силовая"
+    exercises: list[TemplateExerciseIn] = []
+
+
+class WorkoutTemplateUpdate(BaseModel):
+    title: Optional[str] = None
+    type: Optional[str] = None
+    exercises: Optional[list[TemplateExerciseIn]] = None
+
+
+class WorkoutTemplateOut(BaseModel):
+    id: str
+    title: str
+    type: str
+    createdAt: datetime
+    exercises: list[TemplateExerciseOut]
 
 
 # ---------------------------------------------------------------------------
@@ -473,3 +526,85 @@ class WorkoutCommentOut(BaseModel):
     text: str
     createdAt: datetime
     isOwn: bool = False
+
+
+# ---------------------------------------------------------------------------
+# Admin
+# ---------------------------------------------------------------------------
+
+class AdminUserOut(BaseModel):
+    id: int
+    email: Optional[str] = None
+    name: str
+    isAdmin: bool
+
+
+class AdminUserUpdate(BaseModel):
+    isAdmin: bool
+
+
+class AdminPasswordReset(BaseModel):
+    newPassword: str
+
+
+class AdminExerciseOut(BaseModel):
+    id: str
+    name: str
+    muscleGroup: str
+    secondaryMuscles: list[str]
+    equipment: str
+    description: str
+    status: str
+    submittedByName: Optional[str] = None
+    submittedByEmail: Optional[str] = None
+
+
+class AdminExerciseCreate(BaseModel):
+    name: str
+    muscleGroup: str
+    secondaryMuscles: list[str] = []
+    equipment: str
+    description: str = ""
+
+
+class AdminExerciseUpdate(BaseModel):
+    name: str
+
+
+class AdminCycleOut(BaseModel):
+    id: str
+    title: str
+    description: str
+    authorName: str
+    isPublic: bool
+    isApproved: bool
+    workoutCount: int
+    createdAt: datetime
+    submittedByName: Optional[str] = None
+    submittedByEmail: Optional[str] = None
+
+
+class DailyCountOut(BaseModel):
+    date: str
+    count: int
+
+
+class TopUserOut(BaseModel):
+    id: int
+    name: str
+    workoutCount: int
+
+
+class AdminStatsOut(BaseModel):
+    totalUsers: int
+    newUsersLast7Days: int
+    totalWorkouts: int
+    workoutsLast7Days: int
+    totalExercises: int
+    customExercises: int
+    pendingExercises: int
+    totalCycles: int
+    publicCycles: int
+    pendingCycles: int
+    dailyWorkouts: list[DailyCountOut]
+    topUsers: list[TopUserOut]
