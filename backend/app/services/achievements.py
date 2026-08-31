@@ -17,7 +17,7 @@ class AchievementDef:
     title: str
     description: str
     icon: str
-    category: str  # count | streak | volume_month | volume_total
+    category: str  # count | streak | volume_month | volume_total | strength_max
     check: Callable[[dict], bool]
 
 
@@ -32,6 +32,9 @@ def _vol_month(n: float) -> Callable[[dict], bool]:
 
 def _vol_total(n: float) -> Callable[[dict], bool]:
     return lambda s: s["total_volume"] >= n
+
+def _max_weight(exercise_id: str, n: float) -> Callable[[dict], bool]:
+    return lambda s: s["max_weight_by_exercise"].get(exercise_id, 0.0) >= n
 
 
 REGISTRY: list[AchievementDef] = [
@@ -50,6 +53,13 @@ REGISTRY: list[AchievementDef] = [
     AchievementDef("volume_10t_month","Десять тонн",          "10 000 кг за один месяц",        "🏋️", "volume_month", _vol_month(10_000)),
     # ── Суммарный тоннаж ──────────────────────────────────────────────────────
     AchievementDef("volume_100t_total","Сотня тонн",          "100 000 кг суммарно",            "🌐", "volume_total", _vol_total(100_000)),
+    # ── Силовые клубы ─────────────────────────────────────────────────────────
+    AchievementDef("bench_club_100",    "Клуб 100 (жим лёжа)",    "Пожмите 100 кг в жиме лёжа",     "🏋️‍♂️", "strength_max", _max_weight("ex-001", 100)),
+    AchievementDef("bench_club_200",    "Клуб 200 (жим лёжа)",    "Пожмите 200 кг в жиме лёжа",     "👑", "strength_max", _max_weight("ex-001", 200)),
+    AchievementDef("deadlift_club_200", "Клуб 200 (становая тяга)", "Потяните 200 кг в становой тяге", "🏋️", "strength_max", _max_weight("ex-006", 200)),
+    AchievementDef("deadlift_club_300", "Клуб 300 (становая тяга)", "Потяните 300 кг в становой тяге", "👑", "strength_max", _max_weight("ex-006", 300)),
+    AchievementDef("squat_club_200",    "Клуб 200 (присед)",        "Присядьте с 200 кг",              "🦵", "strength_max", _max_weight("ex-024", 200)),
+    AchievementDef("squat_club_300",    "Клуб 300 (присед)",        "Присядьте с 300 кг",              "👑", "strength_max", _max_weight("ex-024", 300)),
 ]
 
 REGISTRY_MAP: dict[str, AchievementDef] = {a.id: a for a in REGISTRY}
@@ -88,11 +98,22 @@ def compute_stats(workouts: list) -> dict:
             current = current + 1 if delta == 1 else 1
         longest = max(longest, current)
 
+    max_weight_by_exercise: dict[str, float] = {}
+    for w in workouts:
+        for ex in w.exercises:
+            for s in ex.sets:
+                if getattr(s, "failed", False):
+                    continue
+                weight = s.weight or 0.0
+                if weight > max_weight_by_exercise.get(ex.exercise_id, 0.0):
+                    max_weight_by_exercise[ex.exercise_id] = weight
+
     return {
         "total_workouts": total,
         "total_volume": total_volume,
         "max_monthly_volume": max_monthly,
         "longest_streak": longest,
+        "max_weight_by_exercise": max_weight_by_exercise,
     }
 
 
