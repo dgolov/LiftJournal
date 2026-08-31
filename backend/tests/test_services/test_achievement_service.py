@@ -22,9 +22,10 @@ def _make_set(weight=100.0, reps=5, failed=False):
     return s
 
 
-def _make_ex(sets):
+def _make_ex(sets, exercise_id="ex-001"):
     ex = MagicMock()
     ex.sets = sets
+    ex.exercise_id = exercise_id
     return ex
 
 
@@ -106,6 +107,29 @@ class TestComputeStats:
         stats = compute_stats(ws)
         assert stats["total_workouts"] == 7
 
+    def test_max_weight_by_exercise(self):
+        s1 = _make_set(weight=100.0, reps=3)
+        s2 = _make_set(weight=120.0, reps=1)
+        ex_bench = _make_ex([s1, s2], exercise_id="ex-001")
+        s3 = _make_set(weight=180.0, reps=2)
+        ex_deadlift = _make_ex([s3], exercise_id="ex-006")
+        w = MagicMock()
+        w.date = date(2026, 1, 1)
+        w.exercises = [ex_bench, ex_deadlift]
+        stats = compute_stats([w])
+        assert stats["max_weight_by_exercise"]["ex-001"] == 120.0
+        assert stats["max_weight_by_exercise"]["ex-006"] == 180.0
+
+    def test_max_weight_by_exercise_excludes_failed_sets(self):
+        s_ok = _make_set(weight=100.0, reps=3, failed=False)
+        s_fail = _make_set(weight=200.0, reps=1, failed=True)
+        ex = _make_ex([s_ok, s_fail], exercise_id="ex-001")
+        w = MagicMock()
+        w.date = date(2026, 1, 1)
+        w.exercises = [ex]
+        stats = compute_stats([w])
+        assert stats["max_weight_by_exercise"]["ex-001"] == 100.0
+
 
 # ── Achievement conditions ─────────────────────────────────────────────────────
 
@@ -149,12 +173,34 @@ class TestAchievementConditions:
         assert not a.check({**base, "total_volume": 99_999})
         assert a.check({**base, "total_volume": 100_000})
 
+    @pytest.mark.parametrize("aid,exercise_id,threshold", [
+        ("bench_club_100",    "ex-001", 100),
+        ("bench_club_200",    "ex-001", 200),
+        ("deadlift_club_200", "ex-006", 200),
+        ("deadlift_club_300", "ex-006", 300),
+        ("squat_club_200",    "ex-024", 200),
+        ("squat_club_300",    "ex-024", 300),
+    ])
+    def test_strength_club_achievements(self, aid, exercise_id, threshold):
+        a = REGISTRY_MAP[aid]
+        base = {"total_workouts": 0, "total_volume": 0, "longest_streak": 0, "max_monthly_volume": 0}
+        assert not a.check({**base, "max_weight_by_exercise": {exercise_id: threshold - 1}})
+        assert a.check({**base, "max_weight_by_exercise": {exercise_id: threshold}})
+        # unaffected by weight lifted on a different exercise
+        assert not a.check({**base, "max_weight_by_exercise": {"ex-999": threshold + 100}})
+
     def test_registry_covers_all_ids(self):
         ids = {a.id for a in REGISTRY}
         assert "first_workout" in ids
         assert "streak_10" in ids
         assert "volume_1t_month" in ids
         assert "volume_100t_total" in ids
+        assert "bench_club_100" in ids
+        assert "bench_club_200" in ids
+        assert "deadlift_club_200" in ids
+        assert "deadlift_club_300" in ids
+        assert "squat_club_200" in ids
+        assert "squat_club_300" in ids
 
 
 # ── AchievementService ─────────────────────────────────────────────────────────
@@ -298,6 +344,31 @@ class TestAchievementServiceEvaluate:
 
         ids = {a.id for a in newly}
         assert "volume_1t_month" in ids
+
+    async def test_unlocks_bench_club_100(self, mock_db):
+        s = _make_set(weight=100.0, reps=1)
+        ex = _make_ex([s], exercise_id="ex-001")
+        w = MagicMock()
+        w.date = date(2026, 1, 1)
+        w.exercises = [ex]
+        with (
+            patch("app.services.achievements.AchievementRepository") as MockRepo,
+            patch("app.services.achievements.WorkoutRepository") as MockWRepo,
+        ):
+            repo = AsyncMock()
+            wrepo = AsyncMock()
+            MockRepo.return_value = repo
+            MockWRepo.return_value = wrepo
+            wrepo.get_all_by_user.return_value = [w]
+            repo.get_for_user.return_value = []
+            repo.unlock = AsyncMock(return_value=MagicMock())
+
+            newly = await AchievementService(mock_db).evaluate(user_id=1)
+
+        ids = {a.id for a in newly}
+        assert "bench_club_100" in ids
+        assert "bench_club_200" not in ids
+        assert "deadlift_club_200" not in ids
 
     async def test_returns_empty_when_no_new_achievements(self, mock_db):
         with (
