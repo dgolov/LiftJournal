@@ -89,6 +89,10 @@
     </div>
 
     <!-- Exercises: edit mode -->
+    <div v-if="isEditing" class="flex items-center justify-between mb-3">
+      <h3 class="font-semibold text-gray-900 dark:text-white">Упражнения</h3>
+      <ExerciseViewModeToggle />
+    </div>
     <draggable
       v-if="isEditing"
       :list="draft.exercises"
@@ -98,7 +102,14 @@
       class="space-y-4"
     >
       <template #item="{ element: ex }">
+        <ExerciseCompactCard
+          v-if="viewMode === 'cards'"
+          :exercise-name="ex.exerciseName"
+          :sets-count="ex.sets.length"
+          @remove="removeDraftExercise(ex.instanceId)"
+        />
         <SwipeDeleteWrapper
+          v-else
           delete-label="Удалить упражнение"
           @delete="removeDraftExercise(ex.instanceId)"
         >
@@ -320,13 +331,17 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import StepperInput from '@/components/ui/StepperInput.vue'
 import ExercisePicker from '@/components/workout/ExercisePicker.vue'
+import ExerciseCompactCard from '@/components/workout/ExerciseCompactCard.vue'
+import ExerciseViewModeToggle from '@/components/workout/ExerciseViewModeToggle.vue'
 import SwipeDeleteWrapper from '@/components/ui/SwipeDeleteWrapper.vue'
+import { useExerciseViewMode } from '@/composables/useExerciseViewMode.js'
 import { WORKOUT_TYPES } from '@/services/mockData.js'
 import workoutService from '@/services/workoutService.js'
 
 const route = useRoute()
 const router = useRouter()
 const store = useStore()
+const viewMode = useExerciseViewMode()
 
 const fetchedWorkout = ref(null)
 const socialMeta = ref(null) // { isLiked, likesCount } — for own workouts not in feed

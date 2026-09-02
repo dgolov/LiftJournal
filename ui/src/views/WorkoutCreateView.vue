@@ -103,6 +103,7 @@
           >
             <LayoutTemplate class="w-4 h-4" />
           </button>
+          <ExerciseViewModeToggle />
           <BaseButton variant="outline" size="sm" @click="showPicker = true">+ Добавить</BaseButton>
         </div>
       </div>
@@ -117,7 +118,15 @@
         @end="onReorder"
       >
         <template #item="{ element }">
-          <ExerciseBlock :exercise="element" />
+          <ExerciseBlock v-if="viewMode === 'standard'" :exercise="element" />
+          <ExerciseCompactCard
+            v-else
+            :exercise-name="element.exerciseName"
+            :sets-count="element.sets.length"
+            :history-label="element.history?.length > 1 ? `${element.historyIndex + 1}/${element.history.length}` : null"
+            @remove="store.commit('workouts/REMOVE_EXERCISE_FROM_ACTIVE', element.instanceId)"
+            @cycle-history="store.commit('workouts/CYCLE_EXERCISE_HISTORY', element.instanceId)"
+          />
         </template>
       </draggable>
 
@@ -223,13 +232,17 @@ import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import ExerciseBlock from '@/components/workout/ExerciseBlock.vue'
+import ExerciseCompactCard from '@/components/workout/ExerciseCompactCard.vue'
+import ExerciseViewModeToggle from '@/components/workout/ExerciseViewModeToggle.vue'
 import ExercisePicker from '@/components/workout/ExercisePicker.vue'
 import TemplatePicker from '@/components/workout/TemplatePicker.vue'
 import RestTimerBar from '@/components/workout/RestTimerBar.vue'
+import { useExerciseViewMode } from '@/composables/useExerciseViewMode.js'
 import { WORKOUT_TYPES } from '@/services/mockData.js'
 
 const store = useStore()
 const router = useRouter()
+const viewMode = useExerciseViewMode()
 
 const workoutStartedAt = computed(() => store.state.workouts.workoutStartedAt)
 

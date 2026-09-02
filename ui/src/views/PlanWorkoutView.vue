@@ -95,6 +95,7 @@
           >
             <LayoutTemplate class="w-4 h-4" />
           </button>
+          <ExerciseViewModeToggle />
           <BaseButton variant="outline" size="sm" @click="showTemplatePicker = true">Шаблон</BaseButton>
           <BaseButton variant="outline" size="sm" @click="showPicker = true">+ Добавить</BaseButton>
         </div>
@@ -109,7 +110,16 @@
         class="space-y-3"
       >
         <template #item="{ element: ex, index: exIdx }">
-          <div class="card p-4">
+          <ExerciseCompactCard
+            v-if="viewMode === 'cards'"
+            :exercise-name="ex.exerciseName"
+            :sets-count="ex.sets.length"
+            unit-label="подходов (план)"
+            :history-label="ex.history?.length > 1 ? `${ex.historyIndex + 1}/${ex.history.length}` : null"
+            @remove="removeExercise(exIdx)"
+            @cycle-history="cycleHistory(exIdx)"
+          />
+          <div v-else class="card p-4">
             <div class="flex items-center justify-between mb-3">
               <div class="flex items-center gap-2 min-w-0">
                 <span class="drag-handle flex-shrink-0 text-gray-300 hover:text-gray-500 dark:hover:text-gray-400 cursor-grab active:cursor-grabbing touch-none p-1 -ml-1">
@@ -237,11 +247,15 @@ import BaseModal from '@/components/ui/BaseModal.vue'
 import StepperInput from '@/components/ui/StepperInput.vue'
 import ExercisePicker from '@/components/workout/ExercisePicker.vue'
 import TemplatePicker from '@/components/workout/TemplatePicker.vue'
+import ExerciseCompactCard from '@/components/workout/ExerciseCompactCard.vue'
+import ExerciseViewModeToggle from '@/components/workout/ExerciseViewModeToggle.vue'
+import { useExerciseViewMode } from '@/composables/useExerciseViewMode.js'
 import { WORKOUT_TYPES } from '@/services/mockData.js'
 
 const store = useStore()
 const router = useRouter()
 const route = useRoute()
+const viewMode = useExerciseViewMode()
 
 const isEdit = computed(() => !!route.params.id)
 const showPicker = ref(false)
