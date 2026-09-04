@@ -91,6 +91,16 @@ const routes = [
     component: () => import('@/views/PlanWorkoutView.vue')
   },
   {
+    path: '/templates',
+    name: 'templates',
+    component: () => import('@/views/TemplatesView.vue')
+  },
+  {
+    path: '/templates/:id/edit',
+    name: 'template-edit',
+    component: () => import('@/views/TemplateEditView.vue')
+  },
+  {
     path: '/about',
     name: 'about',
     component: () => import('@/views/AboutView.vue')
