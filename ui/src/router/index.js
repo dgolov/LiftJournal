@@ -96,9 +96,14 @@ const routes = [
     component: () => import('@/views/TemplatesView.vue')
   },
   {
-    path: '/templates/:id/edit',
-    name: 'template-edit',
-    component: () => import('@/views/TemplateEditView.vue')
+    path: '/templates/new',
+    name: 'template-create',
+    component: () => import('@/views/TemplateCreateView.vue')
+  },
+  {
+    path: '/templates/:id',
+    name: 'template-detail',
+    component: () => import('@/views/TemplateDetailView.vue')
   },
   {
     path: '/about',

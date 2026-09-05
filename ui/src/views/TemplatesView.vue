@@ -2,6 +2,7 @@
   <div>
     <div class="flex items-center justify-between mb-6">
       <h2 class="text-xl font-bold text-gray-900 dark:text-white">Шаблоны</h2>
+      <RouterLink to="/templates/new" class="btn btn-primary text-sm px-4 py-2">+ Добавить</RouterLink>
     </div>
 
     <div v-if="loading" class="text-center py-16 text-gray-400">Загрузка...</div>
@@ -9,9 +10,10 @@
     <BaseEmptyState
       v-else-if="!templates.length"
       title="Нет шаблонов"
-      description="Сохраните тренировку или план как шаблон — он появится здесь"
+      description="Создайте шаблон или сохраните тренировку/план как шаблон — он появится здесь"
     >
       <template #icon><LayoutTemplate class="w-12 h-12" /></template>
+      <RouterLink to="/templates/new" class="mt-4 btn btn-primary">Создать шаблон</RouterLink>
     </BaseEmptyState>
 
     <div v-else class="space-y-3">
@@ -21,7 +23,7 @@
         delete-label="Удалить шаблон"
         @delete="confirmDelete(t)"
       >
-        <div class="bg-white dark:bg-gray-900 p-4">
+        <div class="bg-white dark:bg-gray-900 p-4 cursor-pointer" @click="$router.push(`/templates/${t.id}`)">
           <div class="flex items-start gap-3">
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 flex-wrap mb-0.5">
@@ -32,22 +34,13 @@
                 {{ t.exercises.length }} упр. · {{ totalSets(t) }} подходов
               </p>
             </div>
-            <div class="flex items-center gap-1 flex-shrink-0">
-              <button
-                class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-gray-500 transition-colors"
-                title="Редактировать"
-                @click="$router.push(`/templates/${t.id}/edit`)"
-              >
-                <Pencil class="w-4 h-4" />
-              </button>
-              <button
-                class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors"
-                title="Удалить"
-                @click="confirmDelete(t)"
-              >
-                <Trash2 class="w-4 h-4" />
-              </button>
-            </div>
+            <button
+              class="hidden lg:flex w-10 h-10 items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
+              title="Удалить"
+              @click.stop="confirmDelete(t)"
+            >
+              <Trash2 class="w-4 h-4" />
+            </button>
           </div>
 
           <div v-if="t.exercises.length" class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 flex flex-wrap gap-x-3 gap-y-1">
@@ -72,7 +65,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
-import { LayoutTemplate, Pencil, Trash2 } from 'lucide-vue-next'
+import { LayoutTemplate, Trash2 } from 'lucide-vue-next'
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
