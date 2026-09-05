@@ -9,6 +9,7 @@ export const CHANGELOG = [
     entries: [
       { type: 'feature',        text: 'Добавлены карточки для удобного редактирования тренировок' },
       { type: 'feature',        text: 'Добавлена возможность редактирования шаблонов' },
+      { type: 'improvement',    text: 'Улучшение шаблонов тренировок' },
     ],
   },
   {
