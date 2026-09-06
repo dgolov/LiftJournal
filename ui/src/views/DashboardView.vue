@@ -362,7 +362,7 @@ const adherencePeriod = ref('month')
 const adherencePeriods = [
   { key: 'week', label: '7 дней', days: 7 },
   { key: 'month', label: '30 дней', days: 30 },
-  { key: 'all', label: 'Всё время', days: null },
+  { key: 'year', label: 'Год', days: 365 },
 ]
 
 const allPlanned = computed(() => store.state.planned.plannedWorkouts)
