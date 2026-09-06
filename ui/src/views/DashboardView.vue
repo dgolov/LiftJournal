@@ -73,6 +73,51 @@
       </div>
     </div>
 
+    <!-- Plan adherence -->
+    <div>
+      <h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-3">
+        <CalendarCheck class="w-4 h-4 text-primary" />
+        Выполнение плана
+      </h3>
+
+      <div class="card p-4">
+        <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 gap-0.5 mb-4">
+          <button
+            v-for="p in adherencePeriods" :key="p.key"
+            :class="['flex-1 py-1.5 text-xs font-medium rounded-md transition-colors',
+              adherencePeriod === p.key
+                ? 'bg-white dark:bg-gray-700 shadow-sm text-primary'
+                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300']"
+            @click="adherencePeriod = p.key"
+          >{{ p.label }}</button>
+        </div>
+
+        <template v-if="adherenceStats.total > 0">
+          <div class="flex items-end gap-2 mb-2">
+            <span class="text-3xl font-bold text-gray-900 dark:text-white">{{ adherenceStats.rate }}%</span>
+            <span class="text-xs text-gray-400 mb-1">выполнено из запланированного</span>
+          </div>
+          <div class="h-2.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden flex mb-4">
+            <div class="h-full bg-green-400" :style="{ width: adherencePct(adherenceStats.completed) + '%' }" />
+            <div class="h-full bg-gray-300 dark:bg-gray-600" :style="{ width: adherencePct(adherenceStats.skipped) + '%' }" />
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-center">
+            <div>
+              <p class="text-sm font-bold text-green-500">{{ adherenceStats.completed }}</p>
+              <p class="text-xs text-gray-400">Выполнено</p>
+            </div>
+            <div>
+              <p class="text-sm font-bold text-gray-500 dark:text-gray-400">{{ adherenceStats.skipped }}</p>
+              <p class="text-xs text-gray-400">Пропущено</p>
+            </div>
+          </div>
+        </template>
+        <div v-else class="text-center py-6 text-sm text-gray-400">
+          Нет запланированных тренировок за этот период
+        </div>
+      </div>
+    </div>
+
     <!-- Month-to-month comparison -->
     <div>
       <h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-3">
@@ -209,7 +254,7 @@
 import { computed, ref, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import { Flame, Dumbbell, TrendingUp, Trophy, ClipboardList, Plus, ChevronRight, BarChart2, CalendarClock, Play, Ban } from 'lucide-vue-next'
+import { Flame, Dumbbell, TrendingUp, Trophy, ClipboardList, Plus, ChevronRight, BarChart2, CalendarClock, CalendarCheck, Play, Ban } from 'lucide-vue-next'
 import SkipOrRescheduleModal from '@/components/workout/SkipOrRescheduleModal.vue'
 
 const store = useStore()
@@ -310,6 +355,42 @@ const volumeDelta = computed(() => {
 function formatVolumeShort(v) {
   if (!v) return '0'
   return v >= 1000 ? (v / 1000).toFixed(1) + ' т' : v + ' кг'
+}
+
+// ── Plan adherence ─────────────────────────────────────────────────────────────
+const adherencePeriod = ref('month')
+const adherencePeriods = [
+  { key: 'week', label: '7 дней', days: 7 },
+  { key: 'month', label: '30 дней', days: 30 },
+  { key: 'all', label: 'Всё время', days: null },
+]
+
+const allPlanned = computed(() => store.state.planned.plannedWorkouts)
+
+const adherenceStats = computed(() => {
+  const days = adherencePeriods.find(p => p.key === adherencePeriod.value).days
+  let cutoff = null
+  if (days) cutoff = toDateStr(new Date(today - days * 86400000))
+
+  // The backend auto-flips any overdue 'planned' entry to 'skipped' the moment
+  // the list is fetched (see expire_overdue in planned_workout.py) — so by the
+  // time this runs, 'planned' items left are genuinely still upcoming, and only
+  // 'completed'/'skipped' represent plans that have actually been resolved.
+  const due = allPlanned.value.filter(p => {
+    if (p.status !== 'completed' && p.status !== 'skipped') return false
+    if (cutoff && p.scheduledDate < cutoff) return false
+    return true
+  })
+
+  const completed = due.filter(p => p.status === 'completed').length
+  const skipped = due.length - completed
+  const total = due.length
+
+  return { completed, skipped, total, rate: total > 0 ? Math.round((completed / total) * 100) : 0 }
+})
+
+function adherencePct(n) {
+  return adherenceStats.value.total > 0 ? (n / adherenceStats.value.total) * 100 : 0
 }
 
 // ── Month-to-month comparison ─────────────────────────────────────────────────
