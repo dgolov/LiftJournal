@@ -1,3 +1,5 @@
+from datetime import date as DateType
+
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -34,8 +36,18 @@ class WorkoutService:
             ],
         )
 
-    async def get_workouts(self, user_id: int) -> list[WorkoutOut]:
-        return [self._to_dto(w) for w in await self.repo.get_all_by_user(user_id)]
+    async def get_workouts(
+        self,
+        user_id: int,
+        *,
+        date_from: DateType | None = None,
+        date_to: DateType | None = None,
+        search: str | None = None,
+    ) -> list[WorkoutOut]:
+        workouts = await self.repo.get_all_by_user(
+            user_id, date_from=date_from, date_to=date_to, search=search
+        )
+        return [self._to_dto(w) for w in workouts]
 
     async def get_workout(self, workout_id: str, user_id: int) -> WorkoutOut:
         w = await self.repo.get_by_id(workout_id)

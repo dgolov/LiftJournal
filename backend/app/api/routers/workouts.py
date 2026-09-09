@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends
+from datetime import date as DateType
+
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas import WorkoutCreate, WorkoutUpdate, WorkoutOut
@@ -13,10 +15,15 @@ router = APIRouter()
 
 @router.get("", response_model=list[WorkoutOut])
 async def list_workouts(
+    from_: DateType | None = Query(None, alias="from"),
+    to: DateType | None = Query(None),
+    search: str | None = Query(None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await WorkoutService(db).get_workouts(current_user.id)
+    return await WorkoutService(db).get_workouts(
+        current_user.id, date_from=from_, date_to=to, search=search
+    )
 
 
 @router.post("", response_model=WorkoutOut, status_code=201)
