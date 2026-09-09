@@ -6,9 +6,10 @@
       <div class="flex items-center gap-2">
         <!-- Export button -->
         <button
-          class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400"
+          class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400 disabled:opacity-50"
           title="Экспорт"
-          @click="exportModalOpen = true"
+          :disabled="exportLoading"
+          @click="openExport"
         ><Download class="w-4 h-4" /></button>
         <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 gap-0.5">
         <button
@@ -62,6 +63,7 @@
       </button>
       <div class="flex-1 text-center">
         <span class="text-base font-semibold text-gray-900 dark:text-white capitalize">{{ periodLabel }}</span>
+        <span v-if="periodLoading" class="text-xs text-gray-400 ml-2">загрузка…</span>
       </div>
       <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400" @click="nextPeriod">
         <ChevronRight class="w-4 h-4" />
@@ -228,12 +230,12 @@
       </BaseEmptyState>
     </template>
 
-    <ExportModal v-model="exportModalOpen" :workouts="allWorkouts" />
+    <ExportModal v-model="exportModalOpen" :workouts="exportWorkouts" />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { CalendarDays, List, ChevronLeft, ChevronRight, Activity, Plus, Download } from 'lucide-vue-next'
@@ -241,17 +243,18 @@ import WorkoutCard from '@/components/workout/WorkoutCard.vue'
 import PlanCard from '@/components/workout/PlanCard.vue'
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
 import ExportModal from '@/components/ui/ExportModal.vue'
+import workoutService from '@/services/workoutService.js'
 import { WORKOUT_TYPES } from '@/services/mockData.js'
 
 const store = useStore()
 const router = useRouter()
 const workoutTypes = WORKOUT_TYPES
 
-onMounted(async () => {
-  if (!store.state.workouts.workouts.length) await store.dispatch('workouts/initWorkouts')
+onMounted(() => {
   if (!store.state.planned.plannedWorkouts.length) store.dispatch('planned/fetchPlannedWorkouts')
-  const ids = store.state.workouts.workouts.map(w => w.id)
-  if (ids.length) store.dispatch('social/fetchWorkoutsMeta', ids)
+  // Workouts are no longer bulk-loaded here — loaded per period on demand
+  // by the month-cache watcher further down (keeps History from ever
+  // pulling a user's entire workout history just to show one month).
 })
 
 // --- View state ---
@@ -313,12 +316,14 @@ const periodLabel = computed(() => {
   return monthLabel.value
 })
 
-// --- Workouts data ---
-const allWorkouts = computed(() => store.getters['workouts/allWorkouts'])
+// --- Workouts data (period-scoped — see month cache further down) ---
+const cachedWorkouts = computed(() =>
+  Object.values(monthCache).filter(e => e.status === 'loaded').flatMap(e => e.workouts)
+)
 
 const workoutsByDate = computed(() => {
   const map = {}
-  for (const w of allWorkouts.value) {
+  for (const w of cachedWorkouts.value) {
     if (!map[w.date]) map[w.date] = []
     map[w.date].push(w)
   }
@@ -327,7 +332,7 @@ const workoutsByDate = computed(() => {
 
 const monthWorkouts = computed(() => {
   const prefix = `${currentYear.value}-${String(currentMonth.value + 1).padStart(2, '0')}`
-  return allWorkouts.value.filter(w => w.date.startsWith(prefix))
+  return cachedWorkouts.value.filter(w => w.date.startsWith(prefix))
 })
 
 function volumeOf(w) {
@@ -347,11 +352,11 @@ function dayVolume(dateStr) {
 const periodWorkouts = computed(() => {
   if (granularity.value === 'week') {
     const set = new Set(weekDaysArr.value.map(d => d.dateStr))
-    return allWorkouts.value.filter(w => set.has(w.date))
+    return cachedWorkouts.value.filter(w => set.has(w.date))
   }
   if (granularity.value === 'year') {
     const prefix = `${currentYear.value}-`
-    return allWorkouts.value.filter(w => w.date.startsWith(prefix))
+    return cachedWorkouts.value.filter(w => w.date.startsWith(prefix))
   }
   return monthWorkouts.value
 })
@@ -445,6 +450,102 @@ const weekDaysArr = computed(() => {
 function weekDayShort(date) {
   return date.toLocaleDateString('ru-RU', { weekday: 'short' })
 }
+
+// --- Month-scoped workout cache ---
+// Keyed by 'YYYY-MM'. Local to this view — Dashboard/Exercises/achievements
+// still rely on the full workouts/initWorkouts load for their own needs, this
+// just keeps History itself from ever pulling the whole account history.
+const monthCache = reactive({}) // { [key]: { status: 'loading'|'loaded'|'error', workouts: [] } }
+const periodLoading = ref(false)
+
+function monthKey(year, monthIndex) {
+  return `${year}-${String(monthIndex + 1).padStart(2, '0')}`
+}
+
+function monthDateRange(year, monthIndex) {
+  const from = `${year}-${String(monthIndex + 1).padStart(2, '0')}-01`
+  const lastDay = new Date(year, monthIndex + 1, 0).getDate()
+  const to = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+  return { from, to }
+}
+
+function ensureMonth(year, monthIndex) {
+  const key = monthKey(year, monthIndex)
+  const existing = monthCache[key]
+  if (existing) return existing.status === 'loading' ? existing.promise : Promise.resolve()
+
+  const { from, to } = monthDateRange(year, monthIndex)
+  const entry = reactive({ status: 'loading', workouts: [] })
+  monthCache[key] = entry
+  entry.promise = workoutService.fetchWorkouts({ from, to })
+    .then(workouts => {
+      entry.workouts = workouts
+      entry.status = 'loaded'
+      const ids = workouts.map(w => w.id)
+      if (ids.length) store.dispatch('social/fetchWorkoutsMeta', ids)
+    })
+    .catch(() => {
+      delete monthCache[key] // allow retry on next visit instead of caching a failure forever
+    })
+  return entry.promise
+}
+
+function monthsForCurrentView() {
+  if (granularity.value === 'week') {
+    const set = new Set(weekDaysArr.value.map(d => `${d.date.getFullYear()}:${d.date.getMonth()}`))
+    return [...set].map(s => s.split(':').map(Number))
+  }
+  if (granularity.value === 'year') {
+    return Array.from({ length: 12 }, (_, m) => [currentYear.value, m])
+  }
+  return [[currentYear.value, currentMonth.value]]
+}
+
+async function loadCurrentPeriod() {
+  const months = monthsForCurrentView()
+  periodLoading.value = true
+  try {
+    await Promise.all(months.map(([y, m]) => ensureMonth(y, m)))
+  } finally {
+    periodLoading.value = false
+  }
+  // Prefetch neighboring months in the background so paging feels instant —
+  // not awaited, and skipped for year view (would mean fetching a whole
+  // extra year's worth of months just in case).
+  if (granularity.value !== 'year') {
+    const prev = new Date(currentYear.value, currentMonth.value - 1, 1)
+    const next = new Date(currentYear.value, currentMonth.value + 1, 1)
+    ensureMonth(prev.getFullYear(), prev.getMonth())
+    ensureMonth(next.getFullYear(), next.getMonth())
+  }
+}
+
+watch([granularity, anchorDate], loadCurrentPeriod, { immediate: true })
+
+// Keep the cache in sync with mutations dispatched elsewhere (e.g. deleting
+// or editing a workout via WorkoutCard, creating one via WorkoutCreateView) —
+// those commit straight to the global workouts store, not this local cache.
+const unsubscribeStore = store.subscribe((mutation) => {
+  if (mutation.type === 'workouts/DELETE_WORKOUT') {
+    const id = mutation.payload
+    for (const key in monthCache) {
+      const entry = monthCache[key]
+      const idx = entry.workouts?.findIndex(w => w.id === id)
+      if (idx > -1) { entry.workouts.splice(idx, 1); break }
+    }
+  } else if (mutation.type === 'workouts/UPDATE_WORKOUT' || mutation.type === 'workouts/ADD_WORKOUT') {
+    const w = mutation.payload
+    for (const key in monthCache) {
+      const entry = monthCache[key]
+      const idx = entry.workouts?.findIndex(x => x.id === w.id)
+      if (idx > -1) entry.workouts.splice(idx, 1)
+    }
+    const key = w.date.slice(0, 7)
+    const entry = monthCache[key]
+    if (entry && entry.status === 'loaded') entry.workouts.unshift(w)
+  }
+})
+onUnmounted(unsubscribeStore)
 
 // --- Year: mini-months (granularity === 'year') ---
 const weekDaysNarrow = ['П', 'В', 'С', 'Ч', 'П', 'С', 'В']
@@ -598,10 +699,29 @@ watch(isSearching, (searching) => {
   if (searching) switchView('list')
 })
 
-// List: when searching — all records; otherwise the selected period (week/month/year)
+// Search bypasses the month cache entirely — a search should cover the
+// user's whole history, not just whatever periods happen to be cached —
+// so it goes straight to the backend instead.
+const searchResults = ref([])
+let searchDebounce = null
+
+watch(() => filters.value.search, (q) => {
+  clearTimeout(searchDebounce)
+  const trimmed = q?.trim()
+  if (!trimmed) { searchResults.value = []; return }
+  searchDebounce = setTimeout(async () => {
+    try {
+      searchResults.value = await workoutService.fetchWorkouts({ search: trimmed })
+    } catch {
+      searchResults.value = []
+    }
+  }, 300)
+})
+
+// List: when searching — server-matched results; otherwise the cached period (week/month/year)
 const periodCombinedItems = computed(() => {
-  const baseWorkouts = isSearching.value ? [...allWorkouts.value] : [...periodWorkouts.value]
-  const basePlans    = isSearching.value ? [...allPlanned.value]  : [...periodPlanned.value]
+  const baseWorkouts = isSearching.value ? [...searchResults.value] : [...periodWorkouts.value]
+  const basePlans    = isSearching.value ? [...allPlanned.value]    : [...periodPlanned.value]
   const workouts = applyWorkoutFilters(baseWorkouts).map(w => ({ ...w, _kind: 'workout', _sortDate: w.date }))
   const plans    = applyPlanFilters(basePlans).map(p => ({ ...p, _kind: 'plan', _sortDate: p.scheduledDate }))
   return [...workouts, ...plans].sort((a, b) => b._sortDate.localeCompare(a._sortDate))
@@ -622,4 +742,19 @@ function addWorkoutForDay(dateStr) {
 
 // --- Export ---
 const exportModalOpen = ref(false)
+const exportWorkouts = ref([])
+const exportLoading = ref(false)
+
+// Export needs the full history (it offers "весь период" / custom ranges)
+// so it's fetched fresh, on demand, only when the user actually opens it —
+// not kept preloaded like everything else on this page now.
+async function openExport() {
+  exportLoading.value = true
+  try {
+    exportWorkouts.value = await workoutService.fetchWorkouts()
+    exportModalOpen.value = true
+  } finally {
+    exportLoading.value = false
+  }
+}
 </script>
