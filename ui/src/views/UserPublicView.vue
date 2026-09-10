@@ -143,59 +143,101 @@
       </div>
 
       <!-- TAB: Workouts -->
-      <div v-else-if="activeTab === 'workouts'" class="space-y-3">
-        <div v-if="workoutsLoading" class="space-y-3">
-          <div v-for="i in 4" :key="i" class="card p-4 animate-pulse">
-            <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2" />
-            <div class="h-3 bg-gray-100 dark:bg-gray-800 rounded w-1/2" />
+      <div v-else-if="activeTab === 'workouts'">
+        <!-- View toggle + month nav -->
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 gap-0.5">
+            <button
+              :class="['p-2 rounded-md transition-colors', workoutsView === 'calendar'
+                ? 'bg-white dark:bg-gray-700 shadow-sm text-primary'
+                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300']"
+              title="Календарь"
+              @click="switchWorkoutsView('calendar')"
+            ><CalendarDays class="w-4 h-4" /></button>
+            <button
+              :class="['p-2 rounded-md transition-colors', workoutsView === 'list'
+                ? 'bg-white dark:bg-gray-700 shadow-sm text-primary'
+                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300']"
+              title="Список"
+              @click="switchWorkoutsView('list')"
+            ><List class="w-4 h-4" /></button>
+          </div>
+          <div v-if="!selectedDate" class="flex items-center gap-1">
+            <button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400" @click="prevMonth">
+              <ChevronLeft class="w-4 h-4" />
+            </button>
+            <span class="text-sm font-semibold text-gray-900 dark:text-white capitalize min-w-[8.5rem] text-center">
+              {{ monthLabel }}<span v-if="monthLoading" class="text-xs text-gray-400 font-normal"> · загрузка…</span>
+            </span>
+            <button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400" @click="nextMonth">
+              <ChevronRight class="w-4 h-4" />
+            </button>
           </div>
         </div>
 
-        <BaseEmptyState
-          v-else-if="!workouts.length"
-          title="Нет тренировок"
-          description="У этого пользователя пока нет записей"
-        >
-          <template #icon><Dumbbell class="w-10 h-10" /></template>
-        </BaseEmptyState>
+        <!-- CALENDAR -->
+        <template v-if="workoutsView === 'calendar' && !selectedDate">
+          <div class="grid grid-cols-7 mb-1.5">
+            <div v-for="d in weekDays" :key="d" class="text-center text-xs font-medium text-gray-400 dark:text-gray-500 py-1">{{ d }}</div>
+          </div>
+          <div class="grid grid-cols-7 gap-px bg-gray-200 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
+            <button
+              v-for="day in calendarDays"
+              :key="day.dateStr"
+              :class="cellClass(day)"
+              class="min-h-[74px] sm:min-h-[92px] p-1 sm:p-1.5 flex flex-col items-stretch text-left"
+              @click="day.isCurrentMonth && (selectedDate = day.dateStr)"
+            >
+              <span :class="dayNumberClass(day)">{{ day.date.getDate() }}</span>
+              <div class="flex-1 flex flex-col gap-0.5 mt-1 overflow-hidden">
+                <span
+                  v-for="(w, i) in (workoutsByDate[day.dateStr] || []).slice(0, 2)" :key="i"
+                  :class="['text-[9px] leading-tight px-1 py-0.5 rounded truncate', chipClass(w)]"
+                >{{ w.title || w.type }}</span>
+                <span v-if="(workoutsByDate[day.dateStr] || []).length > 2" class="text-[9px] text-gray-400 dark:text-gray-500 px-1">
+                  +{{ workoutsByDate[day.dateStr].length - 2 }} ещё
+                </span>
+              </div>
+            </button>
+          </div>
+        </template>
 
-        <RouterLink
-          v-else
-          v-for="w in workouts"
-          :key="w.id"
-          :to="`/workouts/${w.id}`"
-          class="card p-4 block hover:shadow-md transition-shadow"
-        >
-          <div class="flex items-start justify-between gap-2 mb-1">
-            <p class="font-semibold text-gray-900 dark:text-white leading-tight">{{ w.title || 'Тренировка' }}</p>
-            <BaseBadge :color="typeColor(w.type)" class="flex-shrink-0">{{ w.type }}</BaseBadge>
+        <!-- DAY DRILL-DOWN -->
+        <template v-else-if="workoutsView === 'calendar' && selectedDate">
+          <button
+            class="flex items-center gap-1 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors -ml-1 mb-3"
+            @click="selectedDate = null"
+          >
+            <ChevronLeft class="w-4 h-4" /> Назад к календарю
+          </button>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white capitalize mb-3">{{ selectedDateLabel }}</h3>
+          <div v-if="(workoutsByDate[selectedDate] || []).length" class="space-y-3">
+            <PublicWorkoutCard v-for="w in workoutsByDate[selectedDate]" :key="w.id" :workout="w" />
           </div>
-          <p class="text-xs text-gray-500 mb-2">
-            {{ formatDate(w.date) }}
-            <span v-if="w.durationMinutes"> · {{ w.durationMinutes }} мин</span>
-            · {{ w.exercises.length }} упр.
-          </p>
-          <div class="flex flex-wrap gap-1.5 mb-2">
-            <span
-              v-for="ex in w.exercises.slice(0, 4)"
-              :key="ex.exerciseId"
-              class="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
-            >{{ ex.exerciseName }}</span>
-            <span v-if="w.exercises.length > 4" class="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-400">
-              +{{ w.exercises.length - 4 }}
-            </span>
+          <BaseEmptyState v-else title="В этот день ничего нет" description="У пользователя нет тренировок в этот день">
+            <template #icon><CalendarDays class="w-12 h-12" /></template>
+          </BaseEmptyState>
+        </template>
+
+        <!-- LIST -->
+        <template v-else>
+          <div v-if="monthLoading && !monthWorkouts.length" class="space-y-3">
+            <div v-for="i in 4" :key="i" class="card p-4 animate-pulse">
+              <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2" />
+              <div class="h-3 bg-gray-100 dark:bg-gray-800 rounded w-1/2" />
+            </div>
           </div>
-          <div class="flex items-center gap-4 text-xs text-gray-400">
-            <span class="flex items-center gap-1">
-              <Heart class="w-3 h-3" :class="w.isLiked ? 'fill-red-400 text-red-400' : ''" />
-              {{ w.likesCount || 0 }}
-            </span>
-            <span class="flex items-center gap-1">
-              <MessageCircle class="w-3 h-3" />
-              {{ w.commentsCount || 0 }}
-            </span>
+          <BaseEmptyState
+            v-else-if="!monthWorkouts.length"
+            title="Нет тренировок"
+            description="У этого пользователя нет записей за выбранный месяц"
+          >
+            <template #icon><Dumbbell class="w-10 h-10" /></template>
+          </BaseEmptyState>
+          <div v-else class="space-y-3">
+            <PublicWorkoutCard v-for="w in monthWorkouts" :key="w.id" :workout="w" />
           </div>
-        </RouterLink>
+        </template>
       </div>
     </template>
 
@@ -204,28 +246,26 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { useStore } from 'vuex'
 import { useRoute } from 'vue-router'
-import { ChevronLeft, Dumbbell, Flame, Medal, Target, Heart, MessageCircle } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, CalendarDays, List, Dumbbell, Flame, Medal, Target } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
-import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
 import ActivityHeatmap from '@/components/social/ActivityHeatmap.vue'
+import PublicWorkoutCard from '@/components/social/PublicWorkoutCard.vue'
 import workoutService from '@/services/workoutService.js'
 
 const store = useStore()
 const route = useRoute()
 
 const loading = ref(false)
-const workoutsLoading = ref(false)
 const followLoading = ref(false)
 const activityLoading = ref(false)
 const maxesLoading = ref(false)
 const goalsLoading = ref(false)
 const achievementsLoading = ref(false)
 
-const workouts = ref([])
 const activity = ref([])
 const maxes = ref([])
 const goals = ref([])
@@ -242,30 +282,34 @@ const currentUserId = computed(() => store.state.auth.userId)
 const isSelf = computed(() => userId.value === currentUserId.value)
 const profile = computed(() => store.state.social.profiles[userId.value] ?? null)
 
-onMounted(async () => {
+// The route stays on the same component when navigating from one public
+// profile to another (e.g. clicking a follower inside this same view), so
+// everything below is keyed off `userId` via a watcher, not onMounted.
+watch(userId, loadProfile, { immediate: true })
+
+async function loadProfile(uid) {
+  resetWorkoutsCalendar()
+
   loading.value = true
   try {
-    await store.dispatch('social/getProfile', userId.value)
+    await store.dispatch('social/getProfile', uid)
   } finally {
     loading.value = false
   }
 
-  // Load all tabs data in parallel
-  const uid = userId.value
   activityLoading.value = true
   maxesLoading.value = true
   goalsLoading.value = true
   achievementsLoading.value = true
-  workoutsLoading.value = true
 
   await Promise.allSettled([
     workoutService.fetchUserActivity(uid).then(d => { activity.value = d }).finally(() => { activityLoading.value = false }),
     workoutService.fetchUserMaxes(uid).then(d => { maxes.value = d }).finally(() => { maxesLoading.value = false }),
     workoutService.fetchUserGoals(uid).then(d => { goals.value = d }).finally(() => { goalsLoading.value = false }),
     workoutService.fetchUserAchievements(uid).then(d => { achievements.value = d }).finally(() => { achievementsLoading.value = false }),
-    workoutService.fetchUserWorkouts(uid).then(d => { workouts.value = d }).catch(() => { workouts.value = [] }).finally(() => { workoutsLoading.value = false }),
+    loadMonth(),
   ])
-})
+}
 
 async function toggleFollow() {
   if (!profile.value) return
@@ -282,10 +326,160 @@ async function toggleFollow() {
   }
 }
 
-const typeColorMap = { 'Силовая': 'indigo', 'Кардио': 'green', 'Растяжка': 'purple', 'HIIT': 'orange', 'Другое': 'gray' }
-function typeColor(t) { return typeColorMap[t] || 'gray' }
-
 function formatDate(d) {
   return new Date(d + 'T00:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
 }
+
+// --- Workouts tab: calendar/list, month-scoped so a profile with a large
+// history is paged through month-by-month instead of loaded all at once ---
+const workoutsView = ref('calendar')
+const anchorDate = ref(new Date())
+const selectedDate = ref(null)
+const monthLoading = ref(false)
+const monthCache = reactive({}) // { 'YYYY-MM': { status: 'loading'|'loaded', workouts: [] } }
+
+function switchWorkoutsView(mode) { workoutsView.value = mode; selectedDate.value = null }
+
+function resetWorkoutsCalendar() {
+  for (const key in monthCache) delete monthCache[key]
+  anchorDate.value = new Date()
+  selectedDate.value = null
+}
+
+const currentYear = computed(() => anchorDate.value.getFullYear())
+const currentMonth = computed(() => anchorDate.value.getMonth())
+const monthLabel = computed(() =>
+  new Date(currentYear.value, currentMonth.value, 1).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })
+)
+
+function toDateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+const todayStr = toDateStr(new Date())
+
+function monthKey(year, monthIndex) {
+  return `${year}-${String(monthIndex + 1).padStart(2, '0')}`
+}
+function monthDateRange(year, monthIndex) {
+  const from = `${year}-${String(monthIndex + 1).padStart(2, '0')}-01`
+  const lastDay = new Date(year, monthIndex + 1, 0).getDate()
+  const to = `${year}-${String(monthIndex + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+  return { from, to }
+}
+
+function ensureMonth(uid, year, monthIndex) {
+  const key = monthKey(year, monthIndex)
+  const existing = monthCache[key]
+  if (existing) return existing.status === 'loading' ? existing.promise : Promise.resolve()
+
+  const { from, to } = monthDateRange(year, monthIndex)
+  const entry = reactive({ status: 'loading', workouts: [] })
+  monthCache[key] = entry
+  entry.promise = workoutService.fetchUserWorkouts(uid, { from, to })
+    .then(ws => { entry.workouts = ws; entry.status = 'loaded' })
+    .catch(() => { delete monthCache[key] }) // allow retry on next visit
+  return entry.promise
+}
+
+async function loadMonth() {
+  const uid = userId.value
+  monthLoading.value = true
+  try {
+    await ensureMonth(uid, currentYear.value, currentMonth.value)
+  } finally {
+    monthLoading.value = false
+  }
+  // Prefetch neighboring months in the background so paging feels instant
+  const prev = new Date(currentYear.value, currentMonth.value - 1, 1)
+  const next = new Date(currentYear.value, currentMonth.value + 1, 1)
+  ensureMonth(uid, prev.getFullYear(), prev.getMonth())
+  ensureMonth(uid, next.getFullYear(), next.getMonth())
+}
+
+function prevMonth() {
+  selectedDate.value = null
+  const d = new Date(anchorDate.value)
+  d.setMonth(d.getMonth() - 1)
+  anchorDate.value = d
+  loadMonth()
+}
+function nextMonth() {
+  selectedDate.value = null
+  const d = new Date(anchorDate.value)
+  d.setMonth(d.getMonth() + 1)
+  anchorDate.value = d
+  loadMonth()
+}
+
+const cachedWorkouts = computed(() =>
+  Object.values(monthCache).filter(e => e.status === 'loaded').flatMap(e => e.workouts)
+)
+const workoutsByDate = computed(() => {
+  const map = {}
+  for (const w of cachedWorkouts.value) {
+    if (!map[w.date]) map[w.date] = []
+    map[w.date].push(w)
+  }
+  return map
+})
+const monthWorkouts = computed(() => {
+  const prefix = `${currentYear.value}-${String(currentMonth.value + 1).padStart(2, '0')}`
+  return cachedWorkouts.value.filter(w => w.date.startsWith(prefix))
+})
+
+const weekDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
+
+const calendarDays = computed(() => {
+  const year = currentYear.value
+  const month = currentMonth.value
+  const firstDay = new Date(year, month, 1)
+  const lastDay = new Date(year, month + 1, 0)
+  const startOffset = (firstDay.getDay() + 6) % 7
+
+  const days = []
+  for (let i = 0; i < startOffset; i++) {
+    const d = new Date(year, month, 1 - startOffset + i)
+    days.push({ date: d, isCurrentMonth: false, dateStr: toDateStr(d) })
+  }
+  for (let n = 1; n <= lastDay.getDate(); n++) {
+    const d = new Date(year, month, n)
+    days.push({ date: d, isCurrentMonth: true, dateStr: toDateStr(d) })
+  }
+  const tail = (7 - days.length % 7) % 7
+  for (let i = 1; i <= tail; i++) {
+    const d = new Date(year, month + 1, i)
+    days.push({ date: d, isCurrentMonth: false, dateStr: toDateStr(d) })
+  }
+  return days
+})
+
+const workoutChipClasses = {
+  'Силовая': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+  'Кардио': 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
+  'Растяжка': 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
+  'HIIT': 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
+  'Другое': 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300',
+}
+function chipClass(w) { return workoutChipClasses[w.type] || workoutChipClasses['Другое'] }
+
+function cellClass(day) {
+  const isSelected = day.dateStr === selectedDate.value
+  const isOtherMonth = !day.isCurrentMonth
+  if (isSelected) return 'bg-primary/10 dark:bg-primary/15'
+  if (isOtherMonth) return 'bg-gray-50 dark:bg-gray-900/40'
+  return 'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors'
+}
+function dayNumberClass(day) {
+  const isToday = day.dateStr === todayStr
+  const isOtherMonth = !day.isCurrentMonth
+  const base = 'w-5 h-5 flex items-center justify-center rounded-full text-xs flex-shrink-0'
+  if (isToday) return `${base} bg-primary text-white font-bold`
+  if (isOtherMonth) return `${base} text-gray-300 dark:text-gray-700`
+  return `${base} text-gray-600 dark:text-gray-300`
+}
+
+const selectedDateLabel = computed(() => {
+  if (!selectedDate.value) return ''
+  return new Date(selectedDate.value + 'T00:00:00').toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })
+})
 </script>

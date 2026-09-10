@@ -178,11 +178,17 @@ class SocialService:
         lc, il = likes_data.get(w.id, (0, False))
         return self._workout_to_dto(w, user, likes_count=lc, comments_count=comments_data.get(w.id, 0), is_liked=il)
 
-    async def get_user_workouts(self, target_user_id: int, current_user_id: int) -> list[FeedWorkoutOut]:
+    async def get_user_workouts(
+        self,
+        target_user_id: int,
+        current_user_id: int,
+        date_from: date | None = None,
+        date_to: date | None = None,
+    ) -> list[FeedWorkoutOut]:
         user = await self.repo.get_user_by_id(target_user_id)
         if not user:
             raise HTTPException(status_code=404, detail="Пользователь не найден")
-        workouts = await self.repo.get_user_workouts(target_user_id)
+        workouts = await self.repo.get_user_workouts(target_user_id, date_from=date_from, date_to=date_to)
         if not workouts:
             return []
         workout_ids = [w.id for w in workouts]
