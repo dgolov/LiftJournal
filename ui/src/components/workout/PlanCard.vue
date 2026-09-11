@@ -1,6 +1,9 @@
 <template>
   <SwipeDeleteWrapper delete-label="Удалить план" @delete="onSwipeDelete">
-    <div class="bg-white dark:bg-gray-900 p-4 border-l-2 border-dashed border-primary/40">
+    <div
+      class="bg-white dark:bg-gray-900 p-4 border-l-2 border-dashed border-primary/40 cursor-pointer"
+      @click="$router.push(`/planning/${plan.id}`)"
+    >
       <div class="flex items-start gap-2">
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 flex-wrap mb-0.5">

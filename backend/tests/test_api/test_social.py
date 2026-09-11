@@ -245,7 +245,23 @@ async def test_get_user_workouts(client):
         resp = await client.get("/api/social/users/2/workouts")
 
     assert resp.status_code == 200
-    svc.get_user_workouts.assert_called_once_with(2, 1)
+    svc.get_user_workouts.assert_called_once_with(2, 1, date_from=None, date_to=None)
+
+
+async def test_get_user_workouts_with_date_range(client):
+    with patch("app.api.routers.social.SocialService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.get_user_workouts.return_value = []
+
+        resp = await client.get("/api/social/users/2/workouts", params={
+            "from": "2026-01-01", "to": "2026-01-31",
+        })
+
+    assert resp.status_code == 200
+    svc.get_user_workouts.assert_called_once_with(
+        2, 1, date_from=date(2026, 1, 1), date_to=date(2026, 1, 31)
+    )
 
 
 # ── Workouts meta ─────────────────────────────────────────────────────────────

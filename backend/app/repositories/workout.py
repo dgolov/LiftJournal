@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import date as DateType, datetime
 
-from sqlalchemy import select
+from sqlalchemy import select, or_, exists, func
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,13 +14,30 @@ class WorkoutRepository:
     def _eager(self):
         return selectinload(Workout.exercises).selectinload(WorkoutExercise.sets)
 
-    async def get_all_by_user(self, user_id: int) -> list[Workout]:
-        result = await self.db.execute(
-            select(Workout)
-            .options(self._eager())
-            .where(Workout.user_id == user_id)
-            .order_by(Workout.created_at.desc())
-        )
+    async def get_all_by_user(
+        self,
+        user_id: int,
+        *,
+        date_from: DateType | None = None,
+        date_to: DateType | None = None,
+        search: str | None = None,
+    ) -> list[Workout]:
+        query = select(Workout).options(self._eager()).where(Workout.user_id == user_id)
+        if date_from is not None:
+            query = query.where(Workout.date >= date_from)
+        if date_to is not None:
+            query = query.where(Workout.date <= date_to)
+        if search:
+            pattern = f"%{search.lower()}%"
+            exercise_match = exists(
+                select(1).where(
+                    WorkoutExercise.workout_id == Workout.id,
+                    func.lower(WorkoutExercise.exercise_name).like(pattern),
+                )
+            )
+            query = query.where(or_(func.lower(Workout.title).like(pattern), exercise_match))
+        query = query.order_by(Workout.created_at.desc())
+        result = await self.db.execute(query)
         return list(result.scalars().all())
 
     async def get_by_id(self, workout_id: str) -> Workout | None:

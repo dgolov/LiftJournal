@@ -91,6 +91,11 @@ const routes = [
     component: () => import('@/views/PlanWorkoutView.vue')
   },
   {
+    path: '/planning/:id',
+    name: 'plan-detail',
+    component: () => import('@/views/PlanDetailView.vue')
+  },
+  {
     path: '/templates',
     name: 'templates',
     component: () => import('@/views/TemplatesView.vue')
