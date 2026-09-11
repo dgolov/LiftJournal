@@ -144,8 +144,8 @@
 
       <!-- TAB: Workouts -->
       <div v-else-if="activeTab === 'workouts'">
-        <!-- View toggle + month nav -->
-        <div class="flex items-center justify-between mb-4">
+        <!-- View toggle -->
+        <div class="flex items-center justify-end mb-4">
           <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 gap-0.5">
             <button
               :class="['p-2 rounded-md transition-colors', workoutsView === 'calendar'
@@ -162,44 +162,123 @@
               @click="switchWorkoutsView('list')"
             ><List class="w-4 h-4" /></button>
           </div>
-          <div v-if="!selectedDate" class="flex items-center gap-1">
-            <button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400" @click="prevMonth">
-              <ChevronLeft class="w-4 h-4" />
-            </button>
-            <span class="text-sm font-semibold text-gray-900 dark:text-white capitalize min-w-[8.5rem] text-center">
-              {{ monthLabel }}<span v-if="monthLoading" class="text-xs text-gray-400 font-normal"> · загрузка…</span>
-            </span>
-            <button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400" @click="nextMonth">
-              <ChevronRight class="w-4 h-4" />
-            </button>
+        </div>
+
+        <!-- Granularity toggle -->
+        <div v-if="!selectedDate" class="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 mb-5 w-fit">
+          <button
+            v-for="g in granularityOptions" :key="g.value"
+            :class="['px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
+              granularity === g.value ? 'bg-white dark:bg-gray-700 shadow-sm text-primary' : 'text-gray-500']"
+            @click="setGranularity(g.value)"
+          >{{ g.label }}</button>
+        </div>
+
+        <!-- Period stats -->
+        <div v-if="!selectedDate" class="grid grid-cols-3 gap-3 mb-5">
+          <div class="card p-3 text-center">
+            <div class="text-xl font-bold text-primary">{{ periodWorkouts.length }}</div>
+            <div class="text-xs text-gray-400 mt-0.5">тренировок</div>
+          </div>
+          <div class="card p-3 text-center">
+            <div class="text-xl font-bold text-gray-900 dark:text-white">{{ periodTotalVolume }}</div>
+            <div class="text-xs text-gray-400 mt-0.5">тоннаж</div>
+          </div>
+          <div class="card p-3 text-center">
+            <div class="text-xl font-bold text-gray-900 dark:text-white">{{ periodTotalDuration }}</div>
+            <div class="text-xs text-gray-400 mt-0.5">часов</div>
           </div>
         </div>
 
-        <!-- CALENDAR -->
+        <!-- Period navigation -->
+        <div v-if="!selectedDate" class="flex items-center gap-2 mb-5">
+          <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400" @click="prevPeriod">
+            <ChevronLeft class="w-4 h-4" />
+          </button>
+          <div class="flex-1 text-center">
+            <span class="text-base font-semibold text-gray-900 dark:text-white capitalize">{{ periodLabel }}</span>
+            <span v-if="periodLoading" class="text-xs text-gray-400 ml-2">загрузка…</span>
+          </div>
+          <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400" @click="nextPeriod">
+            <ChevronRight class="w-4 h-4" />
+          </button>
+        </div>
+
+        <!-- CALENDAR VIEW -->
         <template v-if="workoutsView === 'calendar' && !selectedDate">
-          <div class="grid grid-cols-7 mb-1.5">
-            <div v-for="d in weekDays" :key="d" class="text-center text-xs font-medium text-gray-400 dark:text-gray-500 py-1">{{ d }}</div>
-          </div>
-          <div class="grid grid-cols-7 gap-px bg-gray-200 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
-            <button
-              v-for="day in calendarDays"
-              :key="day.dateStr"
-              :class="cellClass(day)"
-              class="min-h-[74px] sm:min-h-[92px] p-1 sm:p-1.5 flex flex-col items-stretch text-left"
-              @click="day.isCurrentMonth && (selectedDate = day.dateStr)"
-            >
-              <span :class="dayNumberClass(day)">{{ day.date.getDate() }}</span>
-              <div class="flex-1 flex flex-col gap-0.5 mt-1 overflow-hidden">
-                <span
-                  v-for="(w, i) in (workoutsByDate[day.dateStr] || []).slice(0, 2)" :key="i"
-                  :class="['text-[9px] leading-tight px-1 py-0.5 rounded truncate', chipClass(w)]"
-                >{{ w.title || w.type }}</span>
-                <span v-if="(workoutsByDate[day.dateStr] || []).length > 2" class="text-[9px] text-gray-400 dark:text-gray-500 px-1">
-                  +{{ workoutsByDate[day.dateStr].length - 2 }} ещё
-                </span>
+          <!-- Month grid -->
+          <template v-if="granularity === 'month'">
+            <div class="grid grid-cols-7 mb-1.5">
+              <div v-for="d in weekDays" :key="d" class="text-center text-xs font-medium text-gray-400 dark:text-gray-500 py-1">{{ d }}</div>
+            </div>
+            <div class="grid grid-cols-7 gap-px bg-gray-200 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
+              <button
+                v-for="day in calendarDays"
+                :key="day.dateStr"
+                :class="cellClass(day)"
+                class="min-h-[74px] sm:min-h-[92px] p-1 sm:p-1.5 flex flex-col items-stretch text-left"
+                @click="selectDay(day)"
+              >
+                <span :class="dayNumberClass(day)">{{ day.date.getDate() }}</span>
+                <div class="flex-1 flex flex-col gap-0.5 mt-1 overflow-hidden">
+                  <span
+                    v-for="(w, i) in (workoutsByDate[day.dateStr] || []).slice(0, 2)" :key="i"
+                    :class="['text-[9px] leading-tight px-1 py-0.5 rounded truncate', chipClass(w)]"
+                  >{{ w.title || w.type }}</span>
+                  <span v-if="(workoutsByDate[day.dateStr] || []).length > 2" class="text-[9px] text-gray-400 dark:text-gray-500 px-1">
+                    +{{ workoutsByDate[day.dateStr].length - 2 }} ещё
+                  </span>
+                </div>
+              </button>
+            </div>
+          </template>
+
+          <!-- Week columns -->
+          <template v-else-if="granularity === 'week'">
+            <div class="grid grid-cols-7 mb-1.5">
+              <div v-for="day in weekDaysArr" :key="day.dateStr" class="text-center py-1">
+                <div class="text-xs font-medium text-gray-400 dark:text-gray-500">{{ weekDayShort(day.date) }}</div>
               </div>
-            </button>
-          </div>
+            </div>
+            <div class="grid grid-cols-7 gap-px bg-gray-200 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
+              <button
+                v-for="day in weekDaysArr"
+                :key="day.dateStr"
+                :class="cellClass(day)"
+                class="min-h-[220px] p-1.5 flex flex-col items-stretch text-left"
+                @click="selectDay(day)"
+              >
+                <span :class="dayNumberClass(day)">{{ day.date.getDate() }}</span>
+                <div class="flex-1 flex flex-col gap-1 mt-1.5 overflow-y-auto">
+                  <span
+                    v-for="(w, i) in (workoutsByDate[day.dateStr] || [])" :key="i"
+                    :class="['text-[10px] leading-snug px-1.5 py-1 rounded', chipClass(w)]"
+                  >{{ w.title || w.type }}</span>
+                </div>
+              </button>
+            </div>
+          </template>
+
+          <!-- Year: mini-months -->
+          <template v-else>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <div v-for="m in 12" :key="m" class="card p-2.5">
+                <p class="text-xs font-semibold text-center text-gray-700 dark:text-gray-200 mb-1.5 capitalize">{{ miniMonthLabel(m - 1) }}</p>
+                <div class="grid grid-cols-7 gap-[3px] mb-1">
+                  <span v-for="d in weekDaysNarrow" :key="d" class="text-[8px] text-center text-gray-300 dark:text-gray-600">{{ d }}</span>
+                </div>
+                <div class="grid grid-cols-7 gap-[3px]">
+                  <button
+                    v-for="(day, i) in miniMonthDays(m - 1)" :key="i"
+                    :class="['aspect-square rounded-sm text-[9px] flex items-center justify-center transition-colors',
+                      !day.inMonth ? 'invisible' : miniDayClass(day.dateStr)]"
+                    :disabled="!day.inMonth"
+                    @click="day.inMonth && selectDay(day)"
+                  >{{ day.inMonth ? day.date.getDate() : '' }}</button>
+                </div>
+              </div>
+            </div>
+          </template>
         </template>
 
         <!-- DAY DRILL-DOWN -->
@@ -219,23 +298,23 @@
           </BaseEmptyState>
         </template>
 
-        <!-- LIST -->
+        <!-- LIST VIEW -->
         <template v-else>
-          <div v-if="monthLoading && !monthWorkouts.length" class="space-y-3">
+          <div v-if="periodLoading && !periodWorkouts.length" class="space-y-3">
             <div v-for="i in 4" :key="i" class="card p-4 animate-pulse">
               <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2" />
               <div class="h-3 bg-gray-100 dark:bg-gray-800 rounded w-1/2" />
             </div>
           </div>
           <BaseEmptyState
-            v-else-if="!monthWorkouts.length"
+            v-else-if="!periodWorkouts.length"
             title="Нет тренировок"
-            description="У этого пользователя нет записей за выбранный месяц"
+            description="У этого пользователя нет записей за выбранный период"
           >
             <template #icon><Dumbbell class="w-10 h-10" /></template>
           </BaseEmptyState>
           <div v-else class="space-y-3">
-            <PublicWorkoutCard v-for="w in monthWorkouts" :key="w.id" :workout="w" />
+            <PublicWorkoutCard v-for="w in periodWorkoutsSorted" :key="w.id" :workout="w" />
           </div>
         </template>
       </div>
@@ -302,7 +381,6 @@ async function loadProfile(uid) {
     workoutService.fetchUserMaxes(uid).then(d => { maxes.value = d }).finally(() => { maxesLoading.value = false }),
     workoutService.fetchUserGoals(uid).then(d => { goals.value = d }).finally(() => { goalsLoading.value = false }),
     workoutService.fetchUserAchievements(uid).then(d => { achievements.value = d }).finally(() => { achievementsLoading.value = false }),
-    loadMonth(),
   ])
 }
 
@@ -325,22 +403,48 @@ function formatDate(d) {
   return new Date(d + 'T00:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-// --- Workouts tab: calendar/list, month-scoped so a profile with a large
-// history is paged through month-by-month instead of loaded all at once ---
+// --- Workouts tab: calendar/list with week/month/year granularity, mirroring
+// HistoryView's layout — period-cached so a profile with a large history is
+// paged through instead of loaded all at once ---
 const workoutsView = ref('calendar')
+const granularityOptions = [
+  { value: 'week', label: 'Неделя' },
+  { value: 'month', label: 'Месяц' },
+  { value: 'year', label: 'Год' },
+]
+const granularity = ref('month')
 const anchorDate = ref(new Date())
 const selectedDate = ref(null)
-const monthLoading = ref(false)
+const periodLoading = ref(false)
 const monthCache = reactive({}) // { 'YYYY-MM': { status: 'loading'|'loaded', workouts: [] } }
 
 watch(userId, loadProfile, { immediate: true })
 
 function switchWorkoutsView(mode) { workoutsView.value = mode; selectedDate.value = null }
+function setGranularity(g) { granularity.value = g; selectedDate.value = null }
 
 function resetWorkoutsCalendar() {
   for (const key in monthCache) delete monthCache[key]
+  granularity.value = 'month'
   anchorDate.value = new Date()
   selectedDate.value = null
+}
+
+function prevPeriod() {
+  selectedDate.value = null
+  const d = new Date(anchorDate.value)
+  if (granularity.value === 'week') d.setDate(d.getDate() - 7)
+  else if (granularity.value === 'month') d.setMonth(d.getMonth() - 1)
+  else d.setFullYear(d.getFullYear() - 1)
+  anchorDate.value = d
+}
+function nextPeriod() {
+  selectedDate.value = null
+  const d = new Date(anchorDate.value)
+  if (granularity.value === 'week') d.setDate(d.getDate() + 7)
+  else if (granularity.value === 'month') d.setMonth(d.getMonth() + 1)
+  else d.setFullYear(d.getFullYear() + 1)
+  anchorDate.value = d
 }
 
 const currentYear = computed(() => anchorDate.value.getFullYear())
@@ -348,6 +452,19 @@ const currentMonth = computed(() => anchorDate.value.getMonth())
 const monthLabel = computed(() =>
   new Date(currentYear.value, currentMonth.value, 1).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })
 )
+const periodLabel = computed(() => {
+  if (granularity.value === 'week') {
+    const days = weekDaysArr.value
+    const start = days[0].date
+    const end = days[6].date
+    const sameMonth = start.getMonth() === end.getMonth()
+    const startStr = start.toLocaleDateString('ru-RU', { day: 'numeric', month: sameMonth ? undefined : 'long' })
+    const endStr = end.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
+    return `${startStr} – ${endStr}`
+  }
+  if (granularity.value === 'year') return String(currentYear.value)
+  return monthLabel.value
+})
 
 function toDateStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -378,35 +495,54 @@ function ensureMonth(uid, year, monthIndex) {
   return entry.promise
 }
 
-async function loadMonth() {
-  const uid = userId.value
-  monthLoading.value = true
-  try {
-    await ensureMonth(uid, currentYear.value, currentMonth.value)
-  } finally {
-    monthLoading.value = false
-  }
-  // Prefetch neighboring months in the background so paging feels instant
-  const prev = new Date(currentYear.value, currentMonth.value - 1, 1)
-  const next = new Date(currentYear.value, currentMonth.value + 1, 1)
-  ensureMonth(uid, prev.getFullYear(), prev.getMonth())
-  ensureMonth(uid, next.getFullYear(), next.getMonth())
+// --- Week row (granularity === 'week') ---
+const weekDaysArr = computed(() => {
+  const d = new Date(anchorDate.value)
+  const dow = (d.getDay() + 6) % 7
+  const monday = new Date(d)
+  monday.setDate(d.getDate() - dow)
+  return Array.from({ length: 7 }, (_, i) => {
+    const dt = new Date(monday)
+    dt.setDate(monday.getDate() + i)
+    return { date: dt, isCurrentMonth: true, dateStr: toDateStr(dt) }
+  })
+})
+
+function weekDayShort(date) {
+  return date.toLocaleDateString('ru-RU', { weekday: 'short' })
 }
 
-function prevMonth() {
-  selectedDate.value = null
-  const d = new Date(anchorDate.value)
-  d.setMonth(d.getMonth() - 1)
-  anchorDate.value = d
-  loadMonth()
+function monthsForCurrentView() {
+  if (granularity.value === 'week') {
+    const set = new Set(weekDaysArr.value.map(d => `${d.date.getFullYear()}:${d.date.getMonth()}`))
+    return [...set].map(s => s.split(':').map(Number))
+  }
+  if (granularity.value === 'year') {
+    return Array.from({ length: 12 }, (_, m) => [currentYear.value, m])
+  }
+  return [[currentYear.value, currentMonth.value]]
 }
-function nextMonth() {
-  selectedDate.value = null
-  const d = new Date(anchorDate.value)
-  d.setMonth(d.getMonth() + 1)
-  anchorDate.value = d
-  loadMonth()
+
+async function loadCurrentPeriod() {
+  const uid = userId.value
+  const months = monthsForCurrentView()
+  periodLoading.value = true
+  try {
+    await Promise.all(months.map(([y, m]) => ensureMonth(uid, y, m)))
+  } finally {
+    periodLoading.value = false
+  }
+  // Prefetch neighboring months in the background so paging feels instant —
+  // skipped for year view (would mean fetching a whole extra year just in case).
+  if (granularity.value !== 'year') {
+    const prev = new Date(currentYear.value, currentMonth.value - 1, 1)
+    const next = new Date(currentYear.value, currentMonth.value + 1, 1)
+    ensureMonth(uid, prev.getFullYear(), prev.getMonth())
+    ensureMonth(uid, next.getFullYear(), next.getMonth())
+  }
 }
+
+watch([granularity, anchorDate], loadCurrentPeriod, { immediate: true })
 
 const cachedWorkouts = computed(() =>
   Object.values(monthCache).filter(e => e.status === 'loaded').flatMap(e => e.workouts)
@@ -419,11 +555,38 @@ const workoutsByDate = computed(() => {
   }
   return map
 })
-const monthWorkouts = computed(() => {
+
+function volumeOf(w) {
+  return w.exercises.reduce((s, ex) => s + ex.sets.reduce((ss, set) => ss + set.weight * set.reps, 0), 0)
+}
+
+// --- Period-aware aggregates (drive the stats row + list view, across all granularities) ---
+const periodWorkouts = computed(() => {
+  if (granularity.value === 'week') {
+    const set = new Set(weekDaysArr.value.map(d => d.dateStr))
+    return cachedWorkouts.value.filter(w => set.has(w.date))
+  }
+  if (granularity.value === 'year') {
+    const prefix = `${currentYear.value}-`
+    return cachedWorkouts.value.filter(w => w.date.startsWith(prefix))
+  }
   const prefix = `${currentYear.value}-${String(currentMonth.value + 1).padStart(2, '0')}`
   return cachedWorkouts.value.filter(w => w.date.startsWith(prefix))
 })
+const periodWorkoutsSorted = computed(() =>
+  [...periodWorkouts.value].sort((a, b) => b.date.localeCompare(a.date))
+)
 
+const periodTotalVolume = computed(() => {
+  const v = periodWorkouts.value.reduce((sum, w) => sum + volumeOf(w), 0)
+  return v >= 1000 ? (v / 1000).toFixed(1) + ' т' : v + ' кг'
+})
+const periodTotalDuration = computed(() => {
+  const mins = periodWorkouts.value.reduce((sum, w) => sum + (w.durationMinutes || 0), 0)
+  return (mins / 60).toFixed(1)
+})
+
+// --- Month grid (granularity === 'month') ---
 const weekDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 
 const calendarDays = computed(() => {
@@ -450,6 +613,40 @@ const calendarDays = computed(() => {
   return days
 })
 
+// --- Year: mini-months (granularity === 'year') ---
+const weekDaysNarrow = ['П', 'В', 'С', 'Ч', 'П', 'С', 'В']
+
+function miniMonthLabel(monthIndex) {
+  return new Date(currentYear.value, monthIndex, 1).toLocaleDateString('ru-RU', { month: 'long' })
+}
+
+function miniMonthDays(monthIndex) {
+  const year = currentYear.value
+  const firstDay = new Date(year, monthIndex, 1)
+  const lastDay = new Date(year, monthIndex + 1, 0)
+  const startOffset = (firstDay.getDay() + 6) % 7
+
+  const days = []
+  for (let i = 0; i < startOffset; i++) days.push({ inMonth: false })
+  for (let n = 1; n <= lastDay.getDate(); n++) {
+    const d = new Date(year, monthIndex, n)
+    days.push({ date: d, inMonth: true, isCurrentMonth: true, dateStr: toDateStr(d) })
+  }
+  while (days.length < 42) days.push({ inMonth: false })
+  return days
+}
+
+function miniDayClass(dateStr) {
+  const isSelected = dateStr === selectedDate.value
+  const isToday = dateStr === todayStr
+  if (isSelected) return 'bg-primary text-white font-bold'
+  const hasWorkout = (workoutsByDate.value[dateStr] || []).length > 0
+  const tone = hasWorkout ? 'bg-primary/15 dark:bg-primary/25 text-primary font-semibold' : 'text-gray-500 dark:text-gray-400'
+  if (isToday) return `${tone} ring-1 ring-primary`
+  return tone
+}
+
+// --- Shared cell chips/styling (month + week grids) ---
 const workoutChipClasses = {
   'Силовая': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
   'Кардио': 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
@@ -473,6 +670,11 @@ function dayNumberClass(day) {
   if (isToday) return `${base} bg-primary text-white font-bold`
   if (isOtherMonth) return `${base} text-gray-300 dark:text-gray-700`
   return `${base} text-gray-600 dark:text-gray-300`
+}
+
+function selectDay(day) {
+  if (!day.isCurrentMonth) return
+  selectedDate.value = selectedDate.value === day.dateStr ? null : day.dateStr
 }
 
 const selectedDateLabel = computed(() => {
