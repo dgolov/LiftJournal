@@ -282,11 +282,6 @@ const currentUserId = computed(() => store.state.auth.userId)
 const isSelf = computed(() => userId.value === currentUserId.value)
 const profile = computed(() => store.state.social.profiles[userId.value] ?? null)
 
-// The route stays on the same component when navigating from one public
-// profile to another (e.g. clicking a follower inside this same view), so
-// everything below is keyed off `userId` via a watcher, not onMounted.
-watch(userId, loadProfile, { immediate: true })
-
 async function loadProfile(uid) {
   resetWorkoutsCalendar()
 
@@ -337,6 +332,8 @@ const anchorDate = ref(new Date())
 const selectedDate = ref(null)
 const monthLoading = ref(false)
 const monthCache = reactive({}) // { 'YYYY-MM': { status: 'loading'|'loaded', workouts: [] } }
+
+watch(userId, loadProfile, { immediate: true })
 
 function switchWorkoutsView(mode) { workoutsView.value = mode; selectedDate.value = null }
 
