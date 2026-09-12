@@ -30,6 +30,7 @@ services:
 
   frontend:
     build: ./ui
+    restart: unless-stopped
     ports:
       - "80:80"
     depends_on:
