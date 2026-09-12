@@ -4,12 +4,13 @@
 export const CHANGELOG = [
   {
     version: '0.9.0',
-    date: '2026-09-12',
+    date: '2026-09-13',
     label: 'Удобства',
     entries: [
       { type: 'feature',        text: 'Добавлены карточки для удобного редактирования тренировок' },
       { type: 'feature',        text: 'Добавлена возможность редактирования шаблонов' },
       { type: 'improvement',    text: 'Улучшение шаблонов тренировок' },
+      { type: 'improvement',    text: 'Улучшение фронтенд части' },
     ],
   },
   {
