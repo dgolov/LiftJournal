@@ -86,14 +86,28 @@ class SocialRepository:
         )
         return list(result.scalars().all())
 
-    async def get_user_workouts(self, user_id: int) -> list[Workout]:
-        result = await self.db.execute(
+    async def get_user_workouts(
+        self,
+        user_id: int,
+        *,
+        date_from: date | None = None,
+        date_to: date | None = None,
+    ) -> list[Workout]:
+        query = (
             select(Workout)
             .options(selectinload(Workout.exercises).selectinload(WorkoutExercise.sets))
             .where(Workout.user_id == user_id)
-            .order_by(Workout.date.desc(), Workout.created_at.desc())
-            .limit(50)
         )
+        if date_from is not None:
+            query = query.where(Workout.date >= date_from)
+        if date_to is not None:
+            query = query.where(Workout.date <= date_to)
+        query = query.order_by(Workout.date.desc(), Workout.created_at.desc())
+        if date_from is None and date_to is None:
+            # No range requested (e.g. legacy caller) — cap to avoid pulling
+            # a profile's entire history in one shot.
+            query = query.limit(50)
+        result = await self.db.execute(query)
         return list(result.scalars().all())
 
     # ── Public profile extras ─────────────────────────────────────────────────

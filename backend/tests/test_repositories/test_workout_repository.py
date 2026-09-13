@@ -55,6 +55,26 @@ async def test_get_all_by_user_empty(repo, mock_db):
     assert result == []
 
 
+async def test_get_all_by_user_with_date_range(repo, mock_db):
+    w = make_workout(id="w-1", user_id=1)
+    mock_db.execute.return_value = scalars_result([w])
+
+    result = await repo.get_all_by_user(1, date_from=date(2026, 1, 1), date_to=date(2026, 1, 31))
+
+    assert result == [w]
+    mock_db.execute.assert_called_once()
+
+
+async def test_get_all_by_user_with_search(repo, mock_db):
+    w = make_workout(id="w-1", user_id=1)
+    mock_db.execute.return_value = scalars_result([w])
+
+    result = await repo.get_all_by_user(1, search="bench")
+
+    assert result == [w]
+    mock_db.execute.assert_called_once()
+
+
 # ---------------------------------------------------------------------------
 # get_by_id
 # ---------------------------------------------------------------------------

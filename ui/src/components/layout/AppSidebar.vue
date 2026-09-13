@@ -49,7 +49,7 @@
 import { computed, markRaw } from 'vue'
 import { APP_VERSION } from '@/version.js'
 import { useStore } from 'vuex'
-import { Dumbbell, ClipboardList, BarChart3, User, Plus, CalendarDays, BookOpen, LayoutDashboard, Users } from 'lucide-vue-next'
+import { Dumbbell, ClipboardList, BarChart3, User, Plus, CalendarDays, BookOpen, LayoutDashboard, Users, LayoutTemplate } from 'lucide-vue-next'
 
 const store = useStore()
 const isOpen = computed(() => store.state.ui.sidebarOpen)
@@ -64,6 +64,7 @@ const navItems = [
   { to: '/feed', icon: markRaw(Users), label: 'Лента' },
   { to: '/history', icon: markRaw(ClipboardList), label: 'История тренировок' },
   { to: '/planning', icon: markRaw(CalendarDays), label: 'Планирование' },
+  { to: '/templates', icon: markRaw(LayoutTemplate), label: 'Шаблоны' },
   { to: '/exercises', icon: markRaw(Dumbbell), label: 'Упражнения' },
   { to: '/cycles', icon: markRaw(BarChart3), label: 'Циклы' },
   { to: '/profile', icon: markRaw(User), label: 'Профиль' },

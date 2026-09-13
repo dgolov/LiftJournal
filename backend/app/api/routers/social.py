@@ -1,3 +1,5 @@
+from datetime import date as DateType
+
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -124,10 +126,12 @@ async def get_workout(
 @router.get("/users/{user_id}/workouts", response_model=list[FeedWorkoutOut])
 async def get_user_workouts(
     user_id: int,
+    from_: DateType | None = Query(None, alias="from"),
+    to: DateType | None = Query(None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await SocialService(db).get_user_workouts(user_id, current_user.id)
+    return await SocialService(db).get_user_workouts(user_id, current_user.id, date_from=from_, date_to=to)
 
 
 @router.get("/feed", response_model=list[FeedWorkoutOut])

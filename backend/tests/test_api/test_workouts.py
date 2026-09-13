@@ -27,7 +27,23 @@ async def test_list_workouts(client):
 
     assert resp.status_code == 200
     assert len(resp.json()) == 2
-    svc.get_workouts.assert_called_once_with(1)
+    svc.get_workouts.assert_called_once_with(1, date_from=None, date_to=None, search=None)
+
+
+async def test_list_workouts_with_date_range_and_search(client):
+    with patch("app.api.routers.workouts.WorkoutService") as MockSvc:
+        svc = AsyncMock()
+        MockSvc.return_value = svc
+        svc.get_workouts.return_value = []
+
+        resp = await client.get("/api/workouts", params={
+            "from": "2026-01-01", "to": "2026-01-31", "search": "bench",
+        })
+
+    assert resp.status_code == 200
+    svc.get_workouts.assert_called_once_with(
+        1, date_from=date(2026, 1, 1), date_to=date(2026, 1, 31), search="bench"
+    )
 
 
 async def test_list_workouts_empty(client):

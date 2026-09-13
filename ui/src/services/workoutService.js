@@ -85,8 +85,13 @@ const workoutService = {
   },
 
   // Workouts
-  fetchWorkouts() {
-    return request('GET', '/workouts')
+  fetchWorkouts({ from, to, search } = {}) {
+    const params = new URLSearchParams()
+    if (from) params.set('from', from)
+    if (to) params.set('to', to)
+    if (search) params.set('search', search)
+    const qs = params.toString()
+    return request('GET', qs ? `/workouts?${qs}` : '/workouts')
   },
 
   saveWorkout(workout) {
@@ -274,8 +279,12 @@ const workoutService = {
   fetchMyFollowing() {
     return request('GET', '/social/me/following')
   },
-  fetchUserWorkouts(userId) {
-    return request('GET', `/social/users/${userId}/workouts`)
+  fetchUserWorkouts(userId, { from, to } = {}) {
+    const params = new URLSearchParams()
+    if (from) params.set('from', from)
+    if (to) params.set('to', to)
+    const qs = params.toString()
+    return request('GET', qs ? `/social/users/${userId}/workouts?${qs}` : `/social/users/${userId}/workouts`)
   },
   fetchUserActivity(userId) {
     return request('GET', `/social/users/${userId}/activity`)

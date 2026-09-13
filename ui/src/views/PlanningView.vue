@@ -47,7 +47,7 @@
             delete-label="Удалить план"
             @delete="deletePlan(plan)"
           >
-            <div class="bg-white dark:bg-gray-900 p-4">
+            <div class="bg-white dark:bg-gray-900 p-4 cursor-pointer" @click="$router.push(`/planning/${plan.id}`)">
             <div class="flex items-start gap-3">
               <!-- Status icon -->
               <div :class="['w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5', statusIcon(plan).bg]">
@@ -72,19 +72,19 @@
                   <template v-if="plan.status === 'planned'">
                     <button
                       class="px-3 py-1.5 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary/90 transition-colors"
-                      @click="startPlan(plan)"
+                      @click.stop="startPlan(plan)"
                     >Начать</button>
                     <button
                       class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-gray-500 transition-colors"
                       title="Редактировать"
-                      @click="$router.push(`/planning/${plan.id}/edit`)"
+                      @click.stop="$router.push(`/planning/${plan.id}/edit`)"
                     >
                       <Pencil class="w-4 h-4" />
                     </button>
                     <button
                       class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors"
                       title="Пропустить"
-                      @click="skipPlan(plan)"
+                      @click.stop="skipPlan(plan)"
                     >
                       <Ban class="w-4 h-4" />
                     </button>
@@ -93,11 +93,12 @@
                     <RouterLink
                       :to="`/workouts/${plan.completedWorkoutId}`"
                       class="px-3 py-1.5 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 text-xs font-medium rounded-lg hover:border-primary hover:text-primary transition-colors"
+                      @click.stop
                     >Открыть</RouterLink>
                   </template>
                   <button
                     class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors"
-                    @click="deletePlan(plan)"
+                    @click.stop="deletePlan(plan)"
                   >
                     <Trash2 class="w-4 h-4" />
                   </button>

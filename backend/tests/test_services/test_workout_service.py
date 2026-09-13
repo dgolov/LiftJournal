@@ -36,7 +36,7 @@ async def test_get_workouts_returns_list(mock_db):
 
     assert len(result) == 1
     assert result[0].id == "w-1"
-    repo.get_all_by_user.assert_called_once_with(1)
+    repo.get_all_by_user.assert_called_once_with(1, date_from=None, date_to=None, search=None)
 
 
 async def test_get_workouts_empty(mock_db):

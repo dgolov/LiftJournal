@@ -30,8 +30,17 @@ services:
 
   frontend:
     build: ./ui
+    restart: unless-stopped
     ports:
       - "80:80"
+    depends_on:
+      - backend
+
+  admin:
+    build: ./admin
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8081:80"
     depends_on:
       - backend
 
