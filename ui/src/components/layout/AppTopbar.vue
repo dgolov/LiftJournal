@@ -149,7 +149,7 @@ const titleMap = {
   profile: 'Профиль',
 }
 
-const pageTitle = computed(() => titleMap[route.name] || 'LiftJournal')
+const pageTitle = computed(() => titleMap[route.name] || 'LiftForge')
 
 function toggleSidebar() { store.commit('ui/TOGGLE_SIDEBAR') }
 

@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "gym-backend"
+name = "liftforge-backend"
 version = "0.1.0"
-description = "LiftJournal API — gym diary backend"
+description = "LiftForge API — gym diary backend"
 authors = []
 package-mode = false
 

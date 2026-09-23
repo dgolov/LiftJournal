@@ -23,7 +23,7 @@ from app.core.ws_manager import manager
 from app.domain.models import User
 
 
-app = FastAPI(title="LiftJournal API")
+app = FastAPI(title="LiftForge API")
 
 app.add_middleware(
     CORSMiddleware,

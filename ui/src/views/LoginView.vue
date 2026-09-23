@@ -3,7 +3,7 @@
     <div class="w-full max-w-sm">
       <div class="text-center mb-8">
         <Dumbbell class="w-10 h-10 text-primary mx-auto mb-3" />
-        <h1 class="text-2xl font-bold text-gray-900">LiftJournal</h1>
+        <h1 class="text-2xl font-bold text-gray-900">LiftForge</h1>
         <p class="text-sm text-gray-500 mt-1">Дневник пауэрлифтинга</p>
       </div>
 
