@@ -1,14 +1,16 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+  <div class="min-h-screen flex items-center justify-center bg-ink px-4 py-10">
     <div class="w-full max-w-sm">
       <div class="text-center mb-8">
-        <Dumbbell class="w-10 h-10 text-primary mx-auto mb-3" />
-        <h1 class="text-2xl font-bold text-gray-900">LiftForge</h1>
-        <p class="text-sm text-gray-500 mt-1">Дневник пауэрлифтинга</p>
+        <div class="inline-flex items-center justify-center w-14 h-14 bg-primary border-2 border-white mb-4">
+          <Dumbbell class="w-7 h-7 text-white" />
+        </div>
+        <h1 class="text-4xl font-display font-bold text-white uppercase tracking-wide">LiftForge</h1>
+        <p class="text-sm text-steel-300 mt-2">Дневник пауэрлифтинга</p>
       </div>
 
-      <div class="card p-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-5">Регистрация</h2>
+      <div class="bg-card border-2 border-white shadow-[6px_6px_0_theme(colors.primary.DEFAULT)] p-6">
+        <h2 class="text-lg font-display font-semibold text-ink mb-5">Регистрация</h2>
 
         <form @submit.prevent="submit" class="space-y-4">
           <div>
@@ -46,7 +48,7 @@
             />
           </div>
 
-          <p v-if="error" class="text-sm text-red-500">{{ error }}</p>
+          <p v-if="error" class="text-sm text-primary font-medium">{{ error }}</p>
 
           <button
             type="submit"
@@ -57,9 +59,9 @@
           </button>
         </form>
 
-        <p class="mt-4 text-center text-sm text-gray-500">
+        <p class="mt-4 text-center text-sm text-steel-700">
           Уже есть аккаунт?
-          <RouterLink to="/login" class="text-primary font-medium hover:underline">Войти</RouterLink>
+          <RouterLink to="/login" class="text-primary font-semibold hover:underline">Войти</RouterLink>
         </p>
       </div>
     </div>

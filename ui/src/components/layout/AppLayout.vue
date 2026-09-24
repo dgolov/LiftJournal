@@ -1,8 +1,8 @@
 <template>
-  <div class="min-h-screen bg-surface dark:bg-gray-950">
+  <div class="min-h-screen bg-surface dark:bg-steel-950">
     <AppSidebar />
     <AppTopbar />
-    <main class="pt-16 lg:pl-64 pb-safe-content lg:pb-0">
+    <main class="pt-safe-content lg:pl-64 pb-safe-content lg:pb-0">
       <div class="p-4 md:p-6 max-w-5xl mx-auto">
         <slot />
       </div>

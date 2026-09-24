@@ -1,15 +1,15 @@
 <template>
   <div class="max-w-2xl">
     <div class="flex items-center gap-3 mb-6">
-      <button class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors" @click="$router.back()">
+      <button class="p-2 hover:bg-steel-100 dark:hover:bg-steel-700 text-steel-700 dark:text-steel-300 transition-colors" @click="$router.back()">
         <ChevronLeft class="w-5 h-5" />
       </button>
-      <h2 class="text-xl font-bold text-gray-900 dark:text-white">Новая тренировка</h2>
+      <h2 class="text-xl font-bold text-ink dark:text-white">Новая тренировка</h2>
 
       <!-- Cancel button (only when workout is in progress) -->
       <button
         v-if="step > 0"
-        class="ml-auto p-2 rounded-lg text-gray-300 hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+        class="ml-auto p-2 text-steel-300 hover:text-primary hover:bg-primary/10 transition-colors"
         title="Отменить тренировку"
         @click="showCancelConfirm = true"
       >
@@ -18,7 +18,7 @@
     </div>
 
     <BaseModal v-model="showCancelConfirm" title="Отменить тренировку?" max-width="sm">
-      <p class="text-sm text-gray-600 dark:text-gray-400">Весь прогресс будет потерян. Отменить тренировку?</p>
+      <p class="text-sm text-steel-700 dark:text-steel-300">Весь прогресс будет потерян. Отменить тренировку?</p>
       <template #footer>
         <BaseButton variant="ghost" @click="showCancelConfirm = false">Продолжить</BaseButton>
         <BaseButton variant="danger" @click="cancelWorkout">Отменить тренировку</BaseButton>
@@ -28,7 +28,7 @@
     <!-- Step 1: Info -->
     <div v-if="step === 0" class="space-y-4">
       <div class="card p-5">
-        <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Основная информация</h3>
+        <h3 class="font-semibold text-ink dark:text-white mb-4">Основная информация</h3>
         <div class="space-y-4">
           <BaseInput
             :model-value="activeWorkout.title"
@@ -42,8 +42,8 @@
               <button
                 v-for="type in workoutTypes"
                 :key="type"
-                :class="['px-3 py-1.5 rounded-full text-sm font-medium border transition-colors',
-                  activeWorkout.type === type ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-primary']"
+                :class="['px-3 py-1.5 text-sm font-medium border-2 transition-colors',
+                  activeWorkout.type === type ? 'bg-primary text-white border-ink dark:border-steel-100' : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300 hover:border-primary hover:text-primary']"
                 @click="setField('type', type)"
               >{{ type }}</button>
             </div>
@@ -88,24 +88,26 @@
 
     <!-- Step 2: Exercises -->
     <div v-else-if="step === 1">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="font-semibold text-gray-900 dark:text-white">Упражнения</h3>
-        <div class="flex items-center gap-3">
-          <div v-if="workoutStartedAt" class="flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 rounded-full">
-            <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse flex-shrink-0"></span>
-            <span class="font-mono font-bold text-primary text-sm">{{ elapsedFormatted }}</span>
-          </div>
+      <div class="flex items-center justify-between mb-2 flex-wrap gap-y-2">
+        <h3 class="font-semibold text-ink dark:text-white">Упражнения</h3>
+        <div class="flex items-center gap-2 flex-shrink-0">
           <button
             v-if="activeWorkout.exercises.length"
-            class="p-2 rounded-lg text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors"
+            class="p-2 text-steel-300 hover:text-primary hover:bg-primary/10 transition-colors"
             title="Сохранить как шаблон"
             @click="templateName = activeWorkout.title; showSaveTemplate = true"
           >
             <LayoutTemplate class="w-4 h-4" />
           </button>
           <ExerciseViewModeToggle />
-          <BaseButton variant="outline" size="sm" @click="showPicker = true">+ Добавить</BaseButton>
+          <BaseButton variant="outline" size="sm" @click="showPicker = true">Добавить</BaseButton>
         </div>
+      </div>
+
+      <div v-if="workoutStartedAt" class="flex items-center gap-1.5 mb-4">
+        <span class="w-1.5 h-1.5 bg-success rounded-full animate-pulse flex-shrink-0"></span>
+        <span class="font-mono font-bold text-primary text-sm">{{ elapsedFormatted }}</span>
+        <span class="text-xs text-steel-700 dark:text-steel-300">идёт тренировка</span>
       </div>
 
       <draggable
@@ -147,22 +149,22 @@
 
     <!-- Step 3: Review & Finish -->
     <div v-else>
-      <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Завершение тренировки</h3>
+      <h3 class="font-semibold text-ink dark:text-white mb-4">Завершение тренировки</h3>
 
       <div class="card p-4 mb-4">
         <div class="flex items-center gap-2 mb-2">
-          <BaseBadge color="indigo">{{ activeWorkout.type }}</BaseBadge>
-          <span class="text-sm text-gray-500">{{ formattedDate }}</span>
+          <BaseBadge color="red">{{ activeWorkout.type }}</BaseBadge>
+          <span class="text-sm text-steel-700 dark:text-steel-300">{{ formattedDate }}</span>
         </div>
-        <h4 class="font-bold text-gray-900 dark:text-white text-lg">{{ activeWorkout.title || 'Без названия' }}</h4>
-        <p class="text-sm text-gray-500 mt-1">
+        <h4 class="font-display font-bold text-ink dark:text-white text-lg">{{ activeWorkout.title || 'Без названия' }}</h4>
+        <p class="text-sm text-steel-700 dark:text-steel-300 mt-1">
           <span v-if="workoutStartedAt" class="font-mono font-semibold text-primary">{{ elapsedFormatted }}</span>
           <span v-else>—</span>
           &nbsp;·&nbsp;{{ activeWorkout.exercises.length }} упр.&nbsp;·&nbsp;{{ totalSets }} подходов
         </p>
-        <p v-if="activeWorkout.notes" class="text-sm text-gray-600 mt-1 italic">{{ activeWorkout.notes }}</p>
+        <p v-if="activeWorkout.notes" class="text-sm text-steel-700 dark:text-steel-300 mt-1 italic">{{ activeWorkout.notes }}</p>
         <div v-if="activeWorkout.exercises.length" class="mt-3 space-y-1">
-          <p v-for="ex in activeWorkout.exercises" :key="ex.exerciseId" class="text-sm text-gray-700 dark:text-gray-300">
+          <p v-for="ex in activeWorkout.exercises" :key="ex.exerciseId" class="text-sm text-steel-700 dark:text-steel-300">
             · {{ ex.exerciseName }} — {{ ex.sets.length }} подх.
           </p>
         </div>
@@ -194,12 +196,12 @@
         <button
           v-for="w in recentWorkouts"
           :key="w.id"
-          class="w-full text-left px-3 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-3"
+          class="w-full text-left px-3 py-3 hover:bg-steel-100 dark:hover:bg-steel-700 transition-colors flex items-center gap-3 border-2 border-transparent hover:border-steel-300 dark:hover:border-steel-700"
           @click="repeatWorkout(w)"
         >
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ w.title || 'Без названия' }}</p>
-            <p class="text-xs text-gray-400">{{ formatShortDate(w.date) }} · {{ w.type }} · {{ w.exercises.length }} упр.</p>
+            <p class="text-sm font-medium text-ink dark:text-white truncate">{{ w.title || 'Без названия' }}</p>
+            <p class="text-xs text-steel-700 dark:text-steel-300">{{ formatShortDate(w.date) }} · {{ w.type }} · {{ w.exercises.length }} упр.</p>
           </div>
         </button>
       </div>

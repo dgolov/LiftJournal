@@ -168,7 +168,7 @@
                 ><X class="w-5 h-5" /></button>
               </div>
               <button class="text-xs text-primary hover:underline mt-1" @click="addDraftSet(ex.instanceId)">
-                + добавить подход
+                добавить подход
               </button>
             </div>
             <p class="mt-2 text-xs text-gray-400 flex gap-3">

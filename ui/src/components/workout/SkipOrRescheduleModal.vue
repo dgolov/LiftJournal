@@ -1,32 +1,32 @@
 <template>
   <BaseModal :model-value="modelValue" title="Перенести или пропустить?" max-width="sm" @update:model-value="$emit('update:modelValue', $event)">
-    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">«{{ plan?.title }}»</p>
-    <p class="text-xs text-gray-400 mb-4">Запланировано на {{ plan ? formatShortDate(plan.scheduledDate) : '' }}</p>
+    <p class="text-sm text-steel-700 dark:text-steel-300 mb-1">«{{ plan?.title }}»</p>
+    <p class="text-xs text-steel-700 dark:text-steel-300 mb-4">Запланировано на {{ plan ? formatShortDate(plan.scheduledDate) : '' }}</p>
 
     <div class="mb-4">
       <label class="label text-xs">Перенести на другой день</label>
       <input type="date" v-model="rescheduleDate" :min="today" class="input" />
-      <p class="text-xs text-gray-400 mt-1">Тренировка останется в расписании на новую дату</p>
+      <p class="text-xs text-steel-700 dark:text-steel-300 mt-1">Тренировка останется в расписании на новую дату</p>
     </div>
 
     <template v-if="plan?.recurrenceGroupId">
       <p class="label text-xs mb-2">При пропуске без переноса:</p>
       <div class="space-y-2">
         <button
-          :class="['w-full text-left px-4 py-3 rounded-xl border-2 transition-colors text-sm',
-            skipScope === 'one' ? 'border-primary bg-primary/5' : 'border-gray-200 dark:border-gray-700']"
+          :class="['w-full text-left px-4 py-3 border-2 transition-colors text-sm',
+            skipScope === 'one' ? 'border-primary bg-primary/5' : 'border-steel-300 dark:border-steel-700']"
           @click="skipScope = 'one'"
         >
-          <p class="font-medium text-gray-900 dark:text-white">Только эту тренировку</p>
-          <p class="text-xs text-gray-400 mt-0.5">{{ plan?.scheduledDate }}</p>
+          <p class="font-medium text-ink dark:text-white">Только эту тренировку</p>
+          <p class="text-xs text-steel-700 dark:text-steel-300 mt-0.5">{{ plan?.scheduledDate }}</p>
         </button>
         <button
-          :class="['w-full text-left px-4 py-3 rounded-xl border-2 transition-colors text-sm',
-            skipScope === 'all' ? 'border-orange-400 bg-orange-50 dark:bg-orange-900/10' : 'border-gray-200 dark:border-gray-700']"
+          :class="['w-full text-left px-4 py-3 border-2 transition-colors text-sm',
+            skipScope === 'all' ? 'border-primary bg-primary/10' : 'border-steel-300 dark:border-steel-700']"
           @click="skipScope = 'all'"
         >
-          <p class="font-medium text-gray-900 dark:text-white">Эту и все следующие</p>
-          <p class="text-xs text-gray-400 mt-0.5">Пропустит все запланированные повторения</p>
+          <p class="font-medium text-ink dark:text-white">Эту и все следующие</p>
+          <p class="text-xs text-steel-700 dark:text-steel-300 mt-0.5">Пропустит все запланированные повторения</p>
         </button>
       </div>
     </template>

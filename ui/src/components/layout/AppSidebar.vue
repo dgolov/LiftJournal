@@ -1,23 +1,22 @@
 <template>
-  <aside :class="['fixed inset-y-0 left-0 z-40 w-64 bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 flex flex-col transition-transform duration-300',
+  <aside :class="['fixed inset-y-0 left-0 z-40 w-64 bg-card dark:bg-steel-900 border-r-2 border-ink dark:border-steel-700 flex flex-col pt-safe-top transition-transform duration-300',
     isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0']">
     <!-- Logo -->
-    <div class="h-16 flex items-center gap-3 px-6 border-b border-gray-100 dark:border-gray-800">
-      <Dumbbell class="w-6 h-6 text-primary" />
-      <span class="font-bold text-gray-900 dark:text-gray-100 text-lg">LiftForge</span>
+    <div class="h-16 flex items-center gap-2.5 px-6 border-b-2 border-ink dark:border-steel-700">
+      <Dumbbell class="w-6 h-6 text-primary flex-shrink-0" />
+      <span class="font-display font-bold text-ink dark:text-white text-xl uppercase tracking-wide">LiftForge</span>
     </div>
 
     <!-- Nav -->
-    <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+    <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
       <RouterLink
         v-for="item in navItems"
         :key="item.to"
         :to="item.to"
-        :class="['flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors',
-          'hover:bg-gray-50 dark:hover:bg-gray-800',
+        :class="['flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors border-2 border-transparent',
           $route.path === item.to || $route.path.startsWith(item.to + '/') && item.to !== '/'
-            ? 'bg-primary/10 text-primary'
-            : 'text-gray-600 dark:text-gray-400']"
+            ? 'bg-primary text-white'
+            : 'text-steel-700 dark:text-steel-300 hover:border-steel-100 dark:hover:border-steel-700']"
         @click="closeSidebar"
       >
         <component :is="item.icon" class="w-5 h-5 flex-shrink-0" />
@@ -26,21 +25,21 @@
     </nav>
 
     <!-- New workout button -->
-    <div class="p-4 border-t border-gray-100 dark:border-gray-800">
+    <div class="p-3 border-t-2 border-ink dark:border-steel-700">
       <RouterLink to="/workouts/new" @click="closeSidebar"
-        class="flex items-center justify-center gap-2 w-full btn-primary btn rounded-xl py-3 text-sm font-semibold">
+        class="btn btn-primary w-full">
         <Plus class="w-4 h-4" />
         Новая тренировка
       </RouterLink>
-      <p class="text-xs text-gray-400 text-center mt-2 truncate">{{ userName }}</p>
-      <p class="text-xs text-gray-300 dark:text-gray-600 text-center mt-0.5">v{{ APP_VERSION }}</p>
+      <p class="text-xs text-steel-700 dark:text-steel-300 text-center mt-3 truncate">{{ userName }}</p>
+      <p class="text-xs text-steel-300 dark:text-steel-700 text-center mt-0.5 font-mono">v{{ APP_VERSION }}</p>
     </div>
   </aside>
 
   <!-- Mobile overlay -->
   <div
     v-if="isOpen"
-    class="fixed inset-0 z-30 bg-black/30 lg:hidden"
+    class="fixed inset-0 z-30 bg-ink/40 lg:hidden"
     @click="closeSidebar"
   />
 </template>

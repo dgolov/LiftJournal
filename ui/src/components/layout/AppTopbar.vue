@@ -1,11 +1,12 @@
 <template>
-  <header class="fixed top-0 left-0 right-0 lg:left-64 z-30 h-16 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 flex items-center px-4 gap-4">
+  <header class="fixed top-0 left-0 right-0 lg:left-64 z-30 pt-safe-top bg-card dark:bg-steel-900 border-b-2 border-ink dark:border-steel-700">
+   <div class="h-16 flex items-center px-4 gap-4">
     <!-- Mobile hamburger -->
-    <button class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400" @click="toggleSidebar">
+    <button class="lg:hidden p-2 hover:bg-steel-100 dark:hover:bg-steel-700 text-steel-700 dark:text-steel-300" @click="toggleSidebar">
       <Menu class="w-5 h-5" />
     </button>
 
-    <h1 class="flex-1 text-lg font-semibold text-gray-900 dark:text-gray-100">{{ pageTitle }}</h1>
+    <h1 class="flex-1 text-lg font-semibold text-ink dark:text-white truncate">{{ pageTitle }}</h1>
 
     <!-- Quick add button (desktop) -->
     <RouterLink to="/workouts/new" class="hidden sm:flex btn-primary btn text-sm">
@@ -14,7 +15,7 @@
 
     <!-- Theme toggle -->
     <button
-      class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors"
+      class="p-2 hover:bg-steel-100 dark:hover:bg-steel-700 text-steel-700 dark:text-steel-300 transition-colors"
       :title="isDark ? 'Светлая тема' : 'Тёмная тема'"
       @click="toggleTheme"
     >
@@ -24,25 +25,25 @@
 
     <!-- Notification bell -->
     <button
-      class="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors"
+      class="relative p-2 hover:bg-steel-100 dark:hover:bg-steel-700 text-steel-700 dark:text-steel-300 transition-colors"
       @click="togglePanel"
     >
       <Bell class="w-5 h-5" />
       <span
         v-if="unreadCount > 0"
-        class="absolute top-1 right-1 min-w-[16px] h-4 px-0.5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center leading-none"
+        class="absolute top-1 right-1 min-w-[16px] h-4 px-0.5 bg-primary text-white text-[10px] font-bold flex items-center justify-center leading-none border border-card dark:border-steel-900"
       >{{ unreadCount > 99 ? '99+' : unreadCount }}</span>
     </button>
 
     <!-- Avatar → Profile (mobile only) -->
-    <RouterLink to="/profile" class="lg:hidden w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-semibold text-primary">
+    <RouterLink to="/profile" class="lg:hidden w-8 h-8 rounded-full border-2 border-ink dark:border-steel-100 bg-primary/10 flex items-center justify-center text-sm font-display font-semibold text-primary">
       {{ initial }}
     </RouterLink>
 
     <!-- Avatar dropdown (desktop) -->
     <div class="hidden lg:block relative" ref="dropdownRef">
       <button
-        class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-semibold text-primary hover:bg-primary/30 transition-colors"
+        class="w-8 h-8 rounded-full border-2 border-ink dark:border-steel-100 bg-primary/10 flex items-center justify-center text-sm font-display font-semibold text-primary hover:bg-primary/20 transition-colors"
         @click="dropdownOpen = !dropdownOpen"
       >
         {{ initial }}
@@ -57,19 +58,19 @@
       >
         <div
           v-if="dropdownOpen"
-          class="absolute right-0 mt-2 w-44 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl shadow-lg py-1 z-50 origin-top-right"
+          class="absolute right-0 mt-2 w-44 bg-card dark:bg-steel-900 border-2 border-ink dark:border-steel-700 shadow-[4px_4px_0_theme(colors.ink)] dark:shadow-[4px_4px_0_black] py-1 z-50 origin-top-right"
         >
           <RouterLink
             to="/profile"
-            class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            class="flex items-center gap-2 px-4 py-2 text-sm text-steel-700 dark:text-steel-300 hover:bg-steel-100 dark:hover:bg-steel-700 transition-colors"
             @click="dropdownOpen = false"
           >
             <User class="w-4 h-4" />
             Профиль
           </RouterLink>
-          <hr class="my-1 border-gray-100 dark:border-gray-800" />
+          <hr class="my-1 border-steel-100 dark:border-steel-700" />
           <button
-            class="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+            class="flex items-center gap-2 w-full px-4 py-2 text-sm text-primary hover:bg-primary/10 transition-colors"
             @click="logout"
           >
             <LogOut class="w-4 h-4" />
@@ -78,6 +79,7 @@
         </div>
       </transition>
     </div>
+   </div>
   </header>
 
   <!-- Notification panel (teleported outside header stacking context) -->

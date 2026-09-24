@@ -1,14 +1,14 @@
 <template>
   <!-- Swipe wrapper — overflow-hidden clips the sliding card to reveal the red zone -->
   <div
-    class="relative overflow-hidden rounded-xl shadow-sm border border-gray-100 dark:border-gray-800"
+    class="relative overflow-hidden border-2 border-ink dark:border-steel-700"
     @touchstart.passive="onTouchStart"
     @touchmove="onTouchMove"
     @touchend="onTouchEnd"
   >
     <!-- Delete reveal layer (always behind the card) -->
     <div
-      class="absolute inset-0 bg-red-500 flex items-center justify-end pr-5 gap-2 cursor-pointer select-none"
+      class="absolute inset-0 bg-primary flex items-center justify-end pr-5 gap-2 cursor-pointer select-none"
       @click.stop="onDeleteZoneTap"
     >
       <span class="text-white text-sm font-semibold">Удалить</span>
@@ -17,7 +17,7 @@
 
     <!-- Sliding card -->
     <div
-      class="bg-white dark:bg-gray-900 p-4 relative cursor-pointer"
+      class="bg-card dark:bg-steel-900 p-4 relative cursor-pointer"
       :style="{
         transform: `translateX(${swipeX}px)`,
         transition: swiping ? 'none' : 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)',
@@ -28,21 +28,21 @@
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 mb-1">
             <BaseBadge :color="typeColor">{{ workout.type }}</BaseBadge>
-            <span class="text-xs text-gray-400">{{ formattedDate }}</span>
+            <span class="text-xs text-steel-700 dark:text-steel-300">{{ formattedDate }}</span>
           </div>
-          <h3 class="font-semibold text-gray-900 dark:text-white truncate">{{ workout.title }}</h3>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <h3 class="font-display font-semibold text-ink dark:text-white truncate">{{ workout.title }}</h3>
+          <p class="text-xs text-steel-700 dark:text-steel-300 mt-1">
             {{ workout.exercises.length }} упр. · {{ totalSets }} подх. · {{ formatDuration(workout.durationMinutes) }}
           </p>
-          <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+          <p class="text-xs font-mono text-steel-700 dark:text-steel-300 mt-0.5">
             Тоннаж: {{ formatVolume(totalVolume) }} кг
           </p>
           <div v-if="socialMeta" class="flex items-center gap-3 mt-1.5">
-            <span class="flex items-center gap-1 text-xs text-gray-400">
-              <Heart class="w-3 h-3" :class="socialMeta.isLiked ? 'fill-red-400 text-red-400' : ''" />
+            <span class="flex items-center gap-1 text-xs text-steel-700 dark:text-steel-300">
+              <Heart class="w-3 h-3" :class="socialMeta.isLiked ? 'fill-primary text-primary' : ''" />
               {{ socialMeta.likesCount }}
             </span>
-            <span class="flex items-center gap-1 text-xs text-gray-400">
+            <span class="flex items-center gap-1 text-xs text-steel-700 dark:text-steel-300">
               <MessageCircle class="w-3 h-3" />
               {{ socialMeta.commentsCount }}
             </span>
@@ -50,7 +50,7 @@
         </div>
         <!-- Desktop-only trash button -->
         <button
-          class="hidden lg:flex w-10 h-10 items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
+          class="hidden lg:flex w-10 h-10 items-center justify-center text-steel-300 hover:text-primary transition-colors flex-shrink-0"
           title="Удалить"
           @click.stop="confirmDelete"
         >
@@ -61,7 +61,7 @@
   </div>
 
   <BaseModal v-model="showConfirm" title="Удалить тренировку?" max-width="sm">
-    <p class="text-sm text-gray-600 dark:text-gray-400">Это действие нельзя отменить.</p>
+    <p class="text-sm text-steel-700 dark:text-steel-300">Это действие нельзя отменить.</p>
     <template #footer>
       <BaseButton variant="ghost" @click="showConfirm = false">Отмена</BaseButton>
       <BaseButton variant="danger" :disabled="deleting" @click="doDelete">

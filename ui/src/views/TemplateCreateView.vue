@@ -2,16 +2,16 @@
   <div class="max-w-2xl">
     <div class="flex items-center gap-3 mb-6">
       <button
-        class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+        class="p-2 hover:bg-steel-100 dark:hover:bg-steel-700 text-steel-700 dark:text-steel-300 transition-colors"
         @click="$router.back()"
       >
         <ChevronLeft class="w-5 h-5" />
       </button>
-      <h2 class="text-xl font-bold text-gray-900 dark:text-white">Новый шаблон</h2>
+      <h2 class="text-xl font-bold text-ink dark:text-white">Новый шаблон</h2>
     </div>
 
     <div class="card p-5 mb-4 space-y-4">
-      <h3 class="font-semibold text-gray-900 dark:text-white">Основная информация</h3>
+      <h3 class="font-semibold text-ink dark:text-white">Основная информация</h3>
 
       <BaseInput v-model="form.title" label="Название шаблона" placeholder="Например: Push day" />
 
@@ -21,10 +21,10 @@
           <button
             v-for="type in workoutTypes"
             :key="type"
-            :class="['px-3 py-1.5 rounded-full text-sm font-medium border transition-colors',
+            :class="['px-3 py-1.5 text-sm font-medium border-2 transition-colors',
               form.type === type
-                ? 'bg-primary text-white border-primary'
-                : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-primary']"
+                ? 'bg-primary text-white border-ink dark:border-steel-100'
+                : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300 hover:border-primary hover:text-primary']"
             @click="form.type = type"
           >{{ type }}</button>
         </div>
@@ -54,12 +54,12 @@
         <button
           v-for="w in recentWorkouts"
           :key="w.id"
-          class="w-full text-left px-3 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-3"
+          class="w-full text-left px-3 py-3 hover:bg-steel-100 dark:hover:bg-steel-700 transition-colors flex items-center gap-3 border-2 border-transparent hover:border-steel-300 dark:hover:border-steel-700"
           @click="repeatWorkout(w)"
         >
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ w.title || 'Без названия' }}</p>
-            <p class="text-xs text-gray-400">{{ formatShortDate(w.date) }} · {{ w.type }} · {{ w.exercises.length }} упр.</p>
+            <p class="text-sm font-medium text-ink dark:text-white truncate">{{ w.title || 'Без названия' }}</p>
+            <p class="text-xs text-steel-700 dark:text-steel-300">{{ formatShortDate(w.date) }} · {{ w.type }} · {{ w.exercises.length }} упр.</p>
           </div>
         </button>
       </div>

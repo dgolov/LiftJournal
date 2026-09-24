@@ -2,19 +2,19 @@
   <div class="max-w-2xl">
     <div class="flex items-center gap-3 mb-6">
       <button
-        class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors"
+        class="p-2 hover:bg-steel-100 dark:hover:bg-steel-700 text-steel-700 dark:text-steel-300 transition-colors"
         @click="$router.back()"
       >
         <ChevronLeft class="w-5 h-5" />
       </button>
-      <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+      <h2 class="text-xl font-bold text-ink dark:text-white">
         {{ isEdit ? 'Редактировать план' : 'Новый план тренировки' }}
       </h2>
     </div>
 
     <!-- Basic info -->
     <div class="card p-5 mb-4 space-y-4">
-      <h3 class="font-semibold text-gray-900 dark:text-white">Основная информация</h3>
+      <h3 class="font-semibold text-ink dark:text-white">Основная информация</h3>
 
       <BaseInput
         v-model="form.title"
@@ -28,10 +28,10 @@
           <button
             v-for="type in workoutTypes"
             :key="type"
-            :class="['px-3 py-1.5 rounded-full text-sm font-medium border transition-colors',
+            :class="['px-3 py-1.5 text-sm font-medium border-2 transition-colors',
               form.type === type
-                ? 'bg-primary text-white border-primary'
-                : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-primary']"
+                ? 'bg-primary text-white border-ink dark:border-steel-100'
+                : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300 hover:border-primary hover:text-primary']"
             @click="form.type = type"
           >{{ type }}</button>
         </div>
@@ -49,25 +49,25 @@
         <label class="label">Повторение</label>
         <div class="flex gap-2">
           <button
-            :class="['flex-1 py-2 rounded-lg text-sm font-medium border transition-colors',
-              !form.recurring ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400']"
+            :class="['flex-1 py-2 text-sm font-medium border-2 transition-colors',
+              !form.recurring ? 'bg-primary text-white border-ink dark:border-steel-100' : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300']"
             @click="form.recurring = false"
           >Не повторять</button>
           <button
-            :class="['flex-1 py-2 rounded-lg text-sm font-medium border transition-colors',
-              form.recurring ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400']"
+            :class="['flex-1 py-2 text-sm font-medium border-2 transition-colors',
+              form.recurring ? 'bg-primary text-white border-ink dark:border-steel-100' : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300']"
             @click="form.recurring = true"
           >Каждую неделю</button>
         </div>
         <div v-if="form.recurring" class="mt-3 flex items-center gap-3">
-          <span class="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">Повторять</span>
+          <span class="text-sm text-steel-700 dark:text-steel-300 whitespace-nowrap">Повторять</span>
           <select v-model="form.recurrenceWeeks" class="input flex-1">
             <option :value="4">4 недели</option>
             <option :value="8">8 недель</option>
             <option :value="12">12 недель</option>
             <option :value="24">24 недели</option>
           </select>
-          <span class="text-xs text-gray-400 whitespace-nowrap">по {{ scheduledDayLabel }}</span>
+          <span class="text-xs text-steel-700 dark:text-steel-300 whitespace-nowrap">по {{ scheduledDayLabel }}</span>
         </div>
       </div>
 
@@ -85,11 +85,11 @@
     <!-- Exercises -->
     <div class="mb-4">
       <div class="flex items-center justify-between mb-3">
-        <h3 class="font-semibold text-gray-900 dark:text-white">Упражнения</h3>
+        <h3 class="font-semibold text-ink dark:text-white">Упражнения</h3>
         <div class="flex items-center gap-2">
           <button
             v-if="form.exercises.length"
-            class="p-2 rounded-lg text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors"
+            class="p-2 text-steel-300 hover:text-primary hover:bg-primary/10 transition-colors"
             title="Сохранить как шаблон"
             @click="templateName = form.title; showSaveTemplate = true"
           >
@@ -97,7 +97,7 @@
           </button>
           <ExerciseViewModeToggle />
           <BaseButton variant="outline" size="sm" @click="showTemplatePicker = true">Шаблон</BaseButton>
-          <BaseButton variant="outline" size="sm" @click="showPicker = true">+ Добавить</BaseButton>
+          <BaseButton variant="outline" size="sm" @click="showPicker = true">Добавить</BaseButton>
         </div>
       </div>
 
@@ -122,18 +122,18 @@
           <div v-else class="card p-4">
             <div class="flex items-center justify-between mb-3">
               <div class="flex items-center gap-2 min-w-0">
-                <span class="drag-handle flex-shrink-0 text-gray-300 hover:text-gray-500 dark:hover:text-gray-400 cursor-grab active:cursor-grabbing touch-none p-1 -ml-1">
+                <span class="drag-handle flex-shrink-0 text-steel-300 hover:text-steel-700 dark:hover:text-steel-300 cursor-grab active:cursor-grabbing touch-none p-1 -ml-1">
                   <GripVertical class="w-4 h-4" />
                 </span>
                 <div class="min-w-0">
-                  <h4 class="font-semibold text-gray-900 dark:text-white">{{ ex.exerciseName }}</h4>
-                  <p class="text-xs text-gray-400">{{ ex.sets.length }} подходов (план)</p>
+                  <h4 class="font-display font-semibold text-ink dark:text-white">{{ ex.exerciseName }}</h4>
+                  <p class="text-xs text-steel-700 dark:text-steel-300">{{ ex.sets.length }} подходов (план)</p>
                 </div>
               </div>
               <div class="flex items-center gap-1 flex-shrink-0">
                 <button
                   v-if="ex.history?.length > 1"
-                  class="flex items-center gap-1 px-2 h-8 rounded-lg text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+                  class="flex items-center gap-1 px-2 h-8 text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
                   title="Показать подходы из другой тренировки"
                   @click="cycleHistory(exIdx)"
                 >
@@ -141,7 +141,7 @@
                   {{ ex.historyIndex + 1 }}/{{ ex.history.length }} · {{ historyDateLabel(ex) }}
                 </button>
                 <button
-                  class="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors"
+                  class="w-10 h-10 flex items-center justify-center text-steel-300 hover:text-primary transition-colors"
                   @click="removeExercise(exIdx)"
                 >
                   <Trash2 class="w-5 h-5" />
@@ -150,7 +150,7 @@
             </div>
 
             <!-- Column headers -->
-            <div class="flex items-center gap-1 mb-2 text-xs text-gray-400 font-medium">
+            <div class="flex items-center gap-1 mb-2 text-xs text-steel-700 dark:text-steel-300 font-medium">
               <span class="w-5" />
               <span class="flex-1 text-center">Вес (кг)</span>
               <span class="w-3 text-center">×</span>
@@ -164,7 +164,7 @@
                 :key="set.id"
                 class="flex items-center gap-1"
               >
-                <span class="text-xs text-gray-400 w-5 text-center flex-shrink-0">{{ setIdx + 1 }}</span>
+                <span class="text-xs font-mono text-steel-700 dark:text-steel-300 w-5 text-center flex-shrink-0">{{ setIdx + 1 }}</span>
                 <StepperInput
                   class="flex-1"
                   :model-value="set.weight"
@@ -173,7 +173,7 @@
                   placeholder="кг"
                   @update:model-value="set.weight = $event"
                 />
-                <span class="text-gray-300 text-sm flex-shrink-0">×</span>
+                <span class="text-steel-300 text-sm flex-shrink-0">×</span>
                 <StepperInput
                   class="flex-1"
                   :model-value="set.reps"
@@ -182,7 +182,7 @@
                   @update:model-value="set.reps = $event"
                 />
                 <button
-                  class="w-7 h-9 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
+                  class="w-7 h-9 flex items-center justify-center text-steel-300 hover:text-primary transition-colors flex-shrink-0"
                   @click="removeSet(exIdx, setIdx)"
                 >
                   <X class="w-4 h-4" />
@@ -191,9 +191,9 @@
             </div>
 
             <button
-              class="mt-3 w-full py-2 text-sm text-primary hover:text-primary font-medium border border-dashed border-primary/30 hover:border-primary/60 rounded-lg transition-colors"
+              class="mt-3 w-full py-2 text-sm text-primary hover:text-primary-dark font-medium border-2 border-dashed border-primary/40 hover:border-primary transition-colors"
               @click="addSet(exIdx)"
-            >+ Добавить подход</button>
+            >Добавить подход</button>
           </div>
         </template>
       </draggable>

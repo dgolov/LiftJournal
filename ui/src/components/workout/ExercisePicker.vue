@@ -18,16 +18,16 @@
       <button
         v-for="ex in filtered"
         :key="ex.id"
-        class="w-full text-left px-3 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-3"
+        class="w-full text-left px-3 py-3 hover:bg-steel-100 dark:hover:bg-steel-700 transition-colors flex items-center gap-3 border-2 border-transparent hover:border-steel-300 dark:hover:border-steel-700"
         @click="pick(ex)"
       >
         <div class="flex-1 min-w-0">
-          <p class="text-sm font-medium text-gray-900 dark:text-white">{{ ex.name }}</p>
-          <p class="text-xs text-gray-400">{{ ex.muscleGroup }} · {{ ex.equipment }}</p>
+          <p class="text-sm font-medium text-ink dark:text-white">{{ ex.name }}</p>
+          <p class="text-xs text-steel-700 dark:text-steel-300">{{ ex.muscleGroup }} · {{ ex.equipment }}</p>
         </div>
-        <span v-if="isAdded(ex.id)" class="text-xs text-green-500 font-medium flex-shrink-0">В тренировке</span>
+        <span v-if="isAdded(ex.id)" class="text-xs text-success font-medium flex-shrink-0">В тренировке</span>
       </button>
-      <div v-if="!filtered.length" class="text-center py-8 text-gray-400 text-sm">
+      <div v-if="!filtered.length" class="text-center py-8 text-steel-700 dark:text-steel-300 text-sm">
         Ничего не найдено
       </div>
     </div>

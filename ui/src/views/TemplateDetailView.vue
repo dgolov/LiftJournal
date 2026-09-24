@@ -3,12 +3,12 @@
     <!-- Header -->
     <div class="mb-6">
       <div class="flex items-center gap-2 mb-3">
-        <button class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors" @click="onBack">
+        <button class="p-2 hover:bg-steel-100 dark:hover:bg-steel-700 text-steel-700 dark:text-steel-300 transition-colors" @click="onBack">
           <ChevronLeft class="w-5 h-5" />
         </button>
         <template v-if="!isEditing">
           <button
-            class="ml-auto flex items-center gap-1 px-2 h-8 rounded-lg text-xs font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            class="ml-auto flex items-center gap-1 px-2 h-8 text-xs font-medium text-steel-700 dark:text-steel-300 hover:bg-steel-100 dark:hover:bg-steel-700 transition-colors"
             @click="startEdit"
           >
             <Pencil class="w-3.5 h-3.5" /> Изменить
@@ -19,15 +19,15 @@
         <div class="flex items-center gap-2 mb-1">
           <BaseBadge :color="typeColor">{{ template.type }}</BaseBadge>
         </div>
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ template.title }}</h2>
-        <p class="text-sm text-gray-500 mt-1">{{ template.exercises.length }} упр. · {{ totalSets(template) }} подходов</p>
+        <h2 class="text-2xl font-bold text-ink dark:text-white">{{ template.title }}</h2>
+        <p class="text-sm text-steel-700 dark:text-steel-300 mt-1">{{ template.exercises.length }} упр. · {{ totalSets(template) }} подходов</p>
       </div>
     </div>
 
     <!-- Edit form -->
     <template v-if="isEditing">
       <div class="card p-4 mb-4 space-y-4">
-        <h3 class="font-semibold text-gray-900 dark:text-white">Редактирование шаблона</h3>
+        <h3 class="font-semibold text-ink dark:text-white">Редактирование шаблона</h3>
 
         <BaseInput v-model="draft.title" label="Название шаблона" />
 
@@ -37,10 +37,10 @@
             <button
               v-for="type in workoutTypes"
               :key="type"
-              :class="['px-3 py-1.5 rounded-full text-sm font-medium border transition-colors',
+              :class="['px-3 py-1.5 text-sm font-medium border-2 transition-colors',
                 draft.type === type
-                  ? 'bg-primary text-white border-primary'
-                  : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-primary']"
+                  ? 'bg-primary text-white border-ink dark:border-steel-100'
+                  : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300 hover:border-primary hover:text-primary']"
               @click="draft.type = type"
             >{{ type }}</button>
           </div>
@@ -60,22 +60,22 @@
     <!-- Exercises: view mode -->
     <div v-else class="space-y-4">
       <div v-for="ex in template.exercises" :key="ex.exerciseId" class="card p-4">
-        <h3 class="font-semibold text-gray-900 dark:text-white mb-3">{{ ex.exerciseName }}</h3>
+        <h3 class="font-display font-semibold text-ink dark:text-white mb-3">{{ ex.exerciseName }}</h3>
         <div class="space-y-2">
-          <div v-for="(set, i) in ex.sets" :key="set.id" class="flex items-center gap-1 text-sm">
-            <span class="text-gray-400 w-5 text-center flex-shrink-0">{{ i + 1 }}</span>
-            <span class="font-medium">{{ set.weight > 0 ? set.weight + ' кг' : 'Б/в' }}</span>
-            <span class="text-gray-400">×</span>
-            <span class="font-medium">{{ set.reps }} повт.</span>
+          <div v-for="(set, i) in ex.sets" :key="set.id" class="flex items-center gap-1 text-sm font-mono">
+            <span class="text-steel-700 dark:text-steel-300 w-5 text-center flex-shrink-0">{{ i + 1 }}</span>
+            <span class="font-medium text-ink dark:text-white">{{ set.weight > 0 ? set.weight + ' кг' : 'Б/в' }}</span>
+            <span class="text-steel-300">×</span>
+            <span class="font-medium text-ink dark:text-white">{{ set.reps }} повт.</span>
           </div>
-          <p v-if="!ex.sets.length" class="text-sm text-gray-400">Подходы не заданы</p>
+          <p v-if="!ex.sets.length" class="text-sm text-steel-700 dark:text-steel-300">Подходы не заданы</p>
         </div>
       </div>
-      <div v-if="!template.exercises.length" class="text-center py-8 text-gray-400">Упражнения не добавлены</div>
+      <div v-if="!template.exercises.length" class="text-center py-8 text-steel-700 dark:text-steel-300">Упражнения не добавлены</div>
     </div>
   </div>
 
-  <div v-else class="text-center py-16 text-gray-400">
+  <div v-else class="text-center py-16 text-steel-700 dark:text-steel-300">
     Шаблон не найден
   </div>
 </template>

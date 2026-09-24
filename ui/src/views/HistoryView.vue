@@ -2,27 +2,27 @@
   <div>
     <!-- Header -->
     <div class="flex items-center justify-between mb-5">
-      <h2 class="text-xl font-bold text-gray-900 dark:text-white">История</h2>
+      <h2 class="text-xl font-bold text-ink dark:text-white">История</h2>
       <div class="flex items-center gap-2">
         <!-- Export button -->
         <button
-          class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400 disabled:opacity-50"
+          class="p-2 hover:bg-steel-100 dark:hover:bg-steel-700 transition-colors text-steel-700 dark:text-steel-300 disabled:opacity-50"
           title="Экспорт"
           :disabled="exportLoading"
           @click="openExport"
         ><Download class="w-4 h-4" /></button>
-        <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 gap-0.5">
+        <div class="flex bg-steel-100 dark:bg-steel-950 p-0.5 gap-0.5">
         <button
-          :class="['p-2 rounded-md transition-colors', viewMode === 'calendar'
-            ? 'bg-white dark:bg-gray-700 shadow-sm text-primary'
-            : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300']"
+          :class="['p-2 transition-colors', viewMode === 'calendar'
+            ? 'bg-card dark:bg-steel-700 text-primary'
+            : 'text-steel-700 dark:text-steel-300 hover:text-primary']"
           title="Календарь"
           @click="switchView('calendar')"
         ><CalendarDays class="w-4 h-4" /></button>
         <button
-          :class="['p-2 rounded-md transition-colors', viewMode === 'list'
-            ? 'bg-white dark:bg-gray-700 shadow-sm text-primary'
-            : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300']"
+          :class="['p-2 transition-colors', viewMode === 'list'
+            ? 'bg-card dark:bg-steel-700 text-primary'
+            : 'text-steel-700 dark:text-steel-300 hover:text-primary']"
           title="Список"
           @click="switchView('list')"
         ><List class="w-4 h-4" /></button>
@@ -31,11 +31,11 @@
     </div>
 
     <!-- Granularity toggle -->
-    <div v-if="!selectedDate" class="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 mb-5 w-fit">
+    <div v-if="!selectedDate" class="flex gap-1 bg-steel-100 dark:bg-steel-950 p-0.5 mb-5 w-fit">
       <button
         v-for="g in granularityOptions" :key="g.value"
-        :class="['px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
-          granularity === g.value ? 'bg-white dark:bg-gray-700 shadow-sm text-primary' : 'text-gray-500']"
+        :class="['px-3 py-1.5 text-sm font-medium transition-colors',
+          granularity === g.value ? 'bg-card dark:bg-steel-700 text-primary' : 'text-steel-700 dark:text-steel-300']"
         @click="setGranularity(g.value)"
       >{{ g.label }}</button>
     </div>
@@ -43,29 +43,29 @@
     <!-- Period stats (shared) -->
     <div v-if="!selectedDate" class="grid grid-cols-3 gap-3 mb-5">
       <div class="card p-3 text-center">
-        <div class="text-xl font-bold text-primary">{{ periodWorkouts.length }}</div>
-        <div class="text-xs text-gray-400 mt-0.5">тренировок</div>
+        <div class="text-xl font-display font-bold text-primary">{{ periodWorkouts.length }}</div>
+        <div class="text-xs text-steel-700 dark:text-steel-300 mt-0.5">тренировок</div>
       </div>
       <div class="card p-3 text-center">
-        <div class="text-xl font-bold text-gray-900 dark:text-white">{{ periodTotalVolume }}</div>
-        <div class="text-xs text-gray-400 mt-0.5">тоннаж</div>
+        <div class="text-xl font-display font-bold text-ink dark:text-white">{{ periodTotalVolume }}</div>
+        <div class="text-xs text-steel-700 dark:text-steel-300 mt-0.5">тоннаж</div>
       </div>
       <div class="card p-3 text-center">
-        <div class="text-xl font-bold text-gray-900 dark:text-white">{{ periodTotalDuration }}</div>
-        <div class="text-xs text-gray-400 mt-0.5">часов</div>
+        <div class="text-xl font-display font-bold text-ink dark:text-white">{{ periodTotalDuration }}</div>
+        <div class="text-xs text-steel-700 dark:text-steel-300 mt-0.5">часов</div>
       </div>
     </div>
 
     <!-- Period navigation -->
     <div v-if="!selectedDate" class="flex items-center gap-2 mb-5">
-      <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400" @click="prevPeriod">
+      <button class="p-2 hover:bg-steel-100 dark:hover:bg-steel-700 transition-colors text-steel-700 dark:text-steel-300" @click="prevPeriod">
         <ChevronLeft class="w-4 h-4" />
       </button>
       <div class="flex-1 text-center">
-        <span class="text-base font-semibold text-gray-900 dark:text-white capitalize">{{ periodLabel }}</span>
-        <span v-if="periodLoading" class="text-xs text-gray-400 ml-2">загрузка…</span>
+        <span class="text-base font-semibold text-ink dark:text-white capitalize">{{ periodLabel }}</span>
+        <span v-if="periodLoading" class="text-xs text-steel-700 dark:text-steel-300 ml-2">загрузка…</span>
       </div>
-      <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400" @click="nextPeriod">
+      <button class="p-2 hover:bg-steel-100 dark:hover:bg-steel-700 transition-colors text-steel-700 dark:text-steel-300" @click="nextPeriod">
         <ChevronRight class="w-4 h-4" />
       </button>
     </div>
@@ -75,10 +75,10 @@
       <!-- Month grid -->
       <template v-if="granularity === 'month'">
         <div class="grid grid-cols-7 mb-1.5">
-          <div v-for="d in weekDays" :key="d" class="text-center text-xs font-medium text-gray-400 dark:text-gray-500 py-1">{{ d }}</div>
+          <div v-for="d in weekDays" :key="d" class="text-center text-xs font-medium text-steel-700 dark:text-steel-300 py-1">{{ d }}</div>
         </div>
 
-        <div class="grid grid-cols-7 gap-px bg-gray-200 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
+        <div class="grid grid-cols-7 gap-px bg-ink dark:bg-steel-700 border-2 border-ink dark:border-steel-700">
           <button
             v-for="day in calendarDays"
             :key="day.dateStr"
@@ -90,9 +90,9 @@
             <div class="flex-1 flex flex-col gap-0.5 mt-1 overflow-hidden">
               <span
                 v-for="(item, i) in dayItems(day.dateStr).slice(0, 2)" :key="i"
-                :class="['text-[9px] leading-tight px-1 py-0.5 rounded truncate', chipClass(item)]"
+                :class="['text-[9px] leading-tight px-1 py-0.5 truncate', chipClass(item)]"
               >{{ item.label }}</span>
-              <span v-if="dayItems(day.dateStr).length > 2" class="text-[9px] text-gray-400 dark:text-gray-500 px-1">
+              <span v-if="dayItems(day.dateStr).length > 2" class="text-[9px] text-steel-700 dark:text-steel-300 px-1">
                 +{{ dayItems(day.dateStr).length - 2 }} ещё
               </span>
             </div>
@@ -104,11 +104,11 @@
       <template v-else-if="granularity === 'week'">
         <div class="grid grid-cols-7 mb-1.5">
           <div v-for="day in weekDaysArr" :key="day.dateStr" class="text-center py-1">
-            <div class="text-xs font-medium text-gray-400 dark:text-gray-500">{{ weekDayShort(day.date) }}</div>
+            <div class="text-xs font-medium text-steel-700 dark:text-steel-300">{{ weekDayShort(day.date) }}</div>
           </div>
         </div>
 
-        <div class="grid grid-cols-7 gap-px bg-gray-200 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
+        <div class="grid grid-cols-7 gap-px bg-ink dark:bg-steel-700 border-2 border-ink dark:border-steel-700">
           <button
             v-for="day in weekDaysArr"
             :key="day.dateStr"
@@ -120,12 +120,12 @@
             <div class="flex-1 flex flex-col gap-1 mt-1.5 overflow-y-auto">
               <span
                 v-for="(item, i) in dayItems(day.dateStr)" :key="i"
-                :class="['text-[10px] leading-snug px-1.5 py-1 rounded', chipClass(item)]"
+                :class="['text-[10px] leading-snug px-1.5 py-1', chipClass(item)]"
               >{{ item.label }}</span>
             </div>
             <span
               v-if="dayVolume(day.dateStr) > 0"
-              :class="['text-[10px] font-medium text-center mt-1.5 pt-1.5 border-t', selectedDate === day.dateStr ? 'border-white/20 text-white/90' : 'border-gray-100 dark:border-gray-800 text-gray-500 dark:text-gray-400']"
+              :class="['text-[10px] font-mono font-medium text-center mt-1.5 pt-1.5 border-t-2', selectedDate === day.dateStr ? 'border-white/20 text-white/90' : 'border-steel-100 dark:border-steel-700 text-steel-700 dark:text-steel-300']"
             >{{ formatVolumeShort(dayVolume(day.dateStr)) }}</span>
           </button>
         </div>
@@ -135,9 +135,13 @@
       <template v-else>
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <div v-for="m in 12" :key="m" class="card p-2.5">
-            <p class="text-xs font-semibold text-center text-gray-700 dark:text-gray-200 mb-1.5 capitalize">{{ miniMonthLabel(m - 1) }}</p>
+            <button
+              class="w-full text-xs font-display font-semibold text-center text-ink dark:text-steel-100 mb-1.5 capitalize hover:text-primary transition-colors"
+              title="Открыть месяц"
+              @click="goToMonth(m - 1)"
+            >{{ miniMonthLabel(m - 1) }}</button>
             <div class="grid grid-cols-7 gap-[3px] mb-1">
-              <span v-for="d in weekDaysNarrow" :key="d" class="text-[8px] text-center text-gray-300 dark:text-gray-600">{{ d }}</span>
+              <span v-for="d in weekDaysNarrow" :key="d" class="text-[8px] text-center text-steel-300">{{ d }}</span>
             </div>
             <div class="grid grid-cols-7 gap-[3px]">
               <button
@@ -157,24 +161,24 @@
     <!-- DAY DRILL-DOWN -->
     <template v-else-if="viewMode === 'calendar' && selectedDate">
       <button
-        class="flex items-center gap-1 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors -ml-1 mb-3"
+        class="flex items-center gap-1 text-sm font-medium text-steel-700 dark:text-steel-300 hover:text-primary transition-colors -ml-1 mb-3"
         @click="selectedDate = null"
       >
         <ChevronLeft class="w-4 h-4" /> Назад к календарю
       </button>
 
       <div class="flex items-center justify-between gap-3 mb-5">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white capitalize truncate">{{ selectedDateLabel }}</h3>
+        <h3 class="text-lg font-bold text-ink dark:text-white capitalize truncate">{{ selectedDateLabel }}</h3>
         <button
           v-if="selectedDate >= todayStr"
-          class="text-sm px-3 py-2 rounded-lg bg-primary text-white font-medium hover:bg-primary/90 transition-colors flex items-center gap-1.5 flex-shrink-0"
+          class="text-sm px-3 py-2 bg-primary text-white font-display font-semibold uppercase tracking-wide hover:bg-primary-dark transition-colors flex items-center gap-1.5 flex-shrink-0"
           @click="planForDay(selectedDate)"
         >
           <Plus class="w-4 h-4" /> Запланировать
         </button>
         <button
           v-else
-          class="text-sm px-3 py-2 rounded-lg bg-gray-700 text-white font-medium hover:bg-gray-600 transition-colors flex items-center gap-1.5 flex-shrink-0"
+          class="text-sm px-3 py-2 bg-ink dark:bg-steel-700 text-white font-display font-semibold uppercase tracking-wide hover:bg-steel-700 dark:hover:bg-steel-950 transition-colors flex items-center gap-1.5 flex-shrink-0"
           @click="addWorkoutForDay(selectedDate)"
         >
           <Plus class="w-4 h-4" /> Добавить тренировку
@@ -197,14 +201,14 @@
       <div class="card p-4 mb-5 space-y-3">
         <div class="flex flex-wrap gap-2">
           <button
-            :class="['text-sm px-3 py-1.5 rounded-full font-medium border transition-colors',
-              !activeType ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-primary hover:text-primary']"
+            :class="['text-sm px-3 py-1.5 font-medium border-2 transition-colors',
+              !activeType ? 'bg-primary text-white border-ink dark:border-steel-100' : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300 hover:border-primary hover:text-primary']"
             @click="setFilter('type', null)"
           >Все</button>
           <button
             v-for="type in workoutTypes" :key="type"
-            :class="['text-sm px-3 py-1.5 rounded-full font-medium border transition-colors',
-              activeType === type ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-primary hover:text-primary']"
+            :class="['text-sm px-3 py-1.5 font-medium border-2 transition-colors',
+              activeType === type ? 'bg-primary text-white border-ink dark:border-steel-100' : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300 hover:border-primary hover:text-primary']"
             @click="setFilter('type', type)"
           >{{ type }}</button>
         </div>
@@ -214,7 +218,7 @@
           <input type="date" :value="filters.dateTo || ''" class="input flex-1" @input="setFilter('dateTo', $event.target.value || null)" />
         </div>
         <div class="flex items-center justify-between">
-          <span v-if="isSearching" class="text-xs text-gray-400">По всем записям · найдено <strong class="text-gray-600 dark:text-gray-300">{{ periodCombinedItems.length }}</strong></span>
+          <span v-if="isSearching" class="text-xs text-steel-700 dark:text-steel-300">По всем записям · найдено <strong class="text-ink dark:text-steel-100">{{ periodCombinedItems.length }}</strong></span>
           <button v-if="hasActiveFilters" class="btn btn-ghost text-sm" @click="resetFilters">Сбросить фильтры</button>
         </div>
       </div>
@@ -550,6 +554,12 @@ onUnmounted(unsubscribeStore)
 // --- Year: mini-months (granularity === 'year') ---
 const weekDaysNarrow = ['П', 'В', 'С', 'Ч', 'П', 'С', 'В']
 
+function goToMonth(monthIndex) {
+  anchorDate.value = new Date(currentYear.value, monthIndex, 1)
+  granularity.value = 'month'
+  selectedDate.value = null
+}
+
 function miniMonthLabel(monthIndex) {
   return new Date(currentYear.value, monthIndex, 1).toLocaleDateString('ru-RU', { month: 'long' })
 }
@@ -578,28 +588,28 @@ function miniDayClass(dateStr) {
   const plans = plannedByDate.value[dateStr] || []
   let tone = ''
   if (workout) tone = 'bg-primary/15 dark:bg-primary/25 text-primary font-semibold'
-  else if (plans.some(p => p.status === 'completed')) tone = 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 font-semibold'
-  else if (plans.some(p => p.status === 'planned')) tone = 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 font-semibold'
-  else if (plans.some(p => p.status === 'skipped')) tone = 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
-  else tone = 'text-gray-500 dark:text-gray-400'
+  else if (plans.some(p => p.status === 'completed')) tone = 'bg-success/15 dark:bg-success/25 text-success font-semibold'
+  else if (plans.some(p => p.status === 'planned')) tone = 'bg-hazard/20 dark:bg-hazard/25 text-hazard font-semibold'
+  else if (plans.some(p => p.status === 'skipped')) tone = 'bg-steel-100 dark:bg-steel-700 text-steel-300'
+  else tone = 'text-steel-700 dark:text-steel-300'
   if (isToday) return `${tone} ring-1 ring-primary`
   return tone
 }
 
 // --- Shared cell chips (month + week grids) ---
 const workoutChipClasses = {
-  'Силовая': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
-  'Кардио': 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
+  'Силовая': 'bg-primary/15 text-primary dark:bg-primary/25',
+  'Кардио': 'bg-success/15 text-success dark:bg-success/25',
   'Растяжка': 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
-  'HIIT': 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
-  'Другое': 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300',
+  'HIIT': 'bg-hazard/20 text-hazard dark:bg-hazard/25',
+  'Другое': 'bg-steel-100 text-steel-700 dark:bg-steel-700 dark:text-steel-300',
 }
 // Same status-based logic as everywhere else in the app — a skipped plan
 // must not read the same as an upcoming one.
 const planChipClasses = {
-  planned: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-  completed: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
-  skipped: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400',
+  planned: 'bg-hazard/20 text-hazard dark:bg-hazard/25',
+  completed: 'bg-success/15 text-success dark:bg-success/25',
+  skipped: 'bg-steel-100 text-steel-300 dark:bg-steel-700',
 }
 
 function dayItems(dateStr) {
@@ -623,17 +633,17 @@ function cellClass(day) {
   const isSelected = day.dateStr === selectedDate.value
   const isOtherMonth = !day.isCurrentMonth
   if (isSelected) return 'bg-primary/10 dark:bg-primary/15'
-  if (isOtherMonth) return 'bg-gray-50 dark:bg-gray-900/40'
-  return 'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors'
+  if (isOtherMonth) return 'bg-steel-50 dark:bg-steel-950/60'
+  return 'bg-card dark:bg-steel-900 hover:bg-steel-50 dark:hover:bg-steel-700/60 transition-colors'
 }
 
 function dayNumberClass(day) {
   const isToday = day.dateStr === todayStr
   const isOtherMonth = !day.isCurrentMonth
-  const base = 'w-5 h-5 flex items-center justify-center rounded-full text-xs flex-shrink-0'
+  const base = 'w-5 h-5 flex items-center justify-center rounded-full text-xs font-mono flex-shrink-0'
   if (isToday) return `${base} bg-primary text-white font-bold`
-  if (isOtherMonth) return `${base} text-gray-300 dark:text-gray-700`
-  return `${base} text-gray-600 dark:text-gray-300`
+  if (isOtherMonth) return `${base} text-steel-300 dark:text-steel-700`
+  return `${base} text-steel-700 dark:text-steel-300`
 }
 
 function selectDay(day) {

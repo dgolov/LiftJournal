@@ -4,8 +4,8 @@
     <!-- Greeting -->
     <div class="flex items-start justify-between">
       <div>
-        <p class="text-sm text-gray-400 mb-0.5">{{ todayLabel }}</p>
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+        <p class="text-sm text-steel-700 dark:text-steel-300 mb-0.5">{{ todayLabel }}</p>
+        <h2 class="text-2xl font-bold text-ink dark:text-white">
           {{ greeting }}<template v-if="userName">, {{ firstName }}</template>!
         </h2>
       </div>
@@ -17,21 +17,21 @@
     </div>
 
     <!-- Today's planned workout -->
-    <div v-if="todaysPlan" class="card p-4 border-primary/30 dark:border-primary/40 flex items-center gap-3">
-      <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+    <div v-if="todaysPlan" class="card border-l-[6px] border-l-primary p-4 flex items-center gap-3">
+      <div class="w-10 h-10 border-2 border-primary bg-primary/10 flex items-center justify-center flex-shrink-0">
         <CalendarClock class="w-5 h-5 text-primary" />
       </div>
       <div class="flex-1 min-w-0">
-        <p class="text-xs text-primary font-medium">Запланировано на сегодня</p>
-        <p class="font-semibold text-sm text-gray-900 dark:text-white truncate">{{ todaysPlan.title }}</p>
+        <p class="text-xs text-primary font-semibold uppercase tracking-wide">Запланировано на сегодня</p>
+        <p class="font-semibold text-sm text-ink dark:text-white truncate">{{ todaysPlan.title }}</p>
       </div>
       <div class="flex items-center gap-2 flex-shrink-0">
         <button
-          class="px-3 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-1.5"
+          class="px-3 py-2 bg-primary text-white text-sm font-display font-semibold uppercase tracking-wide hover:bg-primary-dark transition-colors flex items-center gap-1.5"
           @click="startTodaysPlan"
         ><Play class="w-3.5 h-3.5" />Начать</button>
         <button
-          class="w-9 h-9 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors"
+          class="w-9 h-9 flex items-center justify-center text-steel-700 dark:text-steel-300 hover:text-primary transition-colors"
           title="Пропустить"
           @click="skipTodaysPlan"
         ><Ban class="w-4 h-4" /></button>
@@ -40,34 +40,32 @@
 
     <!-- Top stat cards -->
     <div class="grid grid-cols-3 gap-3">
-      <div class="card p-4 flex flex-col items-center text-center gap-1">
-        <div class="flex items-center gap-1.5">
-          <Flame :class="['w-5 h-5', currentStreak > 0 ? 'text-orange-400' : 'text-gray-300']" />
-          <span class="text-2xl font-bold text-gray-900 dark:text-white">{{ currentStreak }}</span>
+      <div class="card p-3 flex flex-col items-center text-center gap-1">
+        <div class="h-7 flex items-center justify-center gap-1 text-steel-700 dark:text-steel-300">
+          <Flame :class="['w-3.5 h-3.5 flex-shrink-0', currentStreak > 0 ? 'text-primary' : '']" />
+          <span class="text-[11px] leading-tight">стрик дней</span>
         </div>
-        <span class="text-xs text-gray-400 leading-tight">стрик дней</span>
-        <span v-if="longestStreak > 1" class="text-xs text-gray-300 dark:text-gray-600">макс {{ longestStreak }}</span>
+        <span :class="['text-2xl font-mono font-bold tabular-nums whitespace-nowrap', currentStreak > 0 ? 'text-primary' : 'text-ink dark:text-white']">{{ currentStreak }}</span>
+        <span class="text-xs text-steel-300">{{ longestStreak > 1 ? `макс ${longestStreak}` : '—' }}</span>
       </div>
 
-      <div class="card p-4 flex flex-col items-center text-center gap-1">
-        <div class="flex items-center gap-1.5">
-          <Dumbbell class="w-5 h-5 text-primary" />
-          <span class="text-2xl font-bold text-gray-900 dark:text-white">{{ workoutsThisWeek }}</span>
+      <div class="card p-3 flex flex-col items-center text-center gap-1">
+        <div class="h-7 flex items-center justify-center gap-1 text-steel-700 dark:text-steel-300">
+          <Dumbbell :class="['w-3.5 h-3.5 flex-shrink-0', workoutsThisWeek > 0 ? 'text-primary' : '']" />
+          <span class="text-[11px] leading-tight">тренировок за неделю</span>
         </div>
-        <span class="text-xs text-gray-400 leading-tight">тренировок за неделю</span>
-        <span class="text-xs text-gray-300 dark:text-gray-600">{{ workoutsThisMonth }} в этом мес.</span>
+        <span :class="['text-2xl font-mono font-bold tabular-nums whitespace-nowrap', workoutsThisWeek > 0 ? 'text-primary' : 'text-ink dark:text-white']">{{ workoutsThisWeek }}</span>
+        <span class="text-xs text-steel-300">{{ workoutsThisMonth }} в мес.</span>
       </div>
 
-      <div class="card p-4 flex flex-col items-center text-center gap-1">
-        <div class="flex items-center gap-1.5">
-          <TrendingUp :class="['w-5 h-5', volumeDelta >= 0 ? 'text-green-400' : 'text-red-400']" />
-          <span class="text-2xl font-bold text-gray-900 dark:text-white">{{ formatVolumeShort(monthVolume) }}</span>
+      <div class="card p-3 flex flex-col items-center text-center gap-1">
+        <div class="h-7 flex items-center justify-center gap-1 text-steel-700 dark:text-steel-300">
+          <TrendingUp :class="['w-3.5 h-3.5 flex-shrink-0', volumeDelta >= 0 ? 'text-success' : 'text-primary']" />
+          <span class="text-[11px] leading-tight">тоннаж за мес.</span>
         </div>
-        <span class="text-xs text-gray-400 leading-tight">тоннаж за мес.</span>
-        <span :class="['text-xs leading-tight', volumeDelta > 0 ? 'text-green-400' : volumeDelta < 0 ? 'text-red-400' : 'text-gray-300 dark:text-gray-600']">
-          <template v-if="lastMonthVolume > 0">
-            {{ volumeDelta >= 0 ? '+' : '' }}{{ Math.round(volumeDelta) }}%
-          </template>
+        <span class="text-2xl font-mono font-bold tabular-nums whitespace-nowrap text-ink dark:text-white">{{ formatVolumeShort(monthVolume) }}</span>
+        <span :class="['text-xs', volumeDelta > 0 ? 'text-success' : volumeDelta < 0 ? 'text-primary' : 'text-steel-300']">
+          <template v-if="lastMonthVolume > 0">{{ volumeDelta >= 0 ? '+' : '' }}{{ Math.round(volumeDelta) }}%</template>
           <template v-else>—</template>
         </span>
       </div>
@@ -75,44 +73,44 @@
 
     <!-- Plan adherence -->
     <div>
-      <h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-3">
+      <h3 class="text-base font-semibold text-ink dark:text-white flex items-center gap-2 mb-3">
         <CalendarCheck class="w-4 h-4 text-primary" />
         Выполнение плана
       </h3>
 
       <div class="card p-4">
-        <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 gap-0.5 mb-4">
+        <div class="flex bg-steel-100 dark:bg-steel-950 p-0.5 gap-0.5 mb-4">
           <button
             v-for="p in adherencePeriods" :key="p.key"
-            :class="['flex-1 py-1.5 text-xs font-medium rounded-md transition-colors',
+            :class="['flex-1 py-1.5 text-xs font-medium transition-colors',
               adherencePeriod === p.key
-                ? 'bg-white dark:bg-gray-700 shadow-sm text-primary'
-                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300']"
+                ? 'bg-card dark:bg-steel-700 text-primary'
+                : 'text-steel-700 dark:text-steel-300 hover:text-primary']"
             @click="adherencePeriod = p.key"
           >{{ p.label }}</button>
         </div>
 
         <template v-if="adherenceStats.total > 0">
           <div class="flex items-end gap-2 mb-2">
-            <span class="text-3xl font-bold text-gray-900 dark:text-white">{{ adherenceStats.rate }}%</span>
-            <span class="text-xs text-gray-400 mb-1">выполнено из запланированного</span>
+            <span class="text-3xl font-display font-bold text-ink dark:text-white">{{ adherenceStats.rate }}%</span>
+            <span class="text-xs text-steel-700 dark:text-steel-300 mb-1">выполнено из запланированного</span>
           </div>
-          <div class="h-2.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden flex mb-4">
-            <div class="h-full bg-green-400" :style="{ width: adherencePct(adherenceStats.completed) + '%' }" />
-            <div class="h-full bg-gray-300 dark:bg-gray-600" :style="{ width: adherencePct(adherenceStats.skipped) + '%' }" />
+          <div class="h-2.5 bg-steel-100 dark:bg-steel-950 overflow-hidden flex mb-4">
+            <div class="h-full bg-success" :style="{ width: adherencePct(adherenceStats.completed) + '%' }" />
+            <div class="h-full bg-steel-300 dark:bg-steel-700" :style="{ width: adherencePct(adherenceStats.skipped) + '%' }" />
           </div>
           <div class="grid grid-cols-2 gap-2 text-center">
             <div>
-              <p class="text-sm font-bold text-green-500">{{ adherenceStats.completed }}</p>
-              <p class="text-xs text-gray-400">Выполнено</p>
+              <p class="text-sm font-bold text-success">{{ adherenceStats.completed }}</p>
+              <p class="text-xs text-steel-700 dark:text-steel-300">Выполнено</p>
             </div>
             <div>
-              <p class="text-sm font-bold text-gray-500 dark:text-gray-400">{{ adherenceStats.skipped }}</p>
-              <p class="text-xs text-gray-400">Пропущено</p>
+              <p class="text-sm font-bold text-steel-700 dark:text-steel-300">{{ adherenceStats.skipped }}</p>
+              <p class="text-xs text-steel-700 dark:text-steel-300">Пропущено</p>
             </div>
           </div>
         </template>
-        <div v-else class="text-center py-6 text-sm text-gray-400">
+        <div v-else class="text-center py-6 text-sm text-steel-700 dark:text-steel-300">
           Нет запланированных тренировок за этот период
         </div>
       </div>
@@ -120,20 +118,20 @@
 
     <!-- Month-to-month comparison -->
     <div>
-      <h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-3">
+      <h3 class="text-base font-semibold text-ink dark:text-white flex items-center gap-2 mb-3">
         <BarChart2 class="w-4 h-4 text-primary" />
         Динамика по месяцам
       </h3>
 
       <div class="card p-4">
         <!-- Metric tabs -->
-        <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 gap-0.5 mb-4">
+        <div class="flex bg-steel-100 dark:bg-steel-950 p-0.5 gap-0.5 mb-4">
           <button
             v-for="m in metrics" :key="m.key"
-            :class="['flex-1 py-1.5 text-xs font-medium rounded-md transition-colors',
+            :class="['flex-1 py-1.5 text-xs font-medium transition-colors',
               activeMetric === m.key
-                ? 'bg-white dark:bg-gray-700 shadow-sm text-primary'
-                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300']"
+                ? 'bg-card dark:bg-steel-700 text-primary'
+                : 'text-steel-700 dark:text-steel-300 hover:text-primary']"
             @click="activeMetric = m.key"
           >{{ m.label }}</button>
         </div>
@@ -141,29 +139,29 @@
         <!-- Bars -->
         <div class="space-y-2.5">
           <div v-for="(m, i) in monthlyStats" :key="m.prefix" class="flex items-center gap-3">
-            <span class="text-xs text-gray-400 w-12 flex-shrink-0 capitalize">{{ m.shortLabel }}</span>
-            <div class="flex-1 h-5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+            <span class="text-xs text-steel-700 dark:text-steel-300 w-12 flex-shrink-0 capitalize">{{ m.shortLabel }}</span>
+            <div class="flex-1 h-5 bg-steel-100 dark:bg-steel-950 overflow-hidden">
               <div
-                :class="['h-full rounded-full transition-all duration-500', barColor(i)]"
+                :class="['h-full transition-all duration-500', barColor(i)]"
                 :style="{ width: barWidth(m) + '%' }"
               />
             </div>
             <div class="w-20 flex items-center justify-end gap-1 flex-shrink-0">
-              <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">{{ formatMetric(m) }}</span>
+              <span class="text-xs font-mono font-semibold text-ink dark:text-steel-100">{{ formatMetric(m) }}</span>
               <span
                 v-if="i > 0"
-                :class="['text-xs font-medium', delta(i) > 0 ? 'text-green-400' : delta(i) < 0 ? 'text-red-400' : 'text-gray-300']"
+                :class="['text-xs font-medium', delta(i) > 0 ? 'text-success' : delta(i) < 0 ? 'text-primary' : 'text-steel-300']"
               >{{ delta(i) > 0 ? '↑' : delta(i) < 0 ? '↓' : '' }}</span>
             </div>
           </div>
         </div>
 
         <!-- Summary: current vs prev -->
-        <div v-if="monthlyStats.length >= 2" class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 grid grid-cols-3 gap-2 text-center">
+        <div v-if="monthlyStats.length >= 2" class="mt-4 pt-4 border-t-2 border-steel-100 dark:border-steel-700 grid grid-cols-3 gap-2 text-center">
           <div v-for="m in metrics" :key="m.key">
-            <p class="text-xs text-gray-400 mb-0.5">{{ m.label }}</p>
-            <p class="text-sm font-bold text-gray-900 dark:text-white">{{ formatMetricRaw(monthlyStats.at(-1), m.key) }}</p>
-            <p :class="['text-xs', deltaForMetric(m.key) > 0 ? 'text-green-400' : deltaForMetric(m.key) < 0 ? 'text-red-400' : 'text-gray-300']">
+            <p class="text-xs text-steel-700 dark:text-steel-300 mb-0.5">{{ m.label }}</p>
+            <p class="text-sm font-mono font-bold text-ink dark:text-white">{{ formatMetricRaw(monthlyStats.at(-1), m.key) }}</p>
+            <p :class="['text-xs', deltaForMetric(m.key) > 0 ? 'text-success' : deltaForMetric(m.key) < 0 ? 'text-primary' : 'text-steel-300']">
               <template v-if="monthlyStats.at(-2)[m.key] > 0">
                 {{ deltaForMetric(m.key) >= 0 ? '+' : '' }}{{ Math.round(deltaForMetric(m.key)) }}%
               </template>
@@ -177,8 +175,8 @@
     <!-- Personal records -->
     <div>
       <div class="flex items-center justify-between mb-3">
-        <h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-          <Trophy class="w-4 h-4 text-yellow-500" />
+        <h3 class="text-base font-semibold text-ink dark:text-white flex items-center gap-2">
+          <Trophy class="w-4 h-4 text-hazard" />
           Личные рекорды
         </h3>
         <RouterLink to="/exercises" class="text-xs text-primary hover:underline">Все упражнения</RouterLink>
@@ -189,24 +187,24 @@
           v-for="item in topExercises"
           :key="item.id"
           :to="`/exercises/${item.id}`"
-          class="card p-3.5 hover:shadow-md transition-shadow block"
+          class="card p-3.5 hover:border-primary transition-colors block"
         >
-          <p class="text-xs text-gray-400 mb-1 truncate">{{ item.exercise.muscleGroup }}</p>
-          <p class="font-semibold text-sm text-gray-900 dark:text-white mb-2 line-clamp-2 leading-tight">{{ item.exercise.name }}</p>
+          <p class="text-xs text-steel-700 dark:text-steel-300 mb-1 truncate">{{ item.exercise.muscleGroup }}</p>
+          <p class="font-semibold text-sm text-ink dark:text-white mb-2 line-clamp-2 leading-tight">{{ item.exercise.name }}</p>
           <div class="space-y-0.5">
             <div class="flex items-baseline gap-1">
-              <span class="text-lg font-bold text-primary leading-none">{{ item.pr.bestWeight }}</span>
-              <span class="text-xs text-gray-400">кг × {{ item.pr.bestWeightReps }} повт.</span>
+              <span class="text-lg font-mono font-bold text-primary leading-none">{{ item.pr.bestWeight }}</span>
+              <span class="text-xs text-steel-700 dark:text-steel-300">кг × {{ item.pr.bestWeightReps }} повт.</span>
             </div>
-            <div class="flex items-center gap-1 text-xs text-gray-400">
+            <div class="flex items-center gap-1 text-xs text-steel-700 dark:text-steel-300">
               <span>1ПМ:</span>
-              <span class="font-medium text-gray-700 dark:text-gray-300">{{ item.pr.best1RM }} кг</span>
+              <span class="font-mono font-medium text-ink dark:text-steel-100">{{ item.pr.best1RM }} кг</span>
             </div>
           </div>
         </RouterLink>
       </div>
 
-      <div v-else class="card p-6 text-center text-sm text-gray-400">
+      <div v-else class="card p-6 text-center text-sm text-steel-700 dark:text-steel-300">
         Нет данных — запишите первую тренировку
       </div>
     </div>
@@ -214,8 +212,8 @@
     <!-- Recent workouts -->
     <div>
       <div class="flex items-center justify-between mb-3">
-        <h3 class="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-          <ClipboardList class="w-4 h-4 text-gray-400" />
+        <h3 class="text-base font-semibold text-ink dark:text-white flex items-center gap-2">
+          <ClipboardList class="w-4 h-4 text-steel-300" />
           Последние тренировки
         </h3>
         <RouterLink to="/history" class="text-xs text-primary hover:underline">Вся история</RouterLink>
@@ -226,22 +224,22 @@
           v-for="w in recentWorkouts"
           :key="w.id"
           :to="`/workouts/${w.id}`"
-          class="card p-3.5 flex items-center gap-3 hover:shadow-md transition-shadow block"
+          class="card p-3.5 flex items-center gap-3 hover:border-primary transition-colors block"
         >
-          <div :class="['w-2 h-10 rounded-full flex-shrink-0', typeColorBar(w.type)]" />
+          <div :class="['w-2 h-10 flex-shrink-0', typeColorBar(w.type)]" />
           <div class="flex-1 min-w-0">
-            <p class="font-semibold text-sm text-gray-900 dark:text-white truncate">{{ w.title }}</p>
-            <p class="text-xs text-gray-400 mt-0.5">
+            <p class="font-semibold text-sm text-ink dark:text-white truncate">{{ w.title }}</p>
+            <p class="text-xs text-steel-700 dark:text-steel-300 mt-0.5">
               {{ formatDate(w.date) }}
               <template v-if="workoutVolume(w) > 0"> · {{ formatVolumeShort(workoutVolume(w)) }} тоннаж</template>
               <template v-if="w.durationMinutes"> · {{ w.durationMinutes }} мин</template>
             </p>
           </div>
-          <ChevronRight class="w-4 h-4 text-gray-300 flex-shrink-0" />
+          <ChevronRight class="w-4 h-4 text-steel-300 flex-shrink-0" />
         </RouterLink>
       </div>
 
-      <div v-else class="card p-6 text-center text-sm text-gray-400">
+      <div v-else class="card p-6 text-center text-sm text-steel-700 dark:text-steel-300">
         Пока нет тренировок
       </div>
     </div>
@@ -354,7 +352,8 @@ const volumeDelta = computed(() => {
 
 function formatVolumeShort(v) {
   if (!v) return '0'
-  return v >= 1000 ? (v / 1000).toFixed(1) + ' т' : v + ' кг'
+  // Non-breaking space — the number and unit must never split across lines.
+  return v >= 1000 ? (v / 1000).toFixed(1) + ' т' : v + ' кг'
 }
 
 // ── Plan adherence ─────────────────────────────────────────────────────────────
@@ -426,7 +425,7 @@ function barWidth(m) {
   return Math.round((m[activeMetric.value] / metricMax.value) * 100)
 }
 
-const barColors = ['bg-indigo-200', 'bg-indigo-300', 'bg-indigo-400', 'bg-indigo-500', 'bg-indigo-500', 'bg-primary']
+const barColors = ['bg-steel-300', 'bg-steel-300', 'bg-primary-light', 'bg-primary-light', 'bg-primary', 'bg-primary']
 function barColor(i) { return barColors[i] ?? 'bg-primary' }
 
 function delta(i) {

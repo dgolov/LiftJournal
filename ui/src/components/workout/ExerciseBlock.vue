@@ -1,13 +1,13 @@
 <template>
   <div
-    class="relative overflow-hidden rounded-xl shadow-sm border border-gray-100 dark:border-gray-800"
+    class="relative overflow-hidden border-2 border-ink dark:border-steel-700"
     @touchstart.passive="onTouchStart"
     @touchmove="onTouchMove"
     @touchend="onTouchEnd"
   >
     <!-- Delete reveal layer -->
     <div
-      class="absolute inset-0 bg-red-500 flex items-center justify-end pr-5 gap-2 cursor-pointer select-none"
+      class="absolute inset-0 bg-primary flex items-center justify-end pr-5 gap-2 cursor-pointer select-none"
       @click.stop="onDeleteZoneTap"
     >
       <span class="text-white text-sm font-semibold">Удалить упражнение</span>
@@ -16,7 +16,7 @@
 
     <!-- Sliding card content -->
     <div
-      class="bg-white dark:bg-gray-900 p-4 relative"
+      class="bg-card dark:bg-steel-900 p-4 relative"
       :style="{
         transform: `translateX(${swipeX}px)`,
         transition: swiping ? 'none' : 'transform 0.28s cubic-bezier(0.25, 1, 0.5, 1)',
@@ -25,18 +25,18 @@
     >
       <div class="flex items-center justify-between mb-3" @click.stop>
         <div class="flex items-center gap-2 min-w-0">
-          <span class="drag-handle flex-shrink-0 text-gray-300 hover:text-gray-500 dark:hover:text-gray-400 cursor-grab active:cursor-grabbing touch-none p-1 -ml-1">
+          <span class="drag-handle flex-shrink-0 text-steel-300 hover:text-steel-700 dark:hover:text-steel-300 cursor-grab active:cursor-grabbing touch-none p-1 -ml-1">
             <GripVertical class="w-4 h-4" />
           </span>
           <div class="min-w-0">
-            <h4 class="font-semibold text-gray-900 dark:text-white">{{ exercise.exerciseName }}</h4>
-            <p class="text-xs text-gray-400">{{ exercise.sets.length }} {{ isCardio ? 'сессий' : 'подход(ов)' }}</p>
+            <h4 class="font-display font-semibold text-ink dark:text-white">{{ exercise.exerciseName }}</h4>
+            <p class="text-xs text-steel-700 dark:text-steel-300">{{ exercise.sets.length }} {{ isCardio ? 'сессий' : 'подход(ов)' }}</p>
           </div>
         </div>
         <div class="flex items-center gap-1 flex-shrink-0">
           <button
             v-if="exercise.history?.length > 1"
-            class="flex items-center gap-1 px-2 h-8 rounded-lg text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+            class="flex items-center gap-1 px-2 h-8 text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
             title="Показать подходы из другой тренировки"
             @click.stop="cycleHistory"
           >
@@ -44,7 +44,7 @@
             {{ historyIndex + 1 }}/{{ exercise.history.length }} · {{ historyDateLabel }}
           </button>
           <button
-            class="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
+            class="w-10 h-10 flex items-center justify-center text-steel-300 hover:text-primary transition-colors flex-shrink-0"
             @click.stop="removeExercise"
           >
             <Trash2 class="w-5 h-5" />
@@ -53,13 +53,13 @@
       </div>
 
       <!-- Header row -->
-      <div v-if="isCardio" class="flex items-center gap-1 mb-2 text-xs text-gray-400 font-medium">
+      <div v-if="isCardio" class="flex items-center gap-1 mb-2 text-xs text-steel-700 dark:text-steel-300 font-medium">
         <span class="w-5" />
         <span class="flex-1 text-center">Мин.</span>
         <span class="w-10" />
         <span class="w-8" />
       </div>
-      <div v-else class="flex items-center gap-1 mb-2 text-xs text-gray-400 font-medium">
+      <div v-else class="flex items-center gap-1 mb-2 text-xs text-steel-700 dark:text-steel-300 font-medium">
         <span class="w-5" />
         <span class="flex-1 text-center">Вес (кг)</span>
         <span class="w-3" />
@@ -81,10 +81,10 @@
       </div>
 
       <button
-        class="mt-3 w-full py-2 text-sm text-primary hover:text-primary-dark font-medium border border-dashed border-primary/30 hover:border-primary/60 rounded-lg transition-colors"
+        class="mt-3 w-full py-2 text-sm text-primary hover:text-primary-dark font-medium border-2 border-dashed border-primary/40 hover:border-primary transition-colors"
         @click.stop="addSet"
       >
-        {{ isCardio ? '+ Добавить сессию' : '+ Добавить подход' }}
+        {{ isCardio ? 'Добавить сессию' : 'Добавить подход' }}
       </button>
     </div>
   </div>

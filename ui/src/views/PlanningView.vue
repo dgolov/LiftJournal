@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="flex items-center justify-between mb-6">
-      <h2 class="text-xl font-bold text-gray-900 dark:text-white">Планирование</h2>
+      <h2 class="text-xl font-bold text-ink dark:text-white">Планирование</h2>
       <RouterLink to="/planning/new" class="btn btn-primary text-sm px-4 py-2">+ Запланировать</RouterLink>
     </div>
 
@@ -10,8 +10,8 @@
       <button
         v-for="tab in tabs"
         :key="tab.value"
-        :class="['inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-medium transition-all duration-200',
-          activeTab === tab.value ? tab.activeClass : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700']"
+        :class="['inline-flex items-center gap-1.5 px-3.5 py-2 border-2 text-sm font-medium transition-all duration-200',
+          activeTab === tab.value ? tab.activeClass : 'border-transparent bg-steel-100 dark:bg-steel-950 text-steel-700 dark:text-steel-300 hover:bg-steel-300/40 dark:hover:bg-steel-700']"
         @click="activeTab = tab.value"
       >
         <component :is="tab.icon" :class="['w-3.5 h-3.5', activeTab === tab.value ? '' : 'opacity-60']" />
@@ -19,7 +19,7 @@
       </button>
     </div>
 
-    <div v-if="loading" class="text-center py-16 text-gray-400">Загрузка...</div>
+    <div v-if="loading" class="text-center py-16 text-steel-700 dark:text-steel-300">Загрузка...</div>
 
     <div v-else-if="!grouped.length">
       <BaseEmptyState
@@ -36,8 +36,8 @@
     <div v-else class="space-y-6">
       <div v-for="group in grouped" :key="group.date">
         <div class="flex items-center gap-2 mb-2">
-          <span class="text-sm font-semibold text-gray-500 dark:text-gray-400">{{ group.label }}</span>
-          <div class="flex-1 h-px bg-gray-100 dark:bg-gray-800" />
+          <span class="text-sm font-semibold text-steel-700 dark:text-steel-300">{{ group.label }}</span>
+          <div class="flex-1 h-px bg-steel-100 dark:bg-steel-700" />
         </div>
 
         <div class="space-y-3">
@@ -47,7 +47,7 @@
             delete-label="Удалить план"
             @delete="deletePlan(plan)"
           >
-            <div class="bg-white dark:bg-gray-900 p-4 cursor-pointer" @click="$router.push(`/planning/${plan.id}`)">
+            <div class="bg-card dark:bg-steel-900 p-4 cursor-pointer" @click="$router.push(`/planning/${plan.id}`)">
             <div class="flex items-start gap-3">
               <!-- Status icon -->
               <div :class="['w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5', statusIcon(plan).bg]">
@@ -56,33 +56,33 @@
 
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 flex-wrap mb-0.5">
-                  <span :class="['text-xs px-2 py-0.5 rounded-full font-medium', statusBadge(plan).class]">
+                  <span :class="['text-xs px-2 py-0.5 font-medium', statusBadge(plan).class]">
                     {{ statusBadge(plan).label }}
                   </span>
-                  <span class="text-xs text-gray-400">{{ plan.type }}</span>
+                  <span class="text-xs text-steel-700 dark:text-steel-300">{{ plan.type }}</span>
                 </div>
-                <h3 class="font-semibold text-gray-900 dark:text-white line-clamp-2">{{ plan.title }}</h3>
-                <p v-if="plan.exercises.length" class="text-xs text-gray-400 mt-0.5 whitespace-nowrap">
+                <h3 class="font-display font-semibold text-ink dark:text-white line-clamp-2">{{ plan.title }}</h3>
+                <p v-if="plan.exercises.length" class="text-xs text-steel-700 dark:text-steel-300 mt-0.5 whitespace-nowrap">
                   {{ plan.exercises.length }} упр. · {{ totalSets(plan) }} подходов
                 </p>
-                <p v-if="plan.notes" class="text-xs text-gray-500 mt-1 italic line-clamp-1">{{ plan.notes }}</p>
+                <p v-if="plan.notes" class="text-xs text-steel-700 dark:text-steel-300 mt-1 italic line-clamp-1">{{ plan.notes }}</p>
 
                 <!-- Actions row -->
                 <div class="flex items-center gap-1 mt-2">
                   <template v-if="plan.status === 'planned'">
                     <button
-                      class="px-3 py-1.5 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+                      class="px-3 py-1.5 bg-primary text-white text-xs font-display font-semibold uppercase tracking-wide hover:bg-primary-dark transition-colors"
                       @click.stop="startPlan(plan)"
                     >Начать</button>
                     <button
-                      class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-gray-500 transition-colors"
+                      class="w-8 h-8 flex items-center justify-center text-steel-300 hover:text-primary transition-colors"
                       title="Редактировать"
                       @click.stop="$router.push(`/planning/${plan.id}/edit`)"
                     >
                       <Pencil class="w-4 h-4" />
                     </button>
                     <button
-                      class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors"
+                      class="w-8 h-8 flex items-center justify-center text-steel-300 hover:text-primary transition-colors"
                       title="Пропустить"
                       @click.stop="skipPlan(plan)"
                     >
@@ -92,18 +92,18 @@
                   <template v-else-if="plan.status === 'completed' && plan.completedWorkoutId">
                     <RouterLink
                       :to="`/workouts/${plan.completedWorkoutId}`"
-                      class="px-3 py-1.5 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 text-xs font-medium rounded-lg hover:border-primary hover:text-primary transition-colors"
+                      class="px-3 py-1.5 border-2 border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300 text-xs font-medium hover:border-primary hover:text-primary transition-colors"
                       @click.stop
                     >Открыть</RouterLink>
                   </template>
                   <template v-else-if="plan.status === 'skipped'">
                     <button
-                      class="px-3 py-1.5 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+                      class="px-3 py-1.5 bg-primary text-white text-xs font-display font-semibold uppercase tracking-wide hover:bg-primary-dark transition-colors"
                       @click.stop="markCompletedPlan(plan)"
                     >Всё-таки выполнил</button>
                   </template>
                   <button
-                    class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors"
+                    class="w-8 h-8 flex items-center justify-center text-steel-300 hover:text-primary transition-colors"
                     @click.stop="deletePlan(plan)"
                   >
                     <Trash2 class="w-4 h-4" />
@@ -113,11 +113,11 @@
             </div>
 
             <!-- Exercises preview -->
-            <div v-if="plan.exercises.length && plan.status === 'planned'" class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 flex flex-wrap gap-x-3 gap-y-1">
+            <div v-if="plan.exercises.length && plan.status === 'planned'" class="mt-3 pt-3 border-t-2 border-steel-100 dark:border-steel-700 flex flex-wrap gap-x-3 gap-y-1">
               <span
                 v-for="ex in plan.exercises"
                 :key="ex.exerciseId"
-                class="text-xs text-gray-500 dark:text-gray-400"
+                class="text-xs text-steel-700 dark:text-steel-300"
               >· {{ ex.exerciseName }}</span>
             </div>
             </div>
@@ -128,29 +128,29 @@
 
     <!-- Delete confirm modal -->
     <BaseModal v-model="showDeleteConfirm" title="Удалить план?" max-width="sm">
-      <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">«{{ toDelete?.title }}»</p>
+      <p class="text-sm text-steel-700 dark:text-steel-300 mb-3">«{{ toDelete?.title }}»</p>
       <template v-if="toDelete?.recurrenceGroupId">
         <div class="space-y-2">
           <button
-            :class="['w-full text-left px-4 py-3 rounded-xl border-2 transition-colors text-sm',
-              deleteScope === 'one' ? 'border-primary bg-primary/5' : 'border-gray-200 dark:border-gray-700']"
+            :class="['w-full text-left px-4 py-3 border-2 transition-colors text-sm',
+              deleteScope === 'one' ? 'border-primary bg-primary/5' : 'border-steel-300 dark:border-steel-700']"
             @click="deleteScope = 'one'"
           >
-            <p class="font-medium text-gray-900 dark:text-white">Только эту тренировку</p>
-            <p class="text-xs text-gray-400 mt-0.5">{{ toDelete?.scheduledDate }}</p>
+            <p class="font-medium text-ink dark:text-white">Только эту тренировку</p>
+            <p class="text-xs text-steel-700 dark:text-steel-300 mt-0.5">{{ toDelete?.scheduledDate }}</p>
           </button>
           <button
-            :class="['w-full text-left px-4 py-3 rounded-xl border-2 transition-colors text-sm',
-              deleteScope === 'all' ? 'border-red-400 bg-red-50 dark:bg-red-900/10' : 'border-gray-200 dark:border-gray-700']"
+            :class="['w-full text-left px-4 py-3 border-2 transition-colors text-sm',
+              deleteScope === 'all' ? 'border-primary bg-primary/10' : 'border-steel-300 dark:border-steel-700']"
             @click="deleteScope = 'all'"
           >
-            <p class="font-medium text-gray-900 dark:text-white">Эту и все следующие</p>
-            <p class="text-xs text-gray-400 mt-0.5">Удалит все запланированные повторения</p>
+            <p class="font-medium text-ink dark:text-white">Эту и все следующие</p>
+            <p class="text-xs text-steel-700 dark:text-steel-300 mt-0.5">Удалит все запланированные повторения</p>
           </button>
         </div>
       </template>
       <template v-else>
-        <p class="text-sm text-gray-500 dark:text-gray-400">Будет удалён безвозвратно.</p>
+        <p class="text-sm text-steel-700 dark:text-steel-300">Будет удалён безвозвратно.</p>
       </template>
       <template #footer>
         <BaseButton variant="ghost" @click="showDeleteConfirm = false">Отмена</BaseButton>
@@ -189,10 +189,10 @@ const showMarkCompleted = ref(false)
 const toMarkCompleted = ref(null)
 
 const tabs = [
-  { value: 'planned', label: 'Предстоящие', icon: markRaw(Clock), activeClass: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300' },
-  { value: 'completed', label: 'Выполненные', icon: markRaw(CheckCircle2), activeClass: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300' },
-  { value: 'skipped', label: 'Пропущенные', icon: markRaw(Ban), activeClass: 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300' },
-  { value: 'all', label: 'Все', icon: markRaw(CalendarDays), activeClass: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300' },
+  { value: 'planned', label: 'Предстоящие', icon: markRaw(Clock), activeClass: 'border-hazard bg-hazard/20 text-hazard' },
+  { value: 'completed', label: 'Выполненные', icon: markRaw(CheckCircle2), activeClass: 'border-success bg-success/15 text-success' },
+  { value: 'skipped', label: 'Пропущенные', icon: markRaw(Ban), activeClass: 'border-steel-700 dark:border-steel-300 bg-steel-100 dark:bg-steel-700 text-steel-700 dark:text-steel-300' },
+  { value: 'all', label: 'Все', icon: markRaw(CalendarDays), activeClass: 'border-primary bg-primary/15 text-primary' },
 ]
 
 const allPlanned = computed(() => store.getters['planned/all'])
@@ -249,17 +249,17 @@ function totalSets(plan) {
 
 function statusIcon(plan) {
   const isOverdue = plan.status === 'planned' && plan.scheduledDate < today
-  if (plan.status === 'completed') return { icon: markRaw(CheckCircle2), bg: 'bg-green-100 dark:bg-green-900/30', color: 'text-green-600' }
-  if (plan.status === 'skipped') return { icon: markRaw(Ban), bg: 'bg-gray-100 dark:bg-gray-800', color: 'text-gray-400' }
-  if (isOverdue) return { icon: markRaw(AlertCircle), bg: 'bg-orange-100 dark:bg-orange-900/30', color: 'text-orange-500' }
+  if (plan.status === 'completed') return { icon: markRaw(CheckCircle2), bg: 'bg-success/15', color: 'text-success' }
+  if (plan.status === 'skipped') return { icon: markRaw(Ban), bg: 'bg-steel-100 dark:bg-steel-700', color: 'text-steel-300' }
+  if (isOverdue) return { icon: markRaw(AlertCircle), bg: 'bg-hazard/20', color: 'text-hazard' }
   return { icon: markRaw(Clock), bg: 'bg-primary/10', color: 'text-primary' }
 }
 
 function statusBadge(plan) {
   const isOverdue = plan.status === 'planned' && plan.scheduledDate < today
-  if (plan.status === 'completed') return { label: 'Выполнено', class: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' }
-  if (plan.status === 'skipped') return { label: 'Пропущено', class: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400' }
-  if (isOverdue) return { label: 'Просрочено', class: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400' }
+  if (plan.status === 'completed') return { label: 'Выполнено', class: 'bg-success/15 text-success' }
+  if (plan.status === 'skipped') return { label: 'Пропущено', class: 'bg-steel-100 text-steel-300 dark:bg-steel-700' }
+  if (isOverdue) return { label: 'Просрочено', class: 'bg-hazard/20 text-hazard' }
   return { label: 'Запланировано', class: 'bg-primary/10 text-primary' }
 }
 

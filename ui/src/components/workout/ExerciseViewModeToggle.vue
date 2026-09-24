@@ -1,14 +1,14 @@
 <template>
-  <div class="inline-flex items-center rounded-lg border border-gray-200 dark:border-gray-700 p-0.5 flex-shrink-0">
+  <div class="inline-flex items-center border-2 border-ink dark:border-steel-700 p-0.5 flex-shrink-0">
     <button
-      :class="['p-1.5 rounded-md transition-colors', mode === 'standard' ? 'bg-primary text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300']"
+      :class="['p-1.5 transition-colors', mode === 'standard' ? 'bg-primary text-white' : 'text-steel-700 dark:text-steel-300 hover:text-primary']"
       title="Стандартный режим"
       @click="mode = 'standard'"
     >
       <Rows3 class="w-4 h-4" />
     </button>
     <button
-      :class="['p-1.5 rounded-md transition-colors', mode === 'cards' ? 'bg-primary text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300']"
+      :class="['p-1.5 transition-colors', mode === 'cards' ? 'bg-primary text-white' : 'text-steel-700 dark:text-steel-300 hover:text-primary']"
       title="Режим карточек — быстрое перетаскивание"
       @click="mode = 'cards'"
     >

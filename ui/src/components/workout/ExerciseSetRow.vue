@@ -1,6 +1,6 @@
 <template>
   <div :class="['flex items-center gap-1 transition-opacity', set.failed ? 'opacity-50' : '']">
-    <span class="text-xs text-gray-400 w-5 text-center flex-shrink-0">{{ index + 1 }}</span>
+    <span class="text-xs font-mono text-steel-700 dark:text-steel-300 w-5 text-center flex-shrink-0">{{ index + 1 }}</span>
 
     <template v-if="isCardio">
       <StepperInput
@@ -20,7 +20,7 @@
         placeholder="кг"
         @update:model-value="update('weight', $event)"
       />
-      <span class="text-gray-300 text-sm flex-shrink-0">×</span>
+      <span class="text-steel-300 text-sm flex-shrink-0">×</span>
       <StepperInput
         :class="['flex-1', set.failed ? 'line-through' : '']"
         :model-value="set.reps"
@@ -33,9 +33,9 @@
     <!-- 3-state toggle: none → completed → failed → none -->
     <button
       :class="['w-9 h-9 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0',
-        set.completed ? 'bg-green-500 border-green-500 text-white' :
-        set.failed    ? 'bg-red-500 border-red-500 text-white' :
-                        'border-gray-300 text-transparent hover:border-green-400']"
+        set.completed ? 'bg-success border-success text-white' :
+        set.failed    ? 'bg-primary border-primary text-white' :
+                        'border-steel-300 text-transparent hover:border-success']"
       :title="set.completed ? 'Выполнено (нажмите — провал)' : set.failed ? 'Провал (нажмите — сбросить)' : 'Отметить выполненным'"
       @click="cycleState"
     >
@@ -44,7 +44,7 @@
       <Check v-else class="w-4 h-4" />
     </button>
     <button
-      class="w-7 h-9 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
+      class="w-7 h-9 flex items-center justify-center text-steel-300 hover:text-primary transition-colors flex-shrink-0"
       @click="$emit('remove')"
     >
       <X class="w-5 h-5" />

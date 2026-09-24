@@ -3,32 +3,32 @@
     <!-- Header -->
     <div class="mb-6">
       <div class="flex items-center gap-2 mb-3">
-        <button class="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 transition-colors" @click="$router.back()">
+        <button class="p-2 hover:bg-steel-100 dark:hover:bg-steel-700 text-steel-700 dark:text-steel-300 transition-colors" @click="$router.back()">
           <ChevronLeft class="w-5 h-5" />
         </button>
         <div class="ml-auto flex items-center flex-wrap justify-end gap-1">
           <RouterLink
             v-if="plan.status === 'completed' && plan.completedWorkoutId"
             :to="`/workouts/${plan.completedWorkoutId}`"
-            class="flex items-center gap-1 px-2 h-8 rounded-lg text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+            class="flex items-center gap-1 px-2 h-8 text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
           >
             <ExternalLink class="w-3.5 h-3.5" /> Открыть тренировку
           </RouterLink>
           <template v-if="plan.status === 'planned'">
             <button
-              class="flex items-center gap-1 px-3 h-8 rounded-lg text-xs font-semibold bg-primary text-white hover:bg-primary/90 transition-colors"
+              class="flex items-center gap-1 px-3 h-8 text-xs font-display font-semibold uppercase tracking-wide bg-primary text-white hover:bg-primary-dark transition-colors"
               @click="startPlan"
             >
               <Play class="w-3.5 h-3.5" /> Начать
             </button>
             <button
-              class="flex items-center gap-1 px-2 h-8 rounded-lg text-xs font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              class="flex items-center gap-1 px-2 h-8 text-xs font-medium text-steel-700 dark:text-steel-300 hover:bg-steel-100 dark:hover:bg-steel-700 transition-colors"
               @click="$router.push(`/planning/${plan.id}/edit`)"
             >
               <Pencil class="w-3.5 h-3.5" /> Изменить
             </button>
             <button
-              class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-gray-500 transition-colors"
+              class="w-8 h-8 flex items-center justify-center text-steel-300 hover:text-primary transition-colors"
               title="Перенести или пропустить"
               @click="showSkipConfirm = true"
             >
@@ -37,13 +37,13 @@
           </template>
           <button
             v-if="plan.status === 'skipped'"
-            class="flex items-center gap-1 px-3 h-8 rounded-lg text-xs font-semibold bg-primary text-white hover:bg-primary/90 transition-colors"
+            class="flex items-center gap-1 px-3 h-8 text-xs font-display font-semibold uppercase tracking-wide bg-primary text-white hover:bg-primary-dark transition-colors"
             @click="showMarkCompleted = true"
           >
             <CheckCircle2 class="w-3.5 h-3.5" /> Всё-таки выполнил
           </button>
           <button
-            class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors"
+            class="w-8 h-8 flex items-center justify-center text-steel-300 hover:text-primary transition-colors"
             title="Удалить"
             @click="confirmDelete"
           >
@@ -54,60 +54,60 @@
       <div>
         <div class="flex items-center gap-2 mb-1 flex-wrap">
           <BaseBadge :color="typeColor">{{ plan.type }}</BaseBadge>
-          <span :class="['text-xs px-2 py-0.5 rounded-full font-medium', badge.class]">{{ badge.label }}</span>
+          <span :class="['text-xs px-2 py-0.5 font-medium', badge.class]">{{ badge.label }}</span>
         </div>
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ plan.title }}</h2>
-        <p class="text-sm text-gray-500 mt-1">
+        <h2 class="text-2xl font-bold text-ink dark:text-white">{{ plan.title }}</h2>
+        <p class="text-sm text-steel-700 dark:text-steel-300 mt-1">
           {{ formattedDate }} · {{ plan.exercises.length }} упр. · {{ totalSets }} подходов
         </p>
-        <p v-if="plan.notes" class="text-sm text-gray-600 dark:text-gray-400 mt-2 italic">{{ plan.notes }}</p>
+        <p v-if="plan.notes" class="text-sm text-steel-700 dark:text-steel-300 mt-2 italic">{{ plan.notes }}</p>
       </div>
     </div>
 
     <!-- Exercises -->
     <div class="space-y-4">
       <div v-for="ex in plan.exercises" :key="ex.exerciseId" class="card p-4">
-        <h3 class="font-semibold text-gray-900 dark:text-white mb-3">{{ ex.exerciseName }}</h3>
+        <h3 class="font-display font-semibold text-ink dark:text-white mb-3">{{ ex.exerciseName }}</h3>
         <div class="space-y-2">
-          <div v-for="(set, i) in ex.sets" :key="set.id" class="flex items-center gap-1 text-sm">
-            <span class="text-gray-400 w-5 text-center flex-shrink-0">{{ i + 1 }}</span>
-            <span class="font-medium">{{ set.weight > 0 ? set.weight + ' кг' : 'Б/в' }}</span>
-            <span class="text-gray-400">×</span>
-            <span class="font-medium">{{ set.reps }} повт.</span>
+          <div v-for="(set, i) in ex.sets" :key="set.id" class="flex items-center gap-1 text-sm font-mono">
+            <span class="text-steel-700 dark:text-steel-300 w-5 text-center flex-shrink-0">{{ i + 1 }}</span>
+            <span class="font-medium text-ink dark:text-white">{{ set.weight > 0 ? set.weight + ' кг' : 'Б/в' }}</span>
+            <span class="text-steel-300">×</span>
+            <span class="font-medium text-ink dark:text-white">{{ set.reps }} повт.</span>
           </div>
-          <p v-if="!ex.sets.length" class="text-sm text-gray-400">Подходы не заданы</p>
+          <p v-if="!ex.sets.length" class="text-sm text-steel-700 dark:text-steel-300">Подходы не заданы</p>
         </div>
       </div>
-      <div v-if="!plan.exercises.length" class="text-center py-8 text-gray-400">Упражнения не добавлены</div>
+      <div v-if="!plan.exercises.length" class="text-center py-8 text-steel-700 dark:text-steel-300">Упражнения не добавлены</div>
     </div>
 
     <SkipOrRescheduleModal v-model="showSkipConfirm" :plan="plan" />
     <MarkCompletedModal v-model="showMarkCompleted" :plan="plan" />
 
     <BaseModal v-model="showDeleteConfirm" title="Удалить план?" max-width="sm">
-      <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">«{{ plan.title }}»</p>
+      <p class="text-sm text-steel-700 dark:text-steel-300 mb-3">«{{ plan.title }}»</p>
       <template v-if="plan.recurrenceGroupId">
         <div class="space-y-2">
           <button
-            :class="['w-full text-left px-4 py-3 rounded-xl border-2 transition-colors text-sm',
-              deleteScope === 'one' ? 'border-primary bg-primary/5' : 'border-gray-200 dark:border-gray-700']"
+            :class="['w-full text-left px-4 py-3 border-2 transition-colors text-sm',
+              deleteScope === 'one' ? 'border-primary bg-primary/5' : 'border-steel-300 dark:border-steel-700']"
             @click="deleteScope = 'one'"
           >
-            <p class="font-medium text-gray-900 dark:text-white">Только эту тренировку</p>
-            <p class="text-xs text-gray-400 mt-0.5">{{ plan.scheduledDate }}</p>
+            <p class="font-medium text-ink dark:text-white">Только эту тренировку</p>
+            <p class="text-xs text-steel-700 dark:text-steel-300 mt-0.5">{{ plan.scheduledDate }}</p>
           </button>
           <button
-            :class="['w-full text-left px-4 py-3 rounded-xl border-2 transition-colors text-sm',
-              deleteScope === 'all' ? 'border-red-400 bg-red-50 dark:bg-red-900/10' : 'border-gray-200 dark:border-gray-700']"
+            :class="['w-full text-left px-4 py-3 border-2 transition-colors text-sm',
+              deleteScope === 'all' ? 'border-primary bg-primary/10' : 'border-steel-300 dark:border-steel-700']"
             @click="deleteScope = 'all'"
           >
-            <p class="font-medium text-gray-900 dark:text-white">Эту и все следующие</p>
-            <p class="text-xs text-gray-400 mt-0.5">Удалит все запланированные повторения</p>
+            <p class="font-medium text-ink dark:text-white">Эту и все следующие</p>
+            <p class="text-xs text-steel-700 dark:text-steel-300 mt-0.5">Удалит все запланированные повторения</p>
           </button>
         </div>
       </template>
       <template v-else>
-        <p class="text-sm text-gray-500 dark:text-gray-400">Будет удалён безвозвратно.</p>
+        <p class="text-sm text-steel-700 dark:text-steel-300">Будет удалён безвозвратно.</p>
       </template>
       <template #footer>
         <BaseButton variant="ghost" @click="showDeleteConfirm = false">Отмена</BaseButton>
@@ -116,7 +116,7 @@
     </BaseModal>
   </div>
 
-  <div v-else class="text-center py-16 text-gray-400">
+  <div v-else class="text-center py-16 text-steel-700 dark:text-steel-300">
     План не найден
   </div>
 </template>
@@ -152,9 +152,9 @@ const badge = computed(() => {
   const p = plan.value
   if (!p) return { label: '', class: '' }
   const isOverdue = p.status === 'planned' && p.scheduledDate < today
-  if (p.status === 'completed') return { label: 'Выполнено', class: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' }
-  if (p.status === 'skipped') return { label: 'Пропущено', class: 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400' }
-  if (isOverdue) return { label: 'Просрочено', class: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400' }
+  if (p.status === 'completed') return { label: 'Выполнено', class: 'bg-success/15 text-success' }
+  if (p.status === 'skipped') return { label: 'Пропущено', class: 'bg-steel-100 text-steel-300 dark:bg-steel-700' }
+  if (isOverdue) return { label: 'Просрочено', class: 'bg-hazard/20 text-hazard' }
   return { label: 'Запланировано', class: 'bg-primary/10 text-primary' }
 })
 

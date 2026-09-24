@@ -2,7 +2,7 @@
   <div class="flex items-stretch min-w-0">
     <button
       type="button"
-      class="w-7 flex-shrink-0 flex items-center justify-center text-base text-gray-400 hover:text-primary bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-l-lg border-r-0 active:bg-gray-100 dark:active:bg-gray-600 transition-colors select-none"
+      class="w-7 flex-shrink-0 flex items-center justify-center text-base font-display font-bold text-steel-700 dark:text-steel-300 hover:text-primary bg-steel-100 dark:bg-steel-700 border-2 border-ink dark:border-steel-700 border-r-0 active:bg-steel-300 dark:active:bg-steel-950 transition-colors select-none"
       @click="adjust(-step)"
     >−</button>
     <input
@@ -10,14 +10,14 @@
       inputmode="decimal"
       :value="displayValue"
       :placeholder="placeholder"
-      class="w-full min-w-0 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-0.5 py-2.5 text-sm text-center placeholder-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary focus:z-10 min-h-[44px]"
+      class="w-full min-w-0 border-2 border-ink dark:border-steel-700 bg-white dark:bg-steel-900 text-ink dark:text-white font-mono px-0.5 py-2.5 text-sm text-center placeholder-steel-300 focus:border-primary focus:outline-none focus:z-10 min-h-[44px]"
       @focus="onFocus"
       @blur="onBlur"
       @input="onInput"
     />
     <button
       type="button"
-      class="w-7 flex-shrink-0 flex items-center justify-center text-base text-gray-400 hover:text-primary bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-r-lg border-l-0 active:bg-gray-100 dark:active:bg-gray-600 transition-colors select-none"
+      class="w-7 flex-shrink-0 flex items-center justify-center text-base font-display font-bold text-steel-700 dark:text-steel-300 hover:text-primary bg-steel-100 dark:bg-steel-700 border-2 border-ink dark:border-steel-700 border-l-0 active:bg-steel-300 dark:active:bg-steel-950 transition-colors select-none"
       @click="adjust(step)"
     >+</button>
   </div>

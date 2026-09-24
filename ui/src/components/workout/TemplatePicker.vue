@@ -1,29 +1,29 @@
 <template>
   <BaseModal v-model="show" title="Шаблоны тренировок" max-width="md" :fullscreen="true">
     <div v-if="templates.length" class="mb-4">
-      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Веса и повторы</p>
+      <p class="text-xs font-semibold text-steel-700 dark:text-steel-300 uppercase tracking-wide mb-2">Веса и повторы</p>
       <div class="flex gap-2">
         <button
-          :class="['flex-1 py-2 rounded-lg text-sm font-medium border transition-colors',
-            source === 'history' ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400']"
+          :class="['flex-1 py-2 text-sm font-medium border-2 transition-colors',
+            source === 'history' ? 'bg-primary text-white border-ink dark:border-steel-100' : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300 hover:border-primary hover:text-primary']"
           @click="source = 'history'"
         >Из последней тренировки</button>
         <button
-          :class="['flex-1 py-2 rounded-lg text-sm font-medium border transition-colors',
-            source === 'template' ? 'bg-primary text-white border-primary' : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400']"
+          :class="['flex-1 py-2 text-sm font-medium border-2 transition-colors',
+            source === 'template' ? 'bg-primary text-white border-ink dark:border-steel-100' : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300 hover:border-primary hover:text-primary']"
           @click="source = 'template'"
         >Из шаблона</button>
       </div>
-      <p class="text-xs text-gray-400 mt-2">
+      <p class="text-xs text-steel-700 dark:text-steel-300 mt-2">
         <template v-if="source === 'history'">Подставит веса/повторы из последней тренировки с этим упражнением, если она есть — иначе из шаблона.</template>
         <template v-else>Подставит веса/повторы, сохранённые в самом шаблоне.</template>
         История подходов всё равно останется доступна для переключения.
       </p>
     </div>
 
-    <div v-if="loading" class="text-center py-8 text-gray-400 text-sm">Загрузка...</div>
+    <div v-if="loading" class="text-center py-8 text-steel-700 dark:text-steel-300 text-sm">Загрузка...</div>
 
-    <div v-else-if="!templates.length" class="text-center py-8 text-gray-400 text-sm">
+    <div v-else-if="!templates.length" class="text-center py-8 text-steel-700 dark:text-steel-300 text-sm">
       Нет сохранённых шаблонов
     </div>
 
@@ -31,14 +31,14 @@
       <div
         v-for="t in templates"
         :key="t.id"
-        class="w-full px-3 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-3"
+        class="w-full px-3 py-3 hover:bg-steel-100 dark:hover:bg-steel-700 transition-colors flex items-center gap-3 border-2 border-transparent hover:border-steel-300 dark:hover:border-steel-700"
       >
         <button class="flex-1 min-w-0 text-left" @click="apply(t)">
-          <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ t.title }}</p>
-          <p class="text-xs text-gray-400">{{ t.type }} · {{ t.exercises.length }} упр.</p>
+          <p class="text-sm font-medium text-ink dark:text-white truncate">{{ t.title }}</p>
+          <p class="text-xs text-steel-700 dark:text-steel-300">{{ t.type }} · {{ t.exercises.length }} упр.</p>
         </button>
         <button
-          class="w-9 h-9 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
+          class="w-9 h-9 flex items-center justify-center text-steel-300 hover:text-primary transition-colors flex-shrink-0"
           title="Удалить шаблон"
           @click="remove(t)"
         >

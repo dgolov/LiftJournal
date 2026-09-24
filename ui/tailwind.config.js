@@ -5,19 +5,49 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Iron/blood red — the one accent. Named "primary" so every
+        // existing bg-primary/text-primary/border-primary usage across
+        // the app inherits it without a find-and-replace.
         primary: {
-          DEFAULT: '#6366f1',
-          dark: '#4f46e5',
-          light: '#a5b4fc'
+          DEFAULT: '#C31E24',
+          dark: '#9E181D',
+          light: '#E2585C'
         },
-        success: '#22c55e',
-        danger: '#ef4444',
-        warning: '#f59e0b',
-        surface: '#f8fafc',
-        card: '#ffffff'
+        // Sparing hazard-tape accent — structural details only (stripes,
+        // PR highlight), never a competing second brand color.
+        hazard: '#E8B23D',
+        success: '#5C7A3D',
+        danger: '#C31E24',
+        warning: '#E8B23D',
+        // Raw concrete/chalk, not a cream SaaS off-white.
+        surface: '#F1EFE9',
+        card: '#FFFFFF',
+        ink: '#141414',
+        steel: {
+          50: '#F5F4F2',
+          100: '#E8E6E1',
+          300: '#B9B6AE',
+          700: '#4A4846',
+          900: '#1A1B1D',
+          950: '#111213'
+        }
       },
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif']
+        sans: ['"IBM Plex Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['Oswald', '"IBM Plex Sans"', 'ui-sans-serif', 'sans-serif'],
+        mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace']
+      },
+      borderRadius: {
+        // Sharp by default everywhere (cards, buttons, inputs, pills).
+        // `full` is deliberately left alone — it's how spinners and true
+        // circular elements ask for a circle, and overriding it globally
+        // would turn every loading spinner into a spinning square.
+        DEFAULT: '2px',
+        sm: '2px',
+        md: '2px',
+        lg: '2px',
+        xl: '3px',
+        '2xl': '4px'
       }
     }
   },

@@ -5,28 +5,28 @@
       class="fixed bottom-16 lg:bottom-4 left-0 right-0 z-40 flex justify-center px-4 pointer-events-none"
     >
       <div class="w-full max-w-sm pointer-events-auto">
-        <div class="bg-gray-900/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl shadow-xl border border-white/10 px-4 py-3">
+        <div class="bg-ink/95 backdrop-blur-sm border-2 border-primary px-4 py-3">
 
           <!-- Top row: label + presets -->
           <div class="flex items-center justify-between mb-2">
-            <span class="text-xs font-medium text-gray-400">Отдых</span>
+            <span class="text-xs font-display font-semibold uppercase tracking-wide text-steel-300">Отдых</span>
             <div class="flex gap-1">
               <button
                 v-for="s in presets"
                 :key="s"
-                :class="['text-xs px-2 py-0.5 rounded-full transition-colors',
+                :class="['text-xs px-2 py-0.5 font-mono transition-colors',
                   total === s
                     ? 'bg-primary text-white'
-                    : 'text-gray-400 hover:text-white hover:bg-white/10']"
+                    : 'text-steel-300 hover:text-white hover:bg-white/10']"
                 @click="start(s)"
               >{{ s >= 60 ? (s / 60) + 'мин' : s + 'с' }}</button>
             </div>
           </div>
 
           <!-- Progress bar -->
-          <div class="h-1 bg-white/10 rounded-full mb-3 overflow-hidden">
+          <div class="h-1.5 bg-white/10 mb-3 overflow-hidden">
             <div
-              class="h-full bg-primary rounded-full transition-all duration-1000 ease-linear"
+              class="h-full bg-primary transition-all duration-1000 ease-linear"
               :style="{ width: (progress * 100) + '%' }"
             />
           </div>
@@ -34,7 +34,7 @@
           <!-- Main row: -15 | time | +15 | skip -->
           <div class="flex items-center gap-2">
             <button
-              class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-colors flex-shrink-0"
+              class="w-9 h-9 border-2 border-white/20 hover:border-white/40 text-white text-xs font-display font-bold transition-colors flex-shrink-0"
               @click="adjust(-15)"
             >−15</button>
 
@@ -43,12 +43,12 @@
             </div>
 
             <button
-              class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-colors flex-shrink-0"
+              class="w-9 h-9 border-2 border-white/20 hover:border-white/40 text-white text-xs font-display font-bold transition-colors flex-shrink-0"
               @click="adjust(+15)"
             >+15</button>
 
             <button
-              class="px-3 h-9 rounded-xl bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white text-xs font-medium transition-colors flex-shrink-0"
+              class="px-3 h-9 border-2 border-transparent hover:border-white/20 text-steel-300 hover:text-white text-xs font-medium transition-colors flex-shrink-0"
               @click="stop"
             >Пропустить</button>
           </div>
