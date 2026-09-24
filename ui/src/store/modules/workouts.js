@@ -285,11 +285,18 @@ export default {
       // отредактировать название и заметки перед началом
     },
 
-    startWorkoutFromPlan({ commit, dispatch }, plannedWorkout) {
+    startWorkoutFromPlan({ commit, dispatch }, plannedWorkoutOrOptions) {
+      // Accepts either the plan directly (normal "Начать" — defaults to
+      // today) or { plan, date } to override the date (retroactive
+      // "Всё-таки выполнил" flow, where today is usually wrong).
+      const isOptions = plannedWorkoutOrOptions && 'plan' in plannedWorkoutOrOptions
+      const plannedWorkout = isOptions ? plannedWorkoutOrOptions.plan : plannedWorkoutOrOptions
+      const date = (isOptions && plannedWorkoutOrOptions.date) || new Date().toISOString().split('T')[0]
+
       commit('RESET_ACTIVE_WORKOUT')
       commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'title', value: plannedWorkout.title })
       commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'type', value: plannedWorkout.type })
-      commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'date', value: new Date().toISOString().split('T')[0] })
+      commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'date', value: date })
       commit('SET_ACTIVE_WORKOUT_FIELD', { field: 'notes', value: plannedWorkout.notes || '' })
       commit('SET_ACTIVE_WORKOUT_EXERCISES', plannedWorkout.exercises.map(ex => ({
         instanceId: uid(),

@@ -96,6 +96,12 @@
                       @click.stop
                     >Открыть</RouterLink>
                   </template>
+                  <template v-else-if="plan.status === 'skipped'">
+                    <button
+                      class="px-3 py-1.5 bg-primary text-white text-xs font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+                      @click.stop="markCompletedPlan(plan)"
+                    >Всё-таки выполнил</button>
+                  </template>
                   <button
                     class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors"
                     @click.stop="deletePlan(plan)"
@@ -153,6 +159,7 @@
     </BaseModal>
 
     <SkipOrRescheduleModal v-model="showSkipConfirm" :plan="toSkip" />
+    <MarkCompletedModal v-model="showMarkCompleted" :plan="toMarkCompleted" />
   </div>
 </template>
 
@@ -166,6 +173,7 @@ import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import SwipeDeleteWrapper from '@/components/ui/SwipeDeleteWrapper.vue'
 import SkipOrRescheduleModal from '@/components/workout/SkipOrRescheduleModal.vue'
+import MarkCompletedModal from '@/components/workout/MarkCompletedModal.vue'
 
 const store = useStore()
 const router = useRouter()
@@ -177,6 +185,8 @@ const toDelete = ref(null)
 const deleteScope = ref('one')
 const showSkipConfirm = ref(false)
 const toSkip = ref(null)
+const showMarkCompleted = ref(false)
+const toMarkCompleted = ref(null)
 
 const tabs = [
   { value: 'planned', label: 'Предстоящие', icon: markRaw(Clock), activeClass: 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300' },
@@ -261,6 +271,11 @@ async function startPlan(plan) {
 function skipPlan(plan) {
   toSkip.value = plan
   showSkipConfirm.value = true
+}
+
+function markCompletedPlan(plan) {
+  toMarkCompleted.value = plan
+  showMarkCompleted.value = true
 }
 
 function deletePlan(plan) {
