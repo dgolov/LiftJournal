@@ -6,7 +6,7 @@
         <Dumbbell class="w-7 h-7 text-primary" />
       </div>
       <div>
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">LiftJournal</h1>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">LiftForge</h1>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
           Дневник тренировок
           · <span class="font-semibold text-primary">v{{ APP_VERSION }}</span>

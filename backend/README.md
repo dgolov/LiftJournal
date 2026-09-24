@@ -1,4 +1,4 @@
-# LiftJournal — Backend
+# LiftForge — Backend
 
 REST API + WebSocket для приложения дневника тренировок. Построен на **FastAPI** + **SQLAlchemy (async)** + **PostgreSQL**.
 
@@ -114,8 +114,8 @@ poetry run uvicorn main:app --reload
 ## Запуск через Docker
 
 ```bash
-docker build -t gym-backend .
-docker run -p 8000:8000 --env-file .env gym-backend
+docker build -t liftforge-backend .
+docker run -p 8000:8000 --env-file .env liftforge-backend
 ```
 
 Продакшн-образ при старте сам выполняет `alembic upgrade head && python -m app.seed` перед запуском `uvicorn` (см. `docker-compose.yml`).

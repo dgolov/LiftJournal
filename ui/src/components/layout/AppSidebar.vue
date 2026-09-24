@@ -4,7 +4,7 @@
     <!-- Logo -->
     <div class="h-16 flex items-center gap-3 px-6 border-b border-gray-100 dark:border-gray-800">
       <Dumbbell class="w-6 h-6 text-primary" />
-      <span class="font-bold text-gray-900 dark:text-gray-100 text-lg">LiftJournal</span>
+      <span class="font-bold text-gray-900 dark:text-gray-100 text-lg">LiftForge</span>
     </div>
 
     <!-- Nav -->

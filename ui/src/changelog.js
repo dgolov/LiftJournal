@@ -2,6 +2,15 @@
 // Types: 'feature' | 'fix' | 'improvement'
 
 export const CHANGELOG = [
+    {
+    version: '1.0.0',
+    date: '2026-09-24',
+    label: 'Удобства',
+    entries: [
+      { type: 'improvement',    text: 'Изменение названия, изменение сервера' },
+      { type: 'fix',             text: 'Устранение багов' },
+    ],
+  },
   {
     version: '0.9.0',
     date: '2026-09-13',

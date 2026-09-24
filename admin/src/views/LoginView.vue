@@ -3,7 +3,7 @@
     <div class="card p-6 w-full max-w-sm">
       <div class="flex items-center gap-2 mb-6">
         <ShieldCheck class="w-6 h-6 text-primary" />
-        <h1 class="text-lg font-bold text-gray-900 dark:text-white">LiftJournal Admin</h1>
+        <h1 class="text-lg font-bold text-gray-900 dark:text-white">LiftForge Admin</h1>
       </div>
 
       <form class="space-y-4" @submit.prevent="submit">

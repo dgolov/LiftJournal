@@ -3,7 +3,7 @@
     <header class="border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
       <div class="max-w-4xl mx-auto px-4 py-3 flex items-center gap-6">
         <span class="font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
-          <ShieldCheck class="w-5 h-5 text-primary" /> LiftJournal Admin
+          <ShieldCheck class="w-5 h-5 text-primary" /> LiftForge Admin
         </span>
         <nav class="flex items-center gap-1">
           <RouterLink
