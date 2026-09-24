@@ -36,6 +36,13 @@
             </button>
           </template>
           <button
+            v-if="plan.status === 'skipped'"
+            class="flex items-center gap-1 px-3 h-8 rounded-lg text-xs font-semibold bg-primary text-white hover:bg-primary/90 transition-colors"
+            @click="showMarkCompleted = true"
+          >
+            <CheckCircle2 class="w-3.5 h-3.5" /> Всё-таки выполнил
+          </button>
+          <button
             class="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors"
             title="Удалить"
             @click="confirmDelete"
@@ -75,6 +82,7 @@
     </div>
 
     <SkipOrRescheduleModal v-model="showSkipConfirm" :plan="plan" />
+    <MarkCompletedModal v-model="showMarkCompleted" :plan="plan" />
 
     <BaseModal v-model="showDeleteConfirm" title="Удалить план?" max-width="sm">
       <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">«{{ plan.title }}»</p>
@@ -117,17 +125,19 @@
 import { computed, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
-import { ChevronLeft, Pencil, Trash2, Play, Ban, ExternalLink } from 'lucide-vue-next'
+import { ChevronLeft, Pencil, Trash2, Play, Ban, ExternalLink, CheckCircle2 } from 'lucide-vue-next'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import SkipOrRescheduleModal from '@/components/workout/SkipOrRescheduleModal.vue'
+import MarkCompletedModal from '@/components/workout/MarkCompletedModal.vue'
 
 const route = useRoute()
 const router = useRouter()
 const store = useStore()
 
 const showSkipConfirm = ref(false)
+const showMarkCompleted = ref(false)
 const showDeleteConfirm = ref(false)
 const deleteScope = ref('one')
 
