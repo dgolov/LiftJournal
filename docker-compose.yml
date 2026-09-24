@@ -15,6 +15,7 @@ services:
 
   backend:
     build: ./backend
+    image: ghcr.io/dgolov/liftjournal-backend:latest
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
@@ -24,7 +25,7 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     command: >
       sh -c "alembic upgrade head && python -m app.seed && uvicorn main:app --host 0.0.0.0 --port 8000"
     healthcheck:
@@ -36,15 +37,17 @@ services:
 
   frontend:
     build: ./ui
+    image: ghcr.io/dgolov/liftjournal-frontend:latest
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "127.0.0.1:8080:80"
     depends_on:
       backend:
         condition: service_healthy
 
   admin:
     build: ./admin
+    image: ghcr.io/dgolov/liftjournal-admin:latest
     restart: unless-stopped
     ports:
       - "127.0.0.1:8081:80"
