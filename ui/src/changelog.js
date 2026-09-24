@@ -7,6 +7,7 @@ export const CHANGELOG = [
     date: '2026-09-24',
     label: 'Удобства',
     entries: [
+      { type: 'feature',        text: 'Добавлена возможность выполнения пропущенных тренировок' },
       { type: 'improvement',    text: 'Изменение названия, изменение сервера' },
       { type: 'fix',             text: 'Устранение багов' },
     ],
