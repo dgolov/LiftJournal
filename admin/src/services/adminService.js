@@ -1,6 +1,6 @@
 import { reactive } from 'vue'
 
-const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+const BASE = import.meta.env.VITE_API_URL || '/api'
 const TOKEN_KEY = 'gym_admin_token'
 const NAME_KEY = 'gym_admin_name'
 const USER_ID_KEY = 'gym_admin_user_id'
