@@ -27,6 +27,12 @@ services:
       - "8000:8000"
     command: >
       sh -c "alembic upgrade head && python -m app.seed && uvicorn main:app --host 0.0.0.0 --port 8000"
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
 
   frontend:
     build: ./ui
@@ -34,7 +40,8 @@ services:
     ports:
       - "80:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
   admin:
     build: ./admin
@@ -42,7 +49,8 @@ services:
     ports:
       - "127.0.0.1:8081:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
 volumes:
   postgres_data:
