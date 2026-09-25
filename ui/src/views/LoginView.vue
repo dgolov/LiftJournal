@@ -2,14 +2,14 @@
   <div class="min-h-screen flex items-center justify-center bg-ink px-4 py-10">
     <div class="w-full max-w-sm">
       <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-14 h-14 bg-primary border-2 border-white mb-4">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary shadow-glow mb-4">
           <Dumbbell class="w-7 h-7 text-white" />
         </div>
         <h1 class="text-4xl font-display font-bold text-white uppercase tracking-wide">LiftForge</h1>
         <p class="text-sm text-steel-300 mt-2">Дневник пауэрлифтинга</p>
       </div>
 
-      <div class="bg-card border-2 border-white shadow-[6px_6px_0_theme(colors.primary.DEFAULT)] p-6">
+      <div class="bg-card rounded-3xl shadow-lift p-6">
         <h2 class="text-lg font-display font-semibold text-ink mb-5">Вход</h2>
 
         <form @submit.prevent="submit" class="space-y-4">

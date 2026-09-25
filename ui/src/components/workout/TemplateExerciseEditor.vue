@@ -77,7 +77,7 @@
           </div>
 
           <button
-            class="mt-3 w-full py-2 text-sm text-primary hover:text-primary-dark font-medium border-2 border-dashed border-primary/40 hover:border-primary transition-colors"
+            class="mt-3 w-full py-2 rounded-xl text-sm text-primary hover:text-primary-dark font-medium border border-dashed border-primary/40 hover:border-primary transition-colors"
             @click="addSet(exIdx)"
           >Добавить подход</button>
         </div>

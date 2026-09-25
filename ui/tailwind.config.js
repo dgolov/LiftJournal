@@ -9,27 +9,28 @@ export default {
         // existing bg-primary/text-primary/border-primary usage across
         // the app inherits it without a find-and-replace.
         primary: {
-          DEFAULT: '#C31E24',
-          dark: '#9E181D',
-          light: '#E2585C'
+          DEFAULT: '#D92D3A',
+          dark: '#B71F2C',
+          light: '#F0646E'
         },
         // Sparing hazard-tape accent — structural details only (stripes,
         // PR highlight), never a competing second brand color.
-        hazard: '#E8B23D',
-        success: '#5C7A3D',
-        danger: '#C31E24',
-        warning: '#E8B23D',
-        // Raw concrete/chalk, not a cream SaaS off-white.
-        surface: '#F1EFE9',
+        hazard: '#F0B429',
+        success: '#2F9E6B',
+        danger: '#D92D3A',
+        warning: '#F0B429',
+        // Cool graphite neutrals — a clean gym-floor grey rather than
+        // warm concrete, so white cards lift off the page softly.
+        surface: '#F3F4F7',
         card: '#FFFFFF',
-        ink: '#141414',
+        ink: '#171A21',
         steel: {
-          50: '#F5F4F2',
-          100: '#E8E6E1',
-          300: '#B9B6AE',
-          700: '#4A4846',
-          900: '#1A1B1D',
-          950: '#111213'
+          50: '#F6F7F9',
+          100: '#E6E8EE',
+          300: '#AEB4C0',
+          700: '#4B5260',
+          900: '#1C2028',
+          950: '#12151B'
         }
       },
       fontFamily: {
@@ -38,16 +39,21 @@ export default {
         mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace']
       },
       borderRadius: {
-        // Sharp by default everywhere (cards, buttons, inputs, pills).
-        // `full` is deliberately left alone — it's how spinners and true
-        // circular elements ask for a circle, and overriding it globally
-        // would turn every loading spinner into a spinning square.
-        DEFAULT: '2px',
-        sm: '2px',
-        md: '2px',
-        lg: '2px',
-        xl: '3px',
-        '2xl': '4px'
+        // Soft, tiered corners: small controls < inputs/buttons < cards < sheets.
+        // `full` stays a true circle for avatars, pills and spinners.
+        DEFAULT: '6px',
+        sm: '6px',
+        md: '8px',
+        lg: '10px',
+        xl: '12px',
+        '2xl': '16px',
+        '3xl': '22px'
+      },
+      boxShadow: {
+        // Layered, low-contrast shadows tinted with ink instead of pure black.
+        soft: '0 1px 2px rgba(23,26,33,0.04), 0 2px 8px rgba(23,26,33,0.05)',
+        lift: '0 2px 6px rgba(23,26,33,0.06), 0 12px 32px -8px rgba(23,26,33,0.18)',
+        glow: '0 4px 14px -4px rgba(217,45,58,0.45)'
       }
     }
   },

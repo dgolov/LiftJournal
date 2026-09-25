@@ -1,5 +1,5 @@
 <template>
-  <header class="fixed top-0 left-0 right-0 lg:left-64 z-30 pt-safe-top bg-card dark:bg-steel-900 border-b-2 border-ink dark:border-steel-700">
+  <header class="fixed top-0 left-0 right-0 lg:left-64 z-30 pt-safe-top bg-card dark:bg-steel-900 border-b border-steel-100 dark:border-steel-700">
    <div class="h-16 flex items-center px-4 gap-4">
     <!-- Mobile hamburger -->
     <button class="lg:hidden p-2 hover:bg-steel-100 dark:hover:bg-steel-700 text-steel-700 dark:text-steel-300" @click="toggleSidebar">
@@ -36,14 +36,14 @@
     </button>
 
     <!-- Avatar → Profile (mobile only) -->
-    <RouterLink to="/profile" class="lg:hidden w-8 h-8 rounded-full border-2 border-ink dark:border-steel-100 bg-primary/10 flex items-center justify-center text-sm font-display font-semibold text-primary">
+    <RouterLink to="/profile" class="lg:hidden w-8 h-8 rounded-full border border-steel-100 dark:border-steel-100 bg-primary/10 flex items-center justify-center text-sm font-display font-semibold text-primary">
       {{ initial }}
     </RouterLink>
 
     <!-- Avatar dropdown (desktop) -->
     <div class="hidden lg:block relative" ref="dropdownRef">
       <button
-        class="w-8 h-8 rounded-full border-2 border-ink dark:border-steel-100 bg-primary/10 flex items-center justify-center text-sm font-display font-semibold text-primary hover:bg-primary/20 transition-colors"
+        class="w-8 h-8 rounded-full border border-steel-100 dark:border-steel-100 bg-primary/10 flex items-center justify-center text-sm font-display font-semibold text-primary hover:bg-primary/20 transition-colors"
         @click="dropdownOpen = !dropdownOpen"
       >
         {{ initial }}
@@ -58,7 +58,7 @@
       >
         <div
           v-if="dropdownOpen"
-          class="absolute right-0 mt-2 w-44 bg-card dark:bg-steel-900 border-2 border-ink dark:border-steel-700 shadow-[4px_4px_0_theme(colors.ink)] dark:shadow-[4px_4px_0_black] py-1 z-50 origin-top-right"
+          class="absolute right-0 mt-2 w-44 rounded-xl overflow-hidden bg-card dark:bg-steel-900 border border-steel-100 dark:border-steel-700 shadow-lift py-1 z-50 origin-top-right"
         >
           <RouterLink
             to="/profile"

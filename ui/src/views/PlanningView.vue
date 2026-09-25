@@ -10,7 +10,7 @@
       <button
         v-for="tab in tabs"
         :key="tab.value"
-        :class="['inline-flex items-center gap-1.5 px-3.5 py-2 border-2 text-sm font-medium transition-all duration-200',
+        :class="['inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-sm font-medium transition-all duration-200',
           activeTab === tab.value ? tab.activeClass : 'border-transparent bg-steel-100 dark:bg-steel-950 text-steel-700 dark:text-steel-300 hover:bg-steel-300/40 dark:hover:bg-steel-700']"
         @click="activeTab = tab.value"
       >
@@ -92,7 +92,7 @@
                   <template v-else-if="plan.status === 'completed' && plan.completedWorkoutId">
                     <RouterLink
                       :to="`/workouts/${plan.completedWorkoutId}`"
-                      class="px-3 py-1.5 border-2 border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300 text-xs font-medium hover:border-primary hover:text-primary transition-colors"
+                      class="px-3 py-1.5 rounded-full border border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300 text-xs font-medium hover:border-primary hover:text-primary transition-colors"
                       @click.stop
                     >Открыть</RouterLink>
                   </template>
@@ -132,7 +132,7 @@
       <template v-if="toDelete?.recurrenceGroupId">
         <div class="space-y-2">
           <button
-            :class="['w-full text-left px-4 py-3 border-2 transition-colors text-sm',
+            :class="['w-full text-left px-4 py-3 rounded-xl border transition-colors text-sm',
               deleteScope === 'one' ? 'border-primary bg-primary/5' : 'border-steel-300 dark:border-steel-700']"
             @click="deleteScope = 'one'"
           >
@@ -140,7 +140,7 @@
             <p class="text-xs text-steel-700 dark:text-steel-300 mt-0.5">{{ toDelete?.scheduledDate }}</p>
           </button>
           <button
-            :class="['w-full text-left px-4 py-3 border-2 transition-colors text-sm',
+            :class="['w-full text-left px-4 py-3 rounded-xl border transition-colors text-sm',
               deleteScope === 'all' ? 'border-primary bg-primary/10' : 'border-steel-300 dark:border-steel-700']"
             @click="deleteScope = 'all'"
           >

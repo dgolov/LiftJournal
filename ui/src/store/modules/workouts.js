@@ -184,14 +184,14 @@ export default {
       const ex = state.activeWorkout.exercises.find(e => e.instanceId === instanceId)
       if (!ex) return
       const last = ex.sets[ex.sets.length - 1] || { weight: 0, reps: 0 }
-      ex.sets.push({ id: uid(), weight: last.weight, reps: last.reps, completed: false, failed: false })
+      ex.sets.push({ id: uid(), weight: last.weight, reps: last.reps, completed: false, failed: false, rpe: null })
     },
     CYCLE_EXERCISE_HISTORY(state, instanceId) {
       const ex = state.activeWorkout.exercises.find(e => e.instanceId === instanceId)
       if (!ex || !ex.history?.length) return
       ex.historyIndex = (ex.historyIndex + 1) % ex.history.length
       const option = ex.history[ex.historyIndex]
-      ex.sets = option.sets.map(s => ({ id: uid(), weight: s.weight, reps: s.reps, completed: false, failed: false }))
+      ex.sets = option.sets.map(s => ({ id: uid(), weight: s.weight, reps: s.reps, completed: false, failed: false, rpe: null }))
     },
     UPDATE_SET(state, { instanceId, setId, field, value }) {
       const ex = state.activeWorkout.exercises.find(e => e.instanceId === instanceId)

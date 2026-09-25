@@ -1,7 +1,7 @@
 <template>
   <!-- Swipe wrapper — overflow-hidden clips the sliding card to reveal the red zone -->
   <div
-    class="relative overflow-hidden border-2 border-ink dark:border-steel-700"
+    class="relative overflow-hidden rounded-2xl border border-steel-100 shadow-soft dark:border-steel-700 dark:shadow-none"
     @touchstart.passive="onTouchStart"
     @touchmove="onTouchMove"
     @touchend="onTouchEnd"

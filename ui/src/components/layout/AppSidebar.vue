@@ -1,8 +1,8 @@
 <template>
-  <aside :class="['fixed inset-y-0 left-0 z-40 w-64 bg-card dark:bg-steel-900 border-r-2 border-ink dark:border-steel-700 flex flex-col pt-safe-top transition-transform duration-300',
+  <aside :class="['fixed inset-y-0 left-0 z-40 w-64 bg-card dark:bg-steel-900 border-r border-steel-100 dark:border-steel-700 flex flex-col pt-safe-top transition-transform duration-300',
     isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0']">
     <!-- Logo -->
-    <div class="h-16 flex items-center gap-2.5 px-6 border-b-2 border-ink dark:border-steel-700">
+    <div class="h-16 flex items-center gap-2.5 px-6 border-b border-steel-100 dark:border-steel-700">
       <Dumbbell class="w-6 h-6 text-primary flex-shrink-0" />
       <span class="font-display font-bold text-ink dark:text-white text-xl uppercase tracking-wide">LiftForge</span>
     </div>
@@ -13,10 +13,10 @@
         v-for="item in navItems"
         :key="item.to"
         :to="item.to"
-        :class="['flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors border-2 border-transparent',
+        :class="['flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors',
           $route.path === item.to || $route.path.startsWith(item.to + '/') && item.to !== '/'
-            ? 'bg-primary text-white'
-            : 'text-steel-700 dark:text-steel-300 hover:border-steel-100 dark:hover:border-steel-700']"
+            ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-light'
+            : 'text-steel-700 dark:text-steel-300 hover:bg-steel-50 hover:text-ink dark:hover:bg-steel-950 dark:hover:text-white']"
         @click="closeSidebar"
       >
         <component :is="item.icon" class="w-5 h-5 flex-shrink-0" />
@@ -25,7 +25,7 @@
     </nav>
 
     <!-- New workout button -->
-    <div class="p-3 border-t-2 border-ink dark:border-steel-700">
+    <div class="p-3 border-t-2 border-steel-100 dark:border-steel-700">
       <RouterLink to="/workouts/new" @click="closeSidebar"
         class="btn btn-primary w-full">
         <Plus class="w-4 h-4" />

@@ -78,7 +78,7 @@
           <div v-for="d in weekDays" :key="d" class="text-center text-xs font-medium text-steel-700 dark:text-steel-300 py-1">{{ d }}</div>
         </div>
 
-        <div class="grid grid-cols-7 gap-px bg-ink dark:bg-steel-700 border-2 border-ink dark:border-steel-700">
+        <div class="grid grid-cols-7 gap-px rounded-2xl overflow-hidden bg-steel-100 dark:bg-steel-700 border border-steel-100 dark:border-steel-700">
           <button
             v-for="day in calendarDays"
             :key="day.dateStr"
@@ -108,7 +108,7 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-7 gap-px bg-ink dark:bg-steel-700 border-2 border-ink dark:border-steel-700">
+        <div class="grid grid-cols-7 gap-px rounded-2xl overflow-hidden bg-steel-100 dark:bg-steel-700 border border-steel-100 dark:border-steel-700">
           <button
             v-for="day in weekDaysArr"
             :key="day.dateStr"
@@ -201,14 +201,14 @@
       <div class="card p-4 mb-5 space-y-3">
         <div class="flex flex-wrap gap-2">
           <button
-            :class="['text-sm px-3 py-1.5 font-medium border-2 transition-colors',
-              !activeType ? 'bg-primary text-white border-ink dark:border-steel-100' : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300 hover:border-primary hover:text-primary']"
+            :class="['text-sm px-3 py-1.5 rounded-full font-medium border transition-colors',
+              !activeType ? 'bg-primary text-white border-primary shadow-glow' : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300 hover:border-primary hover:text-primary']"
             @click="setFilter('type', null)"
           >Все</button>
           <button
             v-for="type in workoutTypes" :key="type"
-            :class="['text-sm px-3 py-1.5 font-medium border-2 transition-colors',
-              activeType === type ? 'bg-primary text-white border-ink dark:border-steel-100' : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300 hover:border-primary hover:text-primary']"
+            :class="['text-sm px-3 py-1.5 rounded-full font-medium border transition-colors',
+              activeType === type ? 'bg-primary text-white border-primary shadow-glow' : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300 hover:border-primary hover:text-primary']"
             @click="setFilter('type', type)"
           >{{ type }}</button>
         </div>

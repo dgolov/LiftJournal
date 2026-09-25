@@ -4,13 +4,13 @@
       <p class="text-xs font-semibold text-steel-700 dark:text-steel-300 uppercase tracking-wide mb-2">Веса и повторы</p>
       <div class="flex gap-2">
         <button
-          :class="['flex-1 py-2 text-sm font-medium border-2 transition-colors',
-            source === 'history' ? 'bg-primary text-white border-ink dark:border-steel-100' : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300 hover:border-primary hover:text-primary']"
+          :class="['flex-1 py-2 rounded-xl text-sm font-medium border transition-colors',
+            source === 'history' ? 'bg-primary text-white border-primary shadow-glow' : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300 hover:border-primary hover:text-primary']"
           @click="source = 'history'"
         >Из последней тренировки</button>
         <button
-          :class="['flex-1 py-2 text-sm font-medium border-2 transition-colors',
-            source === 'template' ? 'bg-primary text-white border-ink dark:border-steel-100' : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300 hover:border-primary hover:text-primary']"
+          :class="['flex-1 py-2 rounded-xl text-sm font-medium border transition-colors',
+            source === 'template' ? 'bg-primary text-white border-primary shadow-glow' : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300 hover:border-primary hover:text-primary']"
           @click="source = 'template'"
         >Из шаблона</button>
       </div>
@@ -31,7 +31,7 @@
       <div
         v-for="t in templates"
         :key="t.id"
-        class="w-full px-3 py-3 hover:bg-steel-100 dark:hover:bg-steel-700 transition-colors flex items-center gap-3 border-2 border-transparent hover:border-steel-300 dark:hover:border-steel-700"
+        class="w-full px-3 py-3 rounded-xl hover:bg-steel-100 dark:hover:bg-steel-700 transition-colors flex items-center gap-3 border border-transparent hover:border-steel-300 dark:hover:border-steel-700"
       >
         <button class="flex-1 min-w-0 text-left" @click="apply(t)">
           <p class="text-sm font-medium text-ink dark:text-white truncate">{{ t.title }}</p>

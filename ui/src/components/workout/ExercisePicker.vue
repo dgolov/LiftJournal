@@ -18,7 +18,7 @@
       <button
         v-for="ex in filtered"
         :key="ex.id"
-        class="w-full text-left px-3 py-3 hover:bg-steel-100 dark:hover:bg-steel-700 transition-colors flex items-center gap-3 border-2 border-transparent hover:border-steel-300 dark:hover:border-steel-700"
+        class="w-full text-left px-3 py-3 rounded-xl hover:bg-steel-100 dark:hover:bg-steel-700 transition-colors flex items-center gap-3 border border-transparent hover:border-steel-300 dark:hover:border-steel-700"
         @click="pick(ex)"
       >
         <div class="flex-1 min-w-0">

@@ -2,14 +2,14 @@
   <Teleport to="body">
     <Transition name="modal">
       <div v-if="modelValue" :class="['fixed inset-0 z-50 flex', fullscreen ? 'items-end sm:items-center sm:p-4' : 'items-center justify-center p-4']">
-        <div class="absolute inset-0 bg-ink/60" @click="$emit('update:modelValue', false)" />
+        <div class="absolute inset-0 bg-ink/40 backdrop-blur-[2px]" @click="$emit('update:modelValue', false)" />
         <div :class="[
-          'relative bg-card dark:bg-steel-900 border-2 border-ink dark:border-steel-100 shadow-[6px_6px_0_theme(colors.ink)] dark:shadow-[6px_6px_0_black] w-full flex flex-col',
+          'relative bg-card dark:bg-steel-900 border border-steel-100 dark:border-steel-700 shadow-lift w-full flex flex-col overflow-hidden',
           fullscreen
-            ? 'h-full sm:h-auto sm:max-h-[90vh] ' + maxWidthClass
-            : 'max-h-[90vh] ' + maxWidthClass
+            ? 'h-full rounded-t-3xl sm:h-auto sm:max-h-[90vh] sm:rounded-3xl ' + maxWidthClass
+            : 'max-h-[90vh] rounded-3xl ' + maxWidthClass
         ]">
-          <div v-if="title" class="flex items-center justify-between px-6 pt-5 pb-3 border-b-2 border-steel-100 dark:border-steel-700 flex-shrink-0">
+          <div v-if="title" class="flex items-center justify-between px-6 pt-5 pb-3 border-b border-steel-100 dark:border-steel-700 flex-shrink-0">
             <h3 class="text-lg font-display font-semibold text-ink dark:text-white">{{ title }}</h3>
             <button class="w-8 h-8 flex items-center justify-center text-steel-300 hover:text-ink dark:text-steel-700 dark:hover:text-steel-100 transition-colors" @click="$emit('update:modelValue', false)">
               <X class="w-5 h-5" />

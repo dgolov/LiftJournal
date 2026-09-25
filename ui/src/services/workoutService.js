@@ -28,6 +28,7 @@ function serializeExercises(exercises) {
       reps: s.reps ?? 0,
       completed: s.completed ?? false,
       failed: s.failed ?? false,
+      rpe: s.rpe ?? null,
     })),
   }))
 }
