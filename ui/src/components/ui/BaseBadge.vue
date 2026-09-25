@@ -1,5 +1,5 @@
 <template>
-  <span :class="['inline-flex items-center border px-2 py-0.5 text-xs font-medium', colorClass]">
+  <span :class="['inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium', colorClass]">
     <slot />
   </span>
 </template>

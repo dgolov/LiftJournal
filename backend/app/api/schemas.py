@@ -3,7 +3,7 @@ from typing import Optional
 
 _Date = date  # alias to avoid field-name shadowing in Pydantic models
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 # ---------------------------------------------------------------------------
@@ -76,6 +76,7 @@ class SetIn(BaseModel):
     reps: int = 0
     completed: bool = False
     failed: bool = False
+    rpe: Optional[float] = Field(None, ge=1, le=10)
 
 
 class SetOut(BaseModel):
@@ -84,6 +85,7 @@ class SetOut(BaseModel):
     reps: int
     completed: bool
     failed: bool = False
+    rpe: Optional[float] = None
 
 
 class WorkoutExerciseIn(BaseModel):

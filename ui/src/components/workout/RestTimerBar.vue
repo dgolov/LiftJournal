@@ -5,7 +5,7 @@
       class="fixed bottom-16 lg:bottom-4 left-0 right-0 z-40 flex justify-center px-4 pointer-events-none"
     >
       <div class="w-full max-w-sm pointer-events-auto">
-        <div class="bg-ink/95 backdrop-blur-sm border-2 border-primary px-4 py-3">
+        <div class="bg-ink/95 backdrop-blur-sm rounded-2xl border border-primary/60 shadow-lift px-4 py-3">
 
           <!-- Top row: label + presets -->
           <div class="flex items-center justify-between mb-2">
@@ -34,7 +34,7 @@
           <!-- Main row: -15 | time | +15 | skip -->
           <div class="flex items-center gap-2">
             <button
-              class="w-9 h-9 border-2 border-white/20 hover:border-white/40 text-white text-xs font-display font-bold transition-colors flex-shrink-0"
+              class="w-9 h-9 rounded-lg border border-white/20 hover:border-white/40 text-white text-xs font-display font-bold transition-colors flex-shrink-0"
               @click="adjust(-15)"
             >−15</button>
 
@@ -43,12 +43,12 @@
             </div>
 
             <button
-              class="w-9 h-9 border-2 border-white/20 hover:border-white/40 text-white text-xs font-display font-bold transition-colors flex-shrink-0"
+              class="w-9 h-9 rounded-lg border border-white/20 hover:border-white/40 text-white text-xs font-display font-bold transition-colors flex-shrink-0"
               @click="adjust(+15)"
             >+15</button>
 
             <button
-              class="px-3 h-9 border-2 border-transparent hover:border-white/20 text-steel-300 hover:text-white text-xs font-medium transition-colors flex-shrink-0"
+              class="px-3 h-9 rounded-lg border border-transparent hover:border-white/20 text-steel-300 hover:text-white text-xs font-medium transition-colors flex-shrink-0"
               @click="stop"
             >Пропустить</button>
           </div>

@@ -89,7 +89,7 @@
       <template v-if="plan.recurrenceGroupId">
         <div class="space-y-2">
           <button
-            :class="['w-full text-left px-4 py-3 border-2 transition-colors text-sm',
+            :class="['w-full text-left px-4 py-3 rounded-xl border transition-colors text-sm',
               deleteScope === 'one' ? 'border-primary bg-primary/5' : 'border-steel-300 dark:border-steel-700']"
             @click="deleteScope = 'one'"
           >
@@ -97,7 +97,7 @@
             <p class="text-xs text-steel-700 dark:text-steel-300 mt-0.5">{{ plan.scheduledDate }}</p>
           </button>
           <button
-            :class="['w-full text-left px-4 py-3 border-2 transition-colors text-sm',
+            :class="['w-full text-left px-4 py-3 rounded-xl border transition-colors text-sm',
               deleteScope === 'all' ? 'border-primary bg-primary/10' : 'border-steel-300 dark:border-steel-700']"
             @click="deleteScope = 'all'"
           >

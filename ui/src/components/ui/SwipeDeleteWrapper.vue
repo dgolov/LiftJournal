@@ -1,14 +1,14 @@
 <template>
   <div
-    class="relative overflow-hidden rounded-xl shadow-sm border border-gray-100 dark:border-gray-800"
-    @touchstart.passive="onTouchStart"
-    @touchmove="onTouchMove"
-    @touchend="onTouchEnd"
+    :class="['relative overflow-hidden', bordered ? 'rounded-2xl border border-steel-100 shadow-soft dark:border-steel-700 dark:shadow-none' : '']"
+    @touchstart.passive.stop="onTouchStart"
+    @touchmove.stop="onTouchMove"
+    @touchend.stop="onTouchEnd"
   >
     <!-- Delete reveal layer -->
     <div
       v-if="!props.disabled"
-      class="absolute inset-0 bg-red-500 flex items-center justify-end pr-5 gap-2 select-none cursor-pointer"
+      class="absolute inset-0 bg-primary flex items-center justify-end pr-5 gap-2 select-none cursor-pointer"
       @click.stop="onZoneTap"
     >
       <span class="text-white text-sm font-semibold">{{ deleteLabel }}</span>
@@ -37,6 +37,10 @@ import { Trash2 } from 'lucide-vue-next'
 const props = defineProps({
   deleteLabel: { type: String, default: 'Удалить' },
   disabled: { type: Boolean, default: false },
+  // Card-level usages (templates, plans, exercises...) rely on this
+  // wrapper for their own border. Small repeated rows (a single set)
+  // look too heavy with one — they opt out.
+  bordered: { type: Boolean, default: true },
 })
 
 const emit = defineEmits(['delete'])

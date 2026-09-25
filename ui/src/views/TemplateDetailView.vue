@@ -37,9 +37,9 @@
             <button
               v-for="type in workoutTypes"
               :key="type"
-              :class="['px-3 py-1.5 text-sm font-medium border-2 transition-colors',
+              :class="['px-3 py-1.5 rounded-full text-sm font-medium border transition-colors',
                 draft.type === type
-                  ? 'bg-primary text-white border-ink dark:border-steel-100'
+                  ? 'bg-primary text-white border-primary shadow-glow'
                   : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300 hover:border-primary hover:text-primary']"
               @click="draft.type = type"
             >{{ type }}</button>

@@ -24,7 +24,7 @@
       <button
         v-for="tab in tabs"
         :key="tab.id"
-        class="flex-1 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px"
+        class="flex-1 py-2.5 text-sm font-medium transition-colors border-b -mb-px"
         :class="activeTab === tab.id
           ? 'border-primary text-primary'
           : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"

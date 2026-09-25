@@ -1,6 +1,6 @@
 <template>
   <div
-    class="relative overflow-hidden border-2 border-ink dark:border-steel-700"
+    class="relative overflow-hidden rounded-2xl border border-steel-100 shadow-soft dark:border-steel-700 dark:shadow-none"
     @touchstart.passive="onTouchStart"
     @touchmove="onTouchMove"
     @touchend="onTouchEnd"
@@ -64,6 +64,7 @@
         <span class="flex-1 text-center">Вес (кг)</span>
         <span class="w-3" />
         <span class="flex-1 text-center">Повт.</span>
+        <span class="w-10 text-center">РПЕ</span>
         <span class="w-10" />
         <span class="w-8" />
       </div>
@@ -81,7 +82,7 @@
       </div>
 
       <button
-        class="mt-3 w-full py-2 text-sm text-primary hover:text-primary-dark font-medium border-2 border-dashed border-primary/40 hover:border-primary transition-colors"
+        class="mt-3 w-full py-2 rounded-xl text-sm text-primary hover:text-primary-dark font-medium border border-dashed border-primary/40 hover:border-primary transition-colors"
         @click.stop="addSet"
       >
         {{ isCardio ? 'Добавить сессию' : 'Добавить подход' }}

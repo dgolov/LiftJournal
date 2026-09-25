@@ -26,28 +26,28 @@
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center gap-2 border-2 px-4 py-2.5 text-sm font-display font-semibold uppercase tracking-wide transition-all duration-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary disabled:opacity-40 disabled:cursor-not-allowed disabled:translate-x-0 disabled:translate-y-0 disabled:shadow-none min-h-[44px] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/60 dark:focus-visible:ring-offset-steel-950 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none min-h-[44px] active:scale-[0.98];
   }
   .btn-primary {
-    @apply btn bg-primary text-white border-ink dark:border-steel-950 shadow-[3px_3px_0_theme(colors.ink)] dark:shadow-[3px_3px_0_black] hover:bg-primary-dark;
+    @apply btn bg-primary text-white border-primary shadow-glow hover:bg-primary-dark hover:border-primary-dark;
   }
   .btn-ghost {
-    @apply btn bg-transparent border-transparent text-ink hover:border-steel-300 dark:text-steel-100 dark:hover:border-steel-700;
+    @apply btn bg-transparent border-transparent text-steel-700 hover:bg-steel-100 hover:text-ink dark:text-steel-100 dark:hover:bg-steel-900;
   }
   .btn-danger {
-    @apply btn bg-transparent border-primary text-primary shadow-[3px_3px_0_theme(colors.primary.DEFAULT)] hover:bg-primary hover:text-white;
+    @apply btn bg-primary/5 border-primary/30 text-primary hover:bg-primary hover:border-primary hover:text-white;
   }
   .btn-outline {
-    @apply btn border-ink text-ink bg-transparent hover:bg-ink hover:text-white dark:border-steel-100 dark:text-steel-100 dark:hover:bg-steel-100 dark:hover:text-ink;
+    @apply btn bg-card border-steel-100 text-ink shadow-soft hover:border-steel-300 dark:bg-steel-900 dark:border-steel-700 dark:text-steel-100 dark:hover:border-steel-300;
   }
   .input {
-    @apply w-full max-w-full border-2 border-steel-300 bg-white px-3 py-2.5 text-sm placeholder-steel-300 focus:border-primary focus:outline-none min-h-[44px] dark:bg-steel-900 dark:border-steel-700 dark:text-steel-50 dark:placeholder-steel-700;
+    @apply w-full max-w-full rounded-xl border border-steel-100 bg-white px-3 py-2.5 text-sm placeholder-steel-300 transition-shadow focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10 min-h-[44px] dark:bg-steel-900 dark:border-steel-700 dark:text-steel-50 dark:placeholder-steel-700;
   }
   .label {
     @apply block text-sm font-medium text-steel-700 mb-1 dark:text-steel-300;
   }
   .card {
-    @apply bg-card border-2 border-steel-100 dark:bg-steel-900 dark:border-steel-700;
+    @apply bg-card rounded-2xl border border-steel-100/80 shadow-soft dark:bg-steel-900 dark:border-steel-700/60 dark:shadow-none;
   }
 }
 
@@ -68,7 +68,7 @@ input[type="date"] {
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #b9b6ae; }
+::-webkit-scrollbar-thumb { background: #aeb4c0; border-radius: 9999px; }
 
 /* Safe area for bottom nav (iPhone notch / home indicator) */
 .pb-safe-nav {
@@ -97,8 +97,8 @@ input[type="date"] {
   background: repeating-linear-gradient(
     135deg,
     theme(colors.primary.DEFAULT) 0,
-    theme(colors.primary.DEFAULT) 10px,
-    theme(colors.ink) 10px,
-    theme(colors.ink) 20px
+    theme(colors.primary.DEFAULT) 8px,
+    theme(colors.primary.dark) 8px,
+    theme(colors.primary.dark) 16px
   );
 }

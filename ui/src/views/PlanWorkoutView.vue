@@ -28,9 +28,9 @@
           <button
             v-for="type in workoutTypes"
             :key="type"
-            :class="['px-3 py-1.5 text-sm font-medium border-2 transition-colors',
+            :class="['px-3 py-1.5 rounded-full text-sm font-medium border transition-colors',
               form.type === type
-                ? 'bg-primary text-white border-ink dark:border-steel-100'
+                ? 'bg-primary text-white border-primary shadow-glow'
                 : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300 hover:border-primary hover:text-primary']"
             @click="form.type = type"
           >{{ type }}</button>
@@ -49,13 +49,13 @@
         <label class="label">Повторение</label>
         <div class="flex gap-2">
           <button
-            :class="['flex-1 py-2 text-sm font-medium border-2 transition-colors',
-              !form.recurring ? 'bg-primary text-white border-ink dark:border-steel-100' : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300']"
+            :class="['flex-1 py-2 rounded-xl text-sm font-medium border transition-colors',
+              !form.recurring ? 'bg-primary text-white border-primary shadow-glow' : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300']"
             @click="form.recurring = false"
           >Не повторять</button>
           <button
-            :class="['flex-1 py-2 text-sm font-medium border-2 transition-colors',
-              form.recurring ? 'bg-primary text-white border-ink dark:border-steel-100' : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300']"
+            :class="['flex-1 py-2 rounded-xl text-sm font-medium border transition-colors',
+              form.recurring ? 'bg-primary text-white border-primary shadow-glow' : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300']"
             @click="form.recurring = true"
           >Каждую неделю</button>
         </div>
@@ -191,7 +191,7 @@
             </div>
 
             <button
-              class="mt-3 w-full py-2 text-sm text-primary hover:text-primary-dark font-medium border-2 border-dashed border-primary/40 hover:border-primary transition-colors"
+              class="mt-3 w-full py-2 rounded-xl text-sm text-primary hover:text-primary-dark font-medium border border-dashed border-primary/40 hover:border-primary transition-colors"
               @click="addSet(exIdx)"
             >Добавить подход</button>
           </div>

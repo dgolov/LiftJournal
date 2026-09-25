@@ -42,8 +42,8 @@
               <button
                 v-for="type in workoutTypes"
                 :key="type"
-                :class="['px-3 py-1.5 text-sm font-medium border-2 transition-colors',
-                  activeWorkout.type === type ? 'bg-primary text-white border-ink dark:border-steel-100' : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300 hover:border-primary hover:text-primary']"
+                :class="['px-3 py-1.5 rounded-full text-sm font-medium border transition-colors',
+                  activeWorkout.type === type ? 'bg-primary text-white border-primary shadow-glow' : 'border-steel-300 dark:border-steel-700 text-steel-700 dark:text-steel-300 hover:border-primary hover:text-primary']"
                 @click="setField('type', type)"
               >{{ type }}</button>
             </div>
@@ -196,7 +196,7 @@
         <button
           v-for="w in recentWorkouts"
           :key="w.id"
-          class="w-full text-left px-3 py-3 hover:bg-steel-100 dark:hover:bg-steel-700 transition-colors flex items-center gap-3 border-2 border-transparent hover:border-steel-300 dark:hover:border-steel-700"
+          class="w-full text-left px-3 py-3 rounded-xl hover:bg-steel-100 dark:hover:bg-steel-700 transition-colors flex items-center gap-3 border border-transparent hover:border-steel-300 dark:hover:border-steel-700"
           @click="repeatWorkout(w)"
         >
           <div class="flex-1 min-w-0">

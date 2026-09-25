@@ -17,8 +17,8 @@
     </div>
 
     <!-- Today's planned workout -->
-    <div v-if="todaysPlan" class="card border-l-[6px] border-l-primary p-4 flex items-center gap-3">
-      <div class="w-10 h-10 border-2 border-primary bg-primary/10 flex items-center justify-center flex-shrink-0">
+    <div v-if="todaysPlan" class="card border-l-4 border-l-primary p-4 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
         <CalendarClock class="w-5 h-5 text-primary" />
       </div>
       <div class="flex-1 min-w-0">
