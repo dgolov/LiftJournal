@@ -188,13 +188,18 @@
                 добавить подход
               </button>
             </div>
-            <p class="mt-2 text-xs text-gray-400 flex gap-3">
+            <p class="mt-2 text-xs text-gray-400 flex flex-wrap gap-x-3 gap-y-1">
               <template v-if="isCardio(ex.exerciseId)">
                 <span>Итого: {{ ex.sets.filter(s => !s.failed).reduce((s, set) => s + (set.reps || 0), 0) }} мин.</span>
               </template>
               <template v-else>
-                <span>Тоннаж: {{ ex.sets.filter(s => !s.failed).reduce((s, set) => s + set.weight * set.reps, 0) }} кг</span>
-                <span v-if="ex.sets.some(s => !s.failed)">· Расч. 1ПМ: {{ Math.max(...ex.sets.filter(s => !s.failed).map(s => s.reps === 1 ? s.weight : Math.round(s.weight * (1 + s.reps / 30)))) }} кг</span>
+                <template v-for="st in [strengthSummary(ex)]" :key="'st'">
+                  <span>Тоннаж: {{ st.tonnage }} кг</span>
+                  <span v-if="st.lifts">КПШ: {{ st.lifts }}</span>
+                  <span v-if="st.avgWeight" title="Абсолютная интенсивность — средний вес подъёма">Абс. инт.: {{ st.avgWeight }} кг</span>
+                  <span v-if="st.relIntensity != null" :title="`Относительная интенсивность — от 1ПМ ${st.baseline1RM} кг`">Отн. инт.: {{ st.relIntensity }}%</span>
+                  <span v-if="st.e1RM">Расч. 1ПМ: {{ st.e1RM }} кг</span>
+                </template>
               </template>
             </p>
           </div>
@@ -223,13 +228,18 @@
             </span>
           </div>
         </div>
-        <p class="mt-2 text-xs text-gray-400 flex gap-3">
+        <p class="mt-2 text-xs text-gray-400 flex flex-wrap gap-x-3 gap-y-1">
           <template v-if="isCardio(ex.exerciseId)">
             <span>Итого: {{ ex.sets.filter(s => !s.failed).reduce((s, set) => s + (set.reps || 0), 0) }} мин.</span>
           </template>
           <template v-else>
-            <span>Тоннаж: {{ ex.sets.filter(s => !s.failed).reduce((s, set) => s + set.weight * set.reps, 0) }} кг</span>
-            <span v-if="ex.sets.some(s => !s.failed)">· Расч. 1ПМ: {{ Math.max(...ex.sets.filter(s => !s.failed).map(s => s.reps === 1 ? s.weight : Math.round(s.weight * (1 + s.reps / 30)))) }} кг</span>
+            <template v-for="st in [strengthSummary(ex)]" :key="'st'">
+              <span>Тоннаж: {{ st.tonnage }} кг</span>
+              <span v-if="st.lifts">КПШ: {{ st.lifts }}</span>
+              <span v-if="st.avgWeight" title="Абсолютная интенсивность — средний вес подъёма">Абс. инт.: {{ st.avgWeight }} кг</span>
+              <span v-if="st.relIntensity != null" :title="`Относительная интенсивность — от 1ПМ ${st.baseline1RM} кг`">Отн. инт.: {{ st.relIntensity }}%</span>
+              <span v-if="st.e1RM">Расч. 1ПМ: {{ st.e1RM }} кг</span>
+            </template>
           </template>
         </p>
       </div>
@@ -355,6 +365,7 @@ import SwipeDeleteWrapper from '@/components/ui/SwipeDeleteWrapper.vue'
 import { useExerciseViewMode } from '@/composables/useExerciseViewMode.js'
 import { WORKOUT_TYPES } from '@/services/mockData.js'
 import workoutService from '@/services/workoutService.js'
+import { sessionE1RM, sessionLoad, round1 } from '@/utils/strength.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -441,6 +452,26 @@ function formatCommentDate(iso) {
 }
 
 const exerciseLibrary = computed(() => store.state.exercises.library)
+// Per-exercise load for this workout. Relative intensity uses the same
+// 1RM baseline as the exercise progress chart (profile max or best estimate
+// up to this date), topped up by the live sets so it stays sane while editing.
+function strengthSummary(ex) {
+  const sets = ex.sets.filter(s => !s.failed)
+  const { lifts, tonnage, avgWeight } = sessionLoad(sets)
+  const e1RM = sessionE1RM(sets)
+  const session = store.getters['exercises/progressForExercise'](ex.exerciseId)
+    .find(s => s.workoutId === workout.value?.id)
+  const baseline1RM = Math.max(session?.baseline1RM || 0, e1RM)
+  return {
+    tonnage,
+    lifts,
+    avgWeight: round1(avgWeight),
+    e1RM: Math.round(e1RM),
+    baseline1RM: Math.round(baseline1RM),
+    relIntensity: baseline1RM && avgWeight ? Math.round(avgWeight / baseline1RM * 100) : null,
+  }
+}
+
 function isCardio(exerciseId) {
   return exerciseLibrary.value.find(e => e.id === exerciseId)?.muscleGroup === 'Кардио'
 }

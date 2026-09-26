@@ -132,6 +132,9 @@
         <div class="flex gap-4 text-xs text-gray-400 mb-3 px-1">
           <span>Всего: <strong class="text-gray-700 dark:text-gray-300">{{ filteredSessions.length }}</strong></span>
           <span v-if="!isCardio">Ср. тоннаж: <strong class="text-gray-700 dark:text-gray-300">{{ avgVolume }} кг</strong></span>
+          <span v-if="!isCardio && periodLoad.lifts">КПШ: <strong class="text-gray-700 dark:text-gray-300">{{ periodLoad.lifts }}</strong></span>
+          <span v-if="!isCardio && periodLoad.avgWeight">Ср. вес: <strong class="text-gray-700 dark:text-gray-300">{{ periodLoad.avgWeight }} кг</strong></span>
+          <span v-if="!isCardio && periodLoad.relIntensity != null">Ср. интенсивность: <strong class="text-gray-700 dark:text-gray-300">{{ periodLoad.relIntensity }}%</strong></span>
         </div>
 
         <!-- Table (strength) -->
@@ -144,6 +147,8 @@
                 <th class="px-2 py-2 text-center font-medium text-gray-400 uppercase tracking-wide">Подходы</th>
                 <SortTh key-name="weight" align="right"  class="px-2"      label="Лучший" />
                 <SortTh key-name="orm"    align="right"  class="px-2"      label="1ПМ" />
+                <SortTh key-name="intensity" align="right" class="px-2 hidden sm:table-cell" label="Инт." />
+                <SortTh key-name="lifts"  align="right"  class="px-2 hidden sm:table-cell" label="КПШ" />
                 <SortTh key-name="volume" align="right"  class="pr-4 pl-2" label="Тоннаж" />
               </tr>
             </thead>
@@ -167,6 +172,11 @@
                   <span class="font-semibold text-yellow-500 text-sm">{{ session.best1RM }}</span>
                   <span class="text-xs text-gray-400"> кг</span>
                 </td>
+                <td class="px-2 py-2.5 text-right hidden sm:table-cell" :title="`Средний вес ${session.avgWeight} кг`">
+                  <span class="font-semibold text-gray-900 dark:text-gray-100 text-sm">{{ session.relIntensity ?? '—' }}</span>
+                  <span v-if="session.relIntensity != null" class="text-xs text-gray-400">%</span>
+                </td>
+                <td class="px-2 py-2.5 text-right hidden sm:table-cell text-sm font-semibold text-gray-900 dark:text-gray-100">{{ session.lifts }}</td>
                 <td class="pr-4 pl-2 py-2.5 text-right">
                   <span class="font-semibold text-green-500 text-sm">{{ session.totalVolume }}</span>
                   <span class="text-xs text-gray-400"> кг</span>
@@ -269,6 +279,8 @@ const isCardio = computed(() => exercise.value?.muscleGroup === 'Кардио')
 // ── Period selector (month / year / all-time / custom range) ──────────────────
 const periodOptions = [
   { value: 'month', label: 'Месяц' },
+  { value: 'quarter', label: '3 мес.' },
+  { value: 'half', label: '6 мес.' },
   { value: 'year', label: 'Год' },
   { value: 'all', label: 'Всё время' },
   { value: 'custom', label: 'Свой период' },
@@ -285,6 +297,8 @@ function isoDaysAgo(days) {
 
 const periodRange = computed(() => {
   if (period.value === 'month') return { from: isoDaysAgo(30) }
+  if (period.value === 'quarter') return { from: isoDaysAgo(91) }
+  if (period.value === 'half') return { from: isoDaysAgo(182) }
   if (period.value === 'year') return { from: isoDaysAgo(365) }
   if (period.value === 'custom') {
     const range = {}
@@ -297,6 +311,8 @@ const periodRange = computed(() => {
 
 const periodLabel = computed(() => {
   if (period.value === 'month') return 'месяц'
+  if (period.value === 'quarter') return '3 месяца'
+  if (period.value === 'half') return '6 месяцев'
   if (period.value === 'year') return 'год'
   if (period.value === 'custom') {
     if (customFrom.value && customTo.value) return `${formatDate(customFrom.value)} – ${formatDate(customTo.value)}`
@@ -381,6 +397,8 @@ const filteredSessions = computed(() => {
       case 'volume':   return d * (a.totalVolume - b.totalVolume)
       case 'weight':   return d * (a.maxWeight - b.maxWeight)
       case 'orm':      return d * (a.best1RM - b.best1RM)
+      case 'intensity': return d * ((a.relIntensity ?? -1) - (b.relIntensity ?? -1))
+      case 'lifts':    return d * (a.lifts - b.lifts)
       case 'duration': return d * ((a.totalMinutes || 0) - (b.totalMinutes || 0))
       default:         return -a.date.localeCompare(b.date)
     }
@@ -405,6 +423,22 @@ const avgVolume = computed(() => {
   if (!filteredSessions.value.length) return 0
   const sum = filteredSessions.value.reduce((s, x) => s + (x.totalVolume || 0), 0)
   return Math.round(sum / filteredSessions.value.length)
+})
+
+// Period totals are lift-weighted (Σ tonnage / Σ КПШ), not an average of
+// per-session averages, so a light 3-rep session doesn't count like a 40-rep one.
+const periodLoad = computed(() => {
+  const list = filteredSessions.value
+  const lifts = list.reduce((s, x) => s + (x.lifts || 0), 0)
+  const tonnage = list.reduce((s, x) => s + (x.totalVolume || 0), 0)
+  const withBase = list.filter(x => x.baseline1RM && x.lifts)
+  const relLifts = withBase.reduce((s, x) => s + x.lifts, 0)
+  const relSum = withBase.reduce((s, x) => s + x.avgWeight / x.baseline1RM * 100 * x.lifts, 0)
+  return {
+    lifts,
+    avgWeight: lifts ? Math.round(tonnage / lifts * 10) / 10 : 0,
+    relIntensity: relLifts ? Math.round(relSum / relLifts) : null,
+  }
 })
 
 const pageRange = computed(() => {
