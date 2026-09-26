@@ -2,7 +2,7 @@
   <aside :class="['fixed inset-y-0 left-0 z-40 w-64 bg-card dark:bg-steel-900 border-r border-steel-100 dark:border-steel-700 flex flex-col pt-safe-top transition-transform duration-300',
     isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0']">
     <!-- Logo -->
-    <div class="h-16 flex items-center gap-2.5 px-6 border-b border-steel-100 dark:border-steel-700">
+    <div class="h-16 box-content flex items-center gap-2.5 px-6 border-b border-steel-100 dark:border-steel-700">
       <Dumbbell class="w-6 h-6 text-primary flex-shrink-0" />
       <span class="font-display font-bold text-ink dark:text-white text-xl uppercase tracking-wide">LiftForge</span>
     </div>
