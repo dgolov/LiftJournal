@@ -5,10 +5,13 @@ export const CHANGELOG = [
     {
     version: '1.0.0',
     date: '2026-09-24',
-    label: 'Удобства',
+    label: 'RPE и обновление ui',
     entries: [
       { type: 'feature',        text: 'Добавлена возможность выполнения пропущенных тренировок' },
+      { type: 'feature',        text: 'Добавлено RPE' },
       { type: 'improvement',    text: 'Изменение названия, изменение сервера' },
+      { type: 'improvement',    text: 'Изменение фронтенд части' },
+      { type: 'improvement',    text: 'Улучшение подсчета объема и интенсивности' },
       { type: 'fix',             text: 'Устранение багов' },
     ],
   },
