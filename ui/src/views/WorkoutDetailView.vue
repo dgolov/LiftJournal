@@ -125,7 +125,14 @@
               ><Trash2 class="w-4 h-4" /></button>
             </div>
             <div class="space-y-2">
-              <div v-for="(set, i) in ex.sets" :key="set.id" class="flex items-center gap-1 text-sm">
+              <SwipeDeleteWrapper
+                v-for="(set, i) in ex.sets"
+                :key="set.id"
+                :bordered="false"
+                delete-label="Удалить подход"
+                @delete="removeDraftSet(ex.instanceId, set.id)"
+              >
+              <div class="flex items-center gap-1 text-sm bg-card dark:bg-steel-900 py-0.5">
                 <span class="text-gray-400 w-5 text-center flex-shrink-0">{{ i + 1 }}</span>
                 <template v-if="isCardio(ex.exerciseId)">
                   <StepperInput
@@ -153,31 +160,46 @@
                     placeholder="повт"
                     @update:model-value="updateDraftSet(ex.instanceId, set.id, 'reps', $event)"
                   />
+                  <input
+                    type="text"
+                    inputmode="decimal"
+                    :value="set.rpe ?? ''"
+                    placeholder="РПЕ"
+                    title="RPE — субъективная тяжесть подхода, 1–10 (необязательно)"
+                    class="w-10 flex-shrink-0 rounded-lg border border-steel-100 dark:border-steel-700 bg-white dark:bg-steel-900 text-ink dark:text-white font-mono px-0.5 py-2 text-xs text-center placeholder-gray-300 focus:border-primary focus:outline-none"
+                    @change="onDraftRpeChange(ex.instanceId, set.id, $event)"
+                  />
                 </template>
                 <button
-                  :class="['w-9 h-9 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0 text-sm font-bold',
+                  :class="['w-9 h-9 rounded-full border flex items-center justify-center transition-colors flex-shrink-0 text-sm font-bold',
                     set.completed ? 'bg-green-500 border-green-500 text-white' :
                     set.failed    ? 'bg-red-500 border-red-500 text-white' :
-                                    'border-gray-300 text-gray-300 hover:border-green-400']"
+                                    'bg-card dark:bg-steel-900 border-gray-300 text-gray-300 hover:border-green-400']"
                   :title="set.completed ? 'Выполнено → провал' : set.failed ? 'Провал → сбросить' : 'Отметить выполненным'"
                   @click="cycleDraftSetState(ex.instanceId, set.id, set)"
                 >{{ set.completed ? '✓' : set.failed ? '✗' : '○' }}</button>
                 <button
-                  class="w-7 h-9 flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
+                  class="hidden lg:flex w-7 h-9 items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
                   @click="removeDraftSet(ex.instanceId, set.id)"
                 ><X class="w-5 h-5" /></button>
               </div>
+              </SwipeDeleteWrapper>
               <button class="text-xs text-primary hover:underline mt-1" @click="addDraftSet(ex.instanceId)">
-                + добавить подход
+                добавить подход
               </button>
             </div>
-            <p class="mt-2 text-xs text-gray-400 flex gap-3">
+            <p class="mt-2 text-xs text-gray-400 flex flex-wrap gap-x-3 gap-y-1">
               <template v-if="isCardio(ex.exerciseId)">
                 <span>Итого: {{ ex.sets.filter(s => !s.failed).reduce((s, set) => s + (set.reps || 0), 0) }} мин.</span>
               </template>
               <template v-else>
-                <span>Тоннаж: {{ ex.sets.filter(s => !s.failed).reduce((s, set) => s + set.weight * set.reps, 0) }} кг</span>
-                <span v-if="ex.sets.some(s => !s.failed)">· Расч. 1ПМ: {{ Math.max(...ex.sets.filter(s => !s.failed).map(s => s.reps === 1 ? s.weight : Math.round(s.weight * (1 + s.reps / 30)))) }} кг</span>
+                <template v-for="st in [strengthSummary(ex)]" :key="'st'">
+                  <span>Тоннаж: {{ st.tonnage }} кг</span>
+                  <span v-if="st.lifts" title="Подъёмы в рабочих подходах (от 50% 1ПМ)">КПШ: {{ st.lifts }}</span>
+                  <span v-if="st.avgWeight" title="Абсолютная интенсивность — средний вес подъёма в рабочих подходах (от 50% 1ПМ)">Абс. инт.: {{ st.avgWeight }} кг</span>
+                  <span v-if="st.relIntensity != null" :title="`Относительная интенсивность — от 1ПМ ${st.baseline1RM} кг`">Отн. инт.: {{ st.relIntensity }}%</span>
+                  <span v-if="st.e1RM">Расч. 1ПМ: {{ st.e1RM }} кг</span>
+                </template>
               </template>
             </p>
           </div>
@@ -199,19 +221,25 @@
               <span :class="['font-medium', set.failed ? 'line-through text-gray-400' : '']">{{ set.weight > 0 ? set.weight + ' кг' : 'Б/в' }}</span>
               <span class="text-gray-400">×</span>
               <span :class="['font-medium', set.failed ? 'line-through text-gray-400' : '']">{{ set.reps }} повт.</span>
+              <span v-if="set.rpe" class="text-xs text-gray-400">РПЕ {{ set.rpe }}</span>
             </template>
             <span :class="['ml-auto text-xs font-medium', set.completed ? 'text-green-500' : set.failed ? 'text-red-400' : 'text-gray-300']">
               {{ set.completed ? '✓' : set.failed ? '✗' : '○' }}
             </span>
           </div>
         </div>
-        <p class="mt-2 text-xs text-gray-400 flex gap-3">
+        <p class="mt-2 text-xs text-gray-400 flex flex-wrap gap-x-3 gap-y-1">
           <template v-if="isCardio(ex.exerciseId)">
             <span>Итого: {{ ex.sets.filter(s => !s.failed).reduce((s, set) => s + (set.reps || 0), 0) }} мин.</span>
           </template>
           <template v-else>
-            <span>Тоннаж: {{ ex.sets.filter(s => !s.failed).reduce((s, set) => s + set.weight * set.reps, 0) }} кг</span>
-            <span v-if="ex.sets.some(s => !s.failed)">· Расч. 1ПМ: {{ Math.max(...ex.sets.filter(s => !s.failed).map(s => s.reps === 1 ? s.weight : Math.round(s.weight * (1 + s.reps / 30)))) }} кг</span>
+            <template v-for="st in [strengthSummary(ex)]" :key="'st'">
+              <span>Тоннаж: {{ st.tonnage }} кг</span>
+              <span v-if="st.lifts" title="Подъёмы в рабочих подходах (от 50% 1ПМ)">КПШ: {{ st.lifts }}</span>
+              <span v-if="st.avgWeight" title="Абсолютная интенсивность — средний вес подъёма в рабочих подходах (от 50% 1ПМ)">Абс. инт.: {{ st.avgWeight }} кг</span>
+              <span v-if="st.relIntensity != null" :title="`Относительная интенсивность — от 1ПМ ${st.baseline1RM} кг`">Отн. инт.: {{ st.relIntensity }}%</span>
+              <span v-if="st.e1RM">Расч. 1ПМ: {{ st.e1RM }} кг</span>
+            </template>
           </template>
         </p>
       </div>
@@ -337,6 +365,7 @@ import SwipeDeleteWrapper from '@/components/ui/SwipeDeleteWrapper.vue'
 import { useExerciseViewMode } from '@/composables/useExerciseViewMode.js'
 import { WORKOUT_TYPES } from '@/services/mockData.js'
 import workoutService from '@/services/workoutService.js'
+import { sessionE1RM, sessionLoad, round1 } from '@/utils/strength.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -423,6 +452,26 @@ function formatCommentDate(iso) {
 }
 
 const exerciseLibrary = computed(() => store.state.exercises.library)
+// Per-exercise load for this workout. Relative intensity uses the same
+// 1RM baseline as the exercise progress chart (profile max or best estimate
+// up to this date), topped up by the live sets so it stays sane while editing.
+function strengthSummary(ex) {
+  const sets = ex.sets.filter(s => !s.failed)
+  const e1RM = sessionE1RM(sets)
+  const session = store.getters['exercises/progressForExercise'](ex.exerciseId)
+    .find(s => s.workoutId === workout.value?.id)
+  const baseline1RM = Math.max(session?.baseline1RM || 0, e1RM)
+  const { lifts, tonnage, avgWeight } = sessionLoad(sets, baseline1RM)
+  return {
+    tonnage,
+    lifts,
+    avgWeight: round1(avgWeight),
+    e1RM: Math.round(e1RM),
+    baseline1RM: Math.round(baseline1RM),
+    relIntensity: baseline1RM && avgWeight ? Math.round(avgWeight / baseline1RM * 100) : null,
+  }
+}
+
 function isCardio(exerciseId) {
   return exerciseLibrary.value.find(e => e.id === exerciseId)?.muscleGroup === 'Кардио'
 }
@@ -527,6 +576,17 @@ function updateDraftSet(instanceId, setId, field, value) {
   if (set) set[field] = value
 }
 
+function onDraftRpeChange(instanceId, setId, e) {
+  const raw = e.target.value.trim()
+  if (!raw) { e.target.value = ''; updateDraftSet(instanceId, setId, 'rpe', null); return }
+  const num = parseFloat(raw.replace(',', '.'))
+  if (isNaN(num)) { e.target.value = ''; return }
+  // RPE is conventionally whole or half points (7, 7.5, 8...) — snap to it.
+  const clamped = Math.min(10, Math.max(1, Math.round(num * 2) / 2))
+  e.target.value = String(clamped)
+  updateDraftSet(instanceId, setId, 'rpe', clamped)
+}
+
 function cycleDraftSetState(instanceId, setId, set) {
   if (!set.completed && !set.failed) {
     updateDraftSet(instanceId, setId, 'completed', true)
@@ -555,7 +615,7 @@ function addDraftExercise(exercise) {
     instanceId: uid(),
     exerciseId: exercise.id,
     exerciseName: exercise.name,
-    sets: [{ id: uid(), weight: 0, reps: 0, completed: false, failed: false }]
+    sets: [{ id: uid(), weight: 0, reps: 0, completed: false, failed: false, rpe: null }]
   })
 }
 
@@ -563,7 +623,7 @@ function addDraftSet(instanceId) {
   const ex = draft.value.exercises.find(e => e.instanceId === instanceId)
   if (!ex) return
   const last = ex.sets[ex.sets.length - 1] || { weight: 0, reps: 0 }
-  ex.sets.push({ id: uid(), weight: last.weight, reps: last.reps, completed: false, failed: false })
+  ex.sets.push({ id: uid(), weight: last.weight, reps: last.reps, completed: false, failed: false, rpe: null })
 }
 
 async function saveEdit() {

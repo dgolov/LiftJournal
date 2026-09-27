@@ -43,18 +43,18 @@ function badgeSvg(text) {
 
 export function exportCSV(workouts) {
   const rows = [
-    ['Дата', 'Название', 'Тип', 'Длительность (мин)', 'Тоннаж (кг)', 'Упражнение', 'Подход', 'Вес (кг)', 'Повторения', 'Статус'],
+    ['Дата', 'Название', 'Тип', 'Длительность (мин)', 'Тоннаж (кг)', 'Упражнение', 'Подход', 'Вес (кг)', 'Повторения', 'RPE', 'Статус'],
   ]
 
   for (const w of workouts) {
     const volume = workoutVolume(w)
     if (!w.exercises.length) {
-      rows.push([w.date, w.title, w.type, w.durationMinutes || 0, volume, '', '', '', '', ''])
+      rows.push([w.date, w.title, w.type, w.durationMinutes || 0, volume, '', '', '', '', '', ''])
       continue
     }
     for (const ex of w.exercises) {
       if (!ex.sets.length) {
-        rows.push([w.date, w.title, w.type, w.durationMinutes || 0, volume, ex.exerciseName || '', '', '', '', ''])
+        rows.push([w.date, w.title, w.type, w.durationMinutes || 0, volume, ex.exerciseName || '', '', '', '', '', ''])
         continue
       }
       ex.sets.forEach((set, i) => {
@@ -68,6 +68,7 @@ export function exportCSV(workouts) {
           i + 1,
           set.weight,
           set.reps,
+          set.rpe ?? '',
           set.failed ? 'провал' : 'выполнен',
         ])
       })
@@ -97,6 +98,7 @@ function buildReportHtml(workouts) {
           <td class="center">${i + 1}</td>
           <td class="center">${set.weight} кг</td>
           <td class="center">${set.reps}</td>
+          <td class="center">${set.rpe ?? '—'}</td>
           <td class="center ${set.failed ? 'failed' : 'ok'}">${set.failed ? '✗' : '✓'}</td>
         </tr>`
       ).join('')
@@ -110,7 +112,7 @@ function buildReportHtml(workouts) {
       <table class="workout-table">
         <thead>
           <tr class="workout-header">
-            <td colspan="6">
+            <td colspan="7">
               ${badgeSvg(w.type)}
               <div class="workout-title">${w.title || 'Без названия'}</div>
               <div class="meta">${metaParts.join(' · ')}</div>
@@ -123,6 +125,7 @@ function buildReportHtml(workouts) {
             <th class="center" style="width:52px">Подход</th>
             <th class="center" style="width:64px">Вес</th>
             <th class="center" style="width:52px">Повт.</th>
+            <th class="center" style="width:44px">RPE</th>
             <th class="center" style="width:44px">Статус</th>
           </tr>
         </thead>

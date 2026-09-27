@@ -81,6 +81,7 @@ class ExerciseSet(Base):
     reps: Mapped[int] = mapped_column(Integer, default=0)
     completed: Mapped[bool] = mapped_column(Boolean, default=False)
     failed: Mapped[bool] = mapped_column(Boolean, default=False)
+    rpe: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     order: Mapped[int] = mapped_column(Integer, default=0)
 
     workout_exercise: Mapped["WorkoutExercise"] = relationship(

@@ -85,7 +85,7 @@
           <div v-for="goal in goals" :key="goal.id"
             class="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
             <button
-              :class="['w-7 h-7 rounded-full border-2 flex-shrink-0 transition-colors flex items-center justify-center text-xs font-bold',
+              :class="['w-7 h-7 rounded-full border flex-shrink-0 transition-colors flex items-center justify-center text-xs font-bold',
                 goal.done ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 hover:border-green-400']"
               @click="toggleGoal(goal.id)"
             >{{ goal.done ? '✓' : '' }}</button>
@@ -216,7 +216,7 @@
         <button
           v-for="tab in [{id:'followers',label:'Подписчики'},{id:'following',label:'Подписки'}]"
           :key="tab.id"
-          :class="['flex-1 py-2 text-sm font-medium transition-colors border-b-2 -mb-px',
+          :class="['flex-1 py-2 text-sm font-medium transition-colors border-b -mb-px',
             socialTab === tab.id ? 'border-primary text-primary' : 'border-transparent text-gray-400 hover:text-gray-600']"
           @click="switchSocialTab(tab.id)"
         >{{ tab.label }}</button>

@@ -8,7 +8,7 @@
         <div class="grid grid-cols-2 gap-2">
           <button
             v-for="fmt in formats" :key="fmt.id"
-            :class="['flex items-center gap-2.5 px-4 py-3 rounded-xl border-2 transition-all text-sm font-medium',
+            :class="['flex items-center gap-2.5 px-4 py-3 rounded-xl border transition-all text-sm font-medium',
               format === fmt.id
                 ? 'border-primary bg-primary/5 text-primary'
                 : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600']"

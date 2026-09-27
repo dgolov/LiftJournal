@@ -13,7 +13,7 @@
               @click="setStatus(opt.value)"
             >{{ opt.label }}</button>
           </div>
-          <button class="btn-primary text-sm px-3 py-1.5 flex-shrink-0" @click="openCreate">+ Добавить упражнение</button>
+          <button class="btn-primary text-sm px-3 py-1.5 flex-shrink-0" @click="openCreate">Добавить упражнение</button>
         </div>
       </div>
 

@@ -23,13 +23,13 @@
           <button
             v-for="(set, i) in ex.sets"
             :key="set.id"
-            :class="['w-full flex items-center gap-3 p-2.5 rounded-xl border-2 transition-all text-left',
+            :class="['w-full flex items-center gap-3 p-2.5 rounded-xl border transition-all text-left',
               localCompleted.has(set.id)
                 ? 'border-green-400 bg-green-50 dark:bg-green-900/10'
                 : 'border-gray-100 dark:border-gray-800 hover:border-primary/40']"
             @click="toggleSet(set.id)"
           >
-            <span :class="['w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold flex-shrink-0 transition-colors',
+            <span :class="['w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold flex-shrink-0 transition-colors',
               localCompleted.has(set.id) ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 dark:border-gray-600 text-gray-300 dark:text-gray-500']">
               {{ localCompleted.has(set.id) ? '✓' : i + 1 }}
             </span>

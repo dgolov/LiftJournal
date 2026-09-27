@@ -100,7 +100,7 @@ class WorkoutRepository:
                 order=i,
             )
             we.sets = [
-                ExerciseSet(weight=s.weight, reps=s.reps, completed=s.completed, failed=s.failed, order=j)
+                ExerciseSet(weight=s.weight, reps=s.reps, completed=s.completed, failed=s.failed, rpe=s.rpe, order=j)
                 for j, s in enumerate(ex.sets)
             ]
             result.append(we)

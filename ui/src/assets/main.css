@@ -3,42 +3,51 @@
 @tailwind utilities;
 
 @layer base {
+  html, body {
+    /* Standalone (Add to Home Screen) mode has no browser chrome to absorb
+       the iOS/Android rubber-band bounce — without this, pulling past the
+       top/bottom edge reveals a plain white flash behind the content. */
+    overscroll-behavior-y: none;
+  }
   body {
-    @apply bg-surface text-gray-900 antialiased;
+    @apply bg-surface text-ink antialiased font-sans;
     overflow-x: hidden;
   }
   .dark body {
-    @apply bg-gray-950 text-gray-100;
+    @apply bg-steel-950 text-steel-50;
   }
   *, *::before, *::after {
     min-width: 0;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display font-semibold tracking-tight;
   }
 }
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] active:scale-[0.97];
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary/60 dark:focus-visible:ring-offset-steel-950 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none min-h-[44px] active:scale-[0.98];
   }
   .btn-primary {
-    @apply btn bg-primary text-white hover:bg-primary-dark focus:ring-primary shadow-sm hover:shadow-md;
+    @apply btn bg-primary text-white border-primary shadow-glow hover:bg-primary-dark hover:border-primary-dark;
   }
   .btn-ghost {
-    @apply btn bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-gray-300 dark:text-gray-300 dark:hover:bg-gray-800;
+    @apply btn bg-transparent border-transparent text-steel-700 hover:bg-steel-100 hover:text-ink dark:text-steel-100 dark:hover:bg-steel-900;
   }
   .btn-danger {
-    @apply btn bg-danger text-white hover:bg-red-600 focus:ring-danger shadow-sm hover:shadow-md;
+    @apply btn bg-primary/5 border-primary/30 text-primary hover:bg-primary hover:border-primary hover:text-white;
   }
   .btn-outline {
-    @apply btn border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-300 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800 dark:focus:ring-gray-600;
+    @apply btn bg-card border-steel-100 text-ink shadow-soft hover:border-steel-300 dark:bg-steel-900 dark:border-steel-700 dark:text-steel-100 dark:hover:border-steel-300;
   }
   .input {
-    @apply w-full max-w-full rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm placeholder-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary min-h-[44px] dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-500;
+    @apply w-full max-w-full rounded-xl border border-steel-100 bg-white px-3 py-2.5 text-sm placeholder-steel-300 transition-shadow focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10 min-h-[44px] dark:bg-steel-900 dark:border-steel-700 dark:text-steel-50 dark:placeholder-steel-700;
   }
   .label {
-    @apply block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300;
+    @apply block text-sm font-medium text-steel-700 mb-1 dark:text-steel-300;
   }
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-100 dark:bg-gray-900 dark:border-gray-800;
+    @apply bg-card rounded-2xl border border-steel-100/80 shadow-soft dark:bg-steel-900 dark:border-steel-700/60 dark:shadow-none;
   }
 }
 
@@ -59,7 +68,7 @@ input[type="date"] {
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: #aeb4c0; border-radius: 9999px; }
 
 /* Safe area for bottom nav (iPhone notch / home indicator) */
 .pb-safe-nav {
@@ -67,4 +76,29 @@ input[type="date"] {
 }
 .pb-safe-content {
   padding-bottom: max(5rem, calc(4rem + env(safe-area-inset-bottom)));
+}
+
+/* Safe area for the top bar/sidebar header (status bar / notch) — only
+   matters in standalone mode, where status-bar-style=black-translucent lets
+   the page draw under it. `pt-safe-top` grows the fixed header by the inset
+   so its bg fills the gap; `pt-safe-content` pushes scrollable page content
+   down by the same taller header height. */
+.pt-safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+.pt-safe-content {
+  padding-top: calc(4rem + env(safe-area-inset-top));
+}
+
+/* Hazard stripe — a repeating diagonal red/ink band. One structural device,
+   used sparingly as a section accent (echoes warning tape / plate collars),
+   never as blanket decoration. */
+.hazard-stripe {
+  background: repeating-linear-gradient(
+    135deg,
+    theme(colors.primary.DEFAULT) 0,
+    theme(colors.primary.DEFAULT) 8px,
+    theme(colors.primary.dark) 8px,
+    theme(colors.primary.dark) 16px
+  );
 }

@@ -1,4 +1,5 @@
 import workoutService from '@/services/workoutService.js'
+import { sessionE1RM, sessionLoad, round1 } from '@/utils/strength.js'
 
 export default {
   namespaced: true,
@@ -34,37 +35,85 @@ export default {
 
     // Cross-reference workouts state to compute progress. `range` optionally
     // narrows to { from, to } (inclusive ISO date strings) for period stats.
-    progressForExercise: (state, _getters, rootState) => (exerciseId, range = {}) => {
+    // `source: 'plan'` builds the same series from planned workouts instead —
+    // what the plan asks for, measured against the 1RM known on that date.
+    progressForExercise: (state, _getters, rootState) => (exerciseId, range = {}, { source = 'fact' } = {}) => {
       const exercise = state.library.find(e => e.id === exerciseId)
       const isCardio = exercise?.muscleGroup === 'Кардио'
+      // Relative intensity is measured against the best 1RM known *at that
+      // session*: the profile max recorded on/before it, or the best estimate
+      // from actual sessions up to then — so the baseline is walked over full
+      // history and the period filter is applied only at the end.
+      const declaredMax = exercise && rootState.user?.maxes?.find(m => m.exercise_name === exercise.name)
+      const declaredOn = date => declaredMax && declaredMax.recorded_at.slice(0, 10) <= date ? declaredMax.weight_kg : 0
+      const factSessions = [...rootState.workouts.workouts]
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .map(w => ({ id: w.id, date: w.date, title: w.title, ex: w.exercises.find(e => e.exerciseId === exerciseId) }))
+      const planSessions = (rootState.planned?.plannedWorkouts || [])
+        .filter(p => p.status !== 'skipped')
+        .sort((a, b) => a.scheduledDate.localeCompare(b.scheduledDate))
+        .map(p => ({ id: p.id, date: p.scheduledDate, title: p.title, ex: p.exercises?.find(e => e.exerciseId === exerciseId) }))
+
+      // Best actual e1RM per date, for plan baselines.
+      const actualBest = []
+      let running = 0
+      factSessions.forEach(({ date, ex }) => {
+        if (!ex) return
+        running = Math.max(running, sessionE1RM(ex.sets.filter(s => !s.failed)))
+        actualBest.push({ date, best: running })
+      })
+      const actualBestOn = date => {
+        let best = 0
+        for (const a of actualBest) { if (a.date > date) break; best = a.best }
+        return best
+      }
+
+      const isPlan = source === 'plan'
       const sessions = []
-      const workouts = rootState.workouts.workouts
-      workouts.forEach(workout => {
-        if (range.from && workout.date < range.from) return
-        if (range.to && workout.date > range.to) return
-        const ex = workout.exercises.find(e => e.exerciseId === exerciseId)
-        if (!ex || !ex.sets.length) return
+      running = 0
+      ;(isPlan ? planSessions : factSessions).forEach(({ id, date, title, ex }) => {
+        if (!ex || !ex.sets?.length) return
         const sets = ex.sets.filter(s => !s.failed)
         if (!sets.length) return
         const setsCount = sets.length
         const totalSetsCount = ex.sets.length
+        const base = {
+          date, setsCount, totalSetsCount, workoutId: id, workoutTitle: title,
+          link: isPlan ? `/planning/${id}` : `/workouts/${id}`,
+        }
         if (isCardio) {
           const totalMinutes = sets.reduce((sum, s) => sum + (s.reps || 0), 0)
-          sessions.push({ date: workout.date, totalMinutes, setsCount, totalSetsCount, workoutId: workout.id, workoutTitle: workout.title })
-        } else {
-          const bestSet = sets.reduce((a, b) => b.weight > a.weight ? b : a, sets[0])
-          const maxWeight = bestSet.weight
-          const maxWeightReps = bestSet.reps
-          const totalVolume = sets.reduce((sum, s) => sum + s.weight * s.reps, 0)
-          const maxReps = Math.max(...sets.map(s => s.reps))
-          // Epley estimated 1RM: weight × (1 + reps / 30); for 1 rep = weight itself
-          const best1RM = Math.max(...sets.map(s =>
-            s.reps === 1 ? s.weight : Math.round(s.weight * (1 + s.reps / 30))
-          ))
-          sessions.push({ date: workout.date, maxWeight, maxWeightReps, totalVolume, maxReps, best1RM, setsCount, totalSetsCount, workoutId: workout.id, workoutTitle: workout.title })
+          sessions.push({ ...base, totalMinutes })
+          return
         }
+        const bestSet = sets.reduce((a, b) => b.weight > a.weight ? b : a, sets[0])
+        const e1RM = sessionE1RM(sets)
+        let baseline1RM
+        if (isPlan) {
+          // Only fall back to the plan's own implied 1RM when nothing real is
+          // known yet — otherwise a plan above the current max should read >100%.
+          baseline1RM = Math.max(actualBestOn(date), declaredOn(date)) || e1RM
+        } else {
+          running = Math.max(running, e1RM)
+          baseline1RM = Math.max(running, declaredOn(date))
+        }
+        const { lifts, tonnage, workingTonnage, avgWeight } = sessionLoad(sets, baseline1RM)
+        sessions.push({
+          ...base,
+          maxWeight: bestSet.weight,
+          maxWeightReps: bestSet.reps,
+          maxReps: Math.max(...sets.map(s => s.reps)),
+          totalVolume: tonnage,
+          workingTonnage,
+          lifts,
+          best1RM: Math.round(e1RM),
+          baseline1RM: Math.round(baseline1RM),
+          avgWeight: round1(avgWeight),
+          relIntensity: baseline1RM ? Math.round(avgWeight / baseline1RM * 100) : null,
+          topSetIntensity: baseline1RM ? Math.round(bestSet.weight / baseline1RM * 100) : null,
+        })
       })
-      return sessions.sort((a, b) => a.date.localeCompare(b.date))
+      return sessions.filter(s => (!range.from || s.date >= range.from) && (!range.to || s.date <= range.to))
     },
 
     personalRecord: (state, getters) => (exerciseId, range = {}) => {
