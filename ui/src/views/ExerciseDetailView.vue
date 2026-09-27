@@ -16,8 +16,16 @@
       </div>
     </div>
 
-    <!-- Period selector -->
+    <!-- Source + period selector -->
     <div class="flex items-center gap-2 flex-wrap mb-6">
+      <div class="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5">
+        <button
+          v-for="opt in sourceOptions" :key="opt.value"
+          :class="['px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
+            source === opt.value ? 'bg-white dark:bg-gray-700 shadow-sm text-primary' : 'text-gray-500']"
+          @click="source = opt.value"
+        >{{ opt.label }}</button>
+      </div>
       <div class="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5">
         <button
           v-for="opt in periodOptions" :key="opt.value"
@@ -34,7 +42,7 @@
     </div>
 
     <!-- PR Card (strength) -->
-    <div v-if="pr && !isCardio" class="card p-4 mb-6 border-l-4 border-yellow-400">
+    <div v-if="pr && !isCardio && !isPlan" class="card p-4 mb-6 border-l-4 border-yellow-400">
       <div class="flex items-center gap-2 mb-3">
         <Trophy class="w-6 h-6 text-yellow-500" />
         <p class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Личные рекорды</p>
@@ -60,7 +68,7 @@
     </div>
 
     <!-- PR Card (cardio) -->
-    <div v-if="pr && isCardio" class="card p-4 mb-6 border-l-4 border-yellow-400">
+    <div v-if="pr && isCardio && !isPlan" class="card p-4 mb-6 border-l-4 border-yellow-400">
       <div class="flex items-center gap-2 mb-3">
         <Trophy class="w-6 h-6 text-yellow-500" />
         <p class="text-xs text-gray-500 uppercase tracking-wide font-semibold">Личный рекорд</p>
@@ -74,14 +82,14 @@
     </div>
 
     <!-- No data in selected period, but exercise has history overall -->
-    <div v-if="!pr && period !== 'all' && hasAnyHistory" class="card p-4 mb-6 text-center text-sm text-gray-400">
+    <div v-if="!isPlan && !pr && period !== 'all' && hasAnyHistory" class="card p-4 mb-6 text-center text-sm text-gray-400">
       Нет данных за выбранный период ({{ periodLabel }})
     </div>
 
     <!-- Chart -->
     <div class="card p-4 mb-6">
       <div class="flex items-center gap-2 mb-4">
-        <h3 class="font-semibold text-gray-900 dark:text-white">Прогресс</h3>
+        <h3 class="font-semibold text-gray-900 dark:text-white">{{ isPlan ? 'План' : 'Прогресс' }}</h3>
         <span v-if="period !== 'all'" class="text-xs text-gray-400">· {{ periodLabel }}</span>
       </div>
       <ProgressChart :data="progress" :is-cardio="isCardio" />
@@ -91,7 +99,7 @@
     <div class="card p-4">
       <!-- Header + controls -->
       <div class="flex items-center justify-between mb-4 gap-3 flex-wrap">
-        <h3 class="font-semibold text-gray-900 dark:text-white">История сессий</h3>
+        <h3 class="font-semibold text-gray-900 dark:text-white">{{ isPlan ? 'Запланированные сессии' : 'История сессий' }}</h3>
         <div class="flex items-center gap-2 flex-wrap">
           <!-- Page size -->
           <select v-model.number="pageSize" class="input py-1.5 text-xs pr-7 w-auto">
@@ -156,7 +164,7 @@
               <tr
                 v-for="session in paginatedSessions" :key="session.date + session.workoutId"
                 class="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-                @click="$router.push(`/workouts/${session.workoutId}`)"
+                @click="$router.push(session.link)"
               >
                 <td class="pl-4 pr-2 py-2.5 text-gray-500 text-xs whitespace-nowrap">{{ formatDate(session.date) }}</td>
                 <td class="px-2 py-2.5 text-gray-600 dark:text-gray-400 text-xs truncate max-w-[140px] hidden sm:table-cell">{{ session.workoutTitle }}</td>
@@ -201,7 +209,7 @@
               <tr
                 v-for="session in paginatedSessions" :key="session.date + session.workoutId"
                 class="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-                @click="$router.push(`/workouts/${session.workoutId}`)"
+                @click="$router.push(session.link)"
               >
                 <td class="pl-4 pr-2 py-2.5 text-gray-500 text-xs whitespace-nowrap">{{ formatDate(session.date) }}</td>
                 <td class="px-2 py-2.5 text-gray-600 dark:text-gray-400 text-xs truncate max-w-[140px] hidden sm:table-cell">{{ session.workoutTitle }}</td>
@@ -262,7 +270,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch, h } from 'vue'
+import { computed, ref, watch, h, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useStore } from 'vuex'
 import { ChevronLeft, ChevronRight, Trophy, BarChart3, Filter, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-vue-next'
@@ -285,6 +293,17 @@ const periodOptions = [
   { value: 'all', label: 'Всё время' },
   { value: 'custom', label: 'Свой период' },
 ]
+const sourceOptions = [
+  { value: 'fact', label: 'Выполненные' },
+  { value: 'plan', label: 'Запланированные' },
+]
+const source = ref('fact')
+const isPlan = computed(() => source.value === 'plan')
+
+onMounted(() => {
+  if (!store.state.planned.plannedWorkouts.length) store.dispatch('planned/fetchPlannedWorkouts')
+})
+
 const period = ref('all')
 const customFrom = ref('')
 const customTo = ref('')
@@ -295,11 +314,12 @@ function isoDaysAgo(days) {
   return d.toISOString().slice(0, 10)
 }
 
+// Presets look back over done workouts and ahead over the plan.
+const PRESET_DAYS = { month: 30, quarter: 91, half: 182, year: 365 }
+
 const periodRange = computed(() => {
-  if (period.value === 'month') return { from: isoDaysAgo(30) }
-  if (period.value === 'quarter') return { from: isoDaysAgo(91) }
-  if (period.value === 'half') return { from: isoDaysAgo(182) }
-  if (period.value === 'year') return { from: isoDaysAgo(365) }
+  const days = PRESET_DAYS[period.value]
+  if (days) return isPlan.value ? { from: isoDaysAgo(0), to: isoDaysAgo(-days) } : { from: isoDaysAgo(days) }
   if (period.value === 'custom') {
     const range = {}
     if (customFrom.value) range.from = customFrom.value
@@ -310,10 +330,10 @@ const periodRange = computed(() => {
 })
 
 const periodLabel = computed(() => {
-  if (period.value === 'month') return 'месяц'
-  if (period.value === 'quarter') return '3 месяца'
-  if (period.value === 'half') return '6 месяцев'
-  if (period.value === 'year') return 'год'
+  const presetLabels = isPlan.value
+    ? { month: 'ближайший месяц', quarter: 'ближайшие 3 месяца', half: 'ближайшие 6 месяцев', year: 'ближайший год' }
+    : { month: 'месяц', quarter: '3 месяца', half: '6 месяцев', year: 'год' }
+  if (presetLabels[period.value]) return presetLabels[period.value]
   if (period.value === 'custom') {
     if (customFrom.value && customTo.value) return `${formatDate(customFrom.value)} – ${formatDate(customTo.value)}`
     if (customFrom.value) return `с ${formatDate(customFrom.value)}`
@@ -323,9 +343,9 @@ const periodLabel = computed(() => {
   return 'всё время'
 })
 
-const progress = computed(() => store.getters['exercises/progressForExercise'](route.params.id, periodRange.value))
+const progress = computed(() => store.getters['exercises/progressForExercise'](route.params.id, periodRange.value, { source: source.value }))
 const pr = computed(() => store.getters['exercises/personalRecord'](route.params.id, periodRange.value))
-const hasAnyHistory = computed(() => store.getters['exercises/progressForExercise'](route.params.id).length > 0)
+const hasAnyHistory = computed(() => store.getters['exercises/progressForExercise'](route.params.id, {}, { source: source.value }).length > 0)
 
 // ── Sort-able column header component ─────────────────────────────────────────
 const SortTh = {
@@ -382,7 +402,7 @@ function resetFilters() {
 }
 
 // Reset page when filters/sort/period change
-watch([sortKey, sortDir, pageSize, filterVolumeMin, filterVolumeMax, period, customFrom, customTo], () => { page.value = 1 })
+watch([sortKey, sortDir, pageSize, filterVolumeMin, filterVolumeMax, period, customFrom, customTo, source], () => { page.value = 1 })
 
 const filteredSessions = computed(() => {
   let list = [...progress.value]
@@ -416,6 +436,7 @@ const paginatedSessions = computed(() => {
 const emptyStateDescription = computed(() => {
   if (hasFilters.value) return 'Попробуйте изменить фильтры'
   if (period.value !== 'all' && hasAnyHistory.value) return `Нет сессий за выбранный период (${periodLabel.value})`
+  if (isPlan.value) return 'Запланируйте тренировку с этим упражнением, чтобы видеть план нагрузки'
   return 'Добавьте это упражнение в тренировку, чтобы отслеживать прогресс'
 })
 
@@ -430,7 +451,7 @@ const avgVolume = computed(() => {
 const periodLoad = computed(() => {
   const list = filteredSessions.value
   const lifts = list.reduce((s, x) => s + (x.lifts || 0), 0)
-  const tonnage = list.reduce((s, x) => s + (x.totalVolume || 0), 0)
+  const tonnage = list.reduce((s, x) => s + (x.workingTonnage || 0), 0)
   const withBase = list.filter(x => x.baseline1RM && x.lifts)
   const relLifts = withBase.reduce((s, x) => s + x.lifts, 0)
   const relSum = withBase.reduce((s, x) => s + x.avgWeight / x.baseline1RM * 100 * x.lifts, 0)

@@ -1,7 +1,8 @@
 // Strength-training load metrics for a single exercise session.
 //
-//   Volume              — КПШ (total lifts) and tonnage (Σ weight × reps)
-//   Absolute intensity  — average weight per lift: tonnage / КПШ, kg
+//   Volume              — tonnage (Σ weight × reps, all sets) and КПШ
+//                         (lifts in working sets, ≥ 50% of 1RM)
+//   Absolute intensity  — average weight per working lift, kg
 //   Relative intensity  — absolute intensity as % of the athlete's 1RM
 //   Estimated 1RM       — Epley, weight × (1 + reps / 30), where reps are
 //                         counted to failure: reps + reps-in-reserve (10 − RPE)
@@ -27,13 +28,24 @@ export function sessionE1RM(sets) {
   return Math.max(...pool.map(s => estimate1RM(s.weight, s.reps, s.rpe)))
 }
 
-export function sessionLoad(sets) {
-  const lifts = sets.reduce((sum, s) => sum + (s.reps || 0), 0)
-  const tonnage = sets.reduce((sum, s) => sum + (s.weight || 0) * (s.reps || 0), 0)
+// Warm-up sets below this share of 1RM count toward tonnage but not toward
+// КПШ or intensity (the usual Medvedev/Sheiko convention), otherwise a few
+// light warm-up reps drag the average bar weight far below the working sets.
+export const WORKING_SET_THRESHOLD = 0.5
+
+// `baseline1RM` decides which sets are working sets; without one (no loaded
+// sets yet, bodyweight work) every set counts.
+export function sessionLoad(sets, baseline1RM = 0) {
+  const tonnageOf = list => list.reduce((sum, s) => sum + (s.weight || 0) * (s.reps || 0), 0)
+  const minWeight = baseline1RM * WORKING_SET_THRESHOLD
+  const working = baseline1RM ? sets.filter(s => (s.weight || 0) >= minWeight) : sets
+  const lifts = working.reduce((sum, s) => sum + (s.reps || 0), 0)
+  const workingTonnage = tonnageOf(working)
   return {
+    tonnage: tonnageOf(sets),
+    workingTonnage,
     lifts,
-    tonnage,
-    avgWeight: lifts ? tonnage / lifts : 0,
+    avgWeight: lifts ? workingTonnage / lifts : 0,
   }
 }
 

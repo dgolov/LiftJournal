@@ -195,8 +195,8 @@
               <template v-else>
                 <template v-for="st in [strengthSummary(ex)]" :key="'st'">
                   <span>Тоннаж: {{ st.tonnage }} кг</span>
-                  <span v-if="st.lifts">КПШ: {{ st.lifts }}</span>
-                  <span v-if="st.avgWeight" title="Абсолютная интенсивность — средний вес подъёма">Абс. инт.: {{ st.avgWeight }} кг</span>
+                  <span v-if="st.lifts" title="Подъёмы в рабочих подходах (от 50% 1ПМ)">КПШ: {{ st.lifts }}</span>
+                  <span v-if="st.avgWeight" title="Абсолютная интенсивность — средний вес подъёма в рабочих подходах (от 50% 1ПМ)">Абс. инт.: {{ st.avgWeight }} кг</span>
                   <span v-if="st.relIntensity != null" :title="`Относительная интенсивность — от 1ПМ ${st.baseline1RM} кг`">Отн. инт.: {{ st.relIntensity }}%</span>
                   <span v-if="st.e1RM">Расч. 1ПМ: {{ st.e1RM }} кг</span>
                 </template>
@@ -235,8 +235,8 @@
           <template v-else>
             <template v-for="st in [strengthSummary(ex)]" :key="'st'">
               <span>Тоннаж: {{ st.tonnage }} кг</span>
-              <span v-if="st.lifts">КПШ: {{ st.lifts }}</span>
-              <span v-if="st.avgWeight" title="Абсолютная интенсивность — средний вес подъёма">Абс. инт.: {{ st.avgWeight }} кг</span>
+              <span v-if="st.lifts" title="Подъёмы в рабочих подходах (от 50% 1ПМ)">КПШ: {{ st.lifts }}</span>
+              <span v-if="st.avgWeight" title="Абсолютная интенсивность — средний вес подъёма в рабочих подходах (от 50% 1ПМ)">Абс. инт.: {{ st.avgWeight }} кг</span>
               <span v-if="st.relIntensity != null" :title="`Относительная интенсивность — от 1ПМ ${st.baseline1RM} кг`">Отн. инт.: {{ st.relIntensity }}%</span>
               <span v-if="st.e1RM">Расч. 1ПМ: {{ st.e1RM }} кг</span>
             </template>
@@ -457,11 +457,11 @@ const exerciseLibrary = computed(() => store.state.exercises.library)
 // up to this date), topped up by the live sets so it stays sane while editing.
 function strengthSummary(ex) {
   const sets = ex.sets.filter(s => !s.failed)
-  const { lifts, tonnage, avgWeight } = sessionLoad(sets)
   const e1RM = sessionE1RM(sets)
   const session = store.getters['exercises/progressForExercise'](ex.exerciseId)
     .find(s => s.workoutId === workout.value?.id)
   const baseline1RM = Math.max(session?.baseline1RM || 0, e1RM)
+  const { lifts, tonnage, avgWeight } = sessionLoad(sets, baseline1RM)
   return {
     tonnage,
     lifts,
