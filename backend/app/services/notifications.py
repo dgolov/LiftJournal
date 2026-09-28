@@ -14,13 +14,16 @@ class NotificationService:
     async def _create_and_push(
         self, user_id: int, type: str, actor_id: int,
         workout_id: str | None = None, comment_text: str | None = None,
+        coach_link_id: str | None = None, coach_link_status: str | None = None,
+        planned_workout_id: str | None = None, title: str | None = None,
     ) -> None:
         n = await self.repo.create(
             user_id=user_id, type=type, actor_id=actor_id,
             workout_id=workout_id, comment_text=comment_text,
+            coach_link_id=coach_link_id, planned_workout_id=planned_workout_id,
         )
         actor = await self.repo.get_actor(actor_id)
-        workout_title = await self.repo.get_workout_title(workout_id) if workout_id else None
+        workout_title = title or (await self.repo.get_workout_title(workout_id) if workout_id else None)
         await manager.send(user_id, {
             "event": "notification",
             "data": {
@@ -31,6 +34,9 @@ class NotificationService:
                 "workoutId": workout_id,
                 "workoutTitle": workout_title,
                 "commentText": n.comment_text,
+                "coachLinkId": coach_link_id,
+                "coachLinkStatus": coach_link_status,
+                "plannedWorkoutId": planned_workout_id,
                 "isRead": False,
                 "createdAt": n.created_at.isoformat(),
             },
@@ -58,6 +64,42 @@ class NotificationService:
             comment_text=comment_text[:100] if comment_text else None,
         )
 
+    # ── Coaching ──────────────────────────────────────────────────────────────
+
+    async def notify_coach_invite(self, coach_id: int, athlete_id: int, link_id: str, message: str) -> None:
+        await self._create_and_push(
+            user_id=athlete_id, type="coach_invite", actor_id=coach_id,
+            coach_link_id=link_id, coach_link_status="pending",
+            comment_text=message[:200] if message else None,
+        )
+
+    async def notify_coach_request(self, athlete_id: int, coach_id: int, link_id: str, message: str) -> None:
+        await self._create_and_push(
+            user_id=coach_id, type="coach_request", actor_id=athlete_id,
+            coach_link_id=link_id, coach_link_status="pending",
+            comment_text=message[:200] if message else None,
+        )
+
+    async def notify_coach_accepted(self, actor_id: int, initiator_id: int, link_id: str) -> None:
+        await self._create_and_push(
+            user_id=initiator_id, type="coach_accepted", actor_id=actor_id,
+            coach_link_id=link_id, coach_link_status="active",
+        )
+
+    async def notify_plan_assigned(self, coach_id: int, athlete_id: int, planned_workout_id: str, title: str) -> None:
+        await self._create_and_push(
+            user_id=athlete_id, type="plan_assigned", actor_id=coach_id,
+            planned_workout_id=planned_workout_id, title=title,
+        )
+
+    async def notify_athlete_completed(
+        self, athlete_id: int, coach_id: int, planned_workout_id: str, workout_id: str | None,
+    ) -> None:
+        await self._create_and_push(
+            user_id=coach_id, type="athlete_completed", actor_id=athlete_id,
+            planned_workout_id=planned_workout_id, workout_id=workout_id,
+        )
+
     # ── Public API ────────────────────────────────────────────────────────────
 
     async def get_unread_count(self, user_id: int) -> UnreadCountOut:
@@ -74,12 +116,15 @@ class NotificationService:
                 actorId=u.id,
                 actorName=u.name,
                 workoutId=n.workout_id,
-                workoutTitle=w.title if w else None,
+                workoutTitle=w.title if w else (pw.title if pw else None),
                 commentText=n.comment_text,
+                coachLinkId=n.coach_link_id,
+                coachLinkStatus=link.status if link else None,
+                plannedWorkoutId=n.planned_workout_id,
                 isRead=n.is_read,
                 createdAt=n.created_at,
             )
-            for n, u, w in rows
+            for n, u, w, link, pw in rows
         ]
         has_more = (page * per_page) < total
         return NotificationsPageOut(items=items, hasMore=has_more, total=total)
