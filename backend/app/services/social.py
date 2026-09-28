@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import date
 
 from app.api.schemas import (
-    UserPublicOut, UserSearchOut, FollowStatusOut,
+    CoachLinkBrief, PublicPersonOut, UserPublicOut, WeightEntryOut, UserSearchOut, FollowStatusOut,
     FeedWorkoutOut, WorkoutExerciseOut, SetOut,
     LikeStatusOut, WorkoutCommentIn, WorkoutCommentOut,
     ActivityDayOut, PublicMaxOut, PublicGoalOut, PublicAchievementOut,
@@ -50,6 +50,45 @@ class SocialService:
             followingCount=await self.repo.following_count(user_id),
             workoutsCount=await self.repo.workouts_count(user_id),
             isFollowing=await self.repo.is_following(current_user_id, user_id),
+            followsMe=await self.repo.is_following(user_id, current_user_id),
+            isCoach=bool(user.is_coach),
+            coachBio=user.coach_bio or "",
+            coachAccepting=bool(user.coach_accepting),
+            coachLink=await self._coach_link_brief(current_user_id, user_id),
+            **await self._coaching_extras(user, current_user_id),
+        )
+
+    async def _coaching_extras(self, user, viewer_id: int) -> dict:
+        from app.repositories.coach import CoachRepository
+        coach_repo = CoachRepository(self.repo.db)
+        coaches = [
+            PublicPersonOut(id=coach.id, name=coach.name, avatarUrl=coach.avatar_url)
+            for _link, coach, _athlete in await coach_repo.list_links(user.id, "athlete", ["active"])
+        ]
+        extras = {"coaches": coaches}
+        if user.is_coach:
+            extras["athletesCount"] = await coach_repo.count_active_athletes(user.id)
+        can_see_weight = viewer_id == user.id
+        if not can_see_weight:
+            link = await coach_repo.get_active_link(viewer_id, user.id)
+            can_see_weight = bool(link and link.can_see_private)
+        if can_see_weight:
+            log = await coach_repo.get_weight_log(user.id)
+            if log:
+                extras["currentWeight"] = WeightEntryOut(date=log[-1].date, kg=log[-1].kg)
+        return extras
+
+    async def _coach_link_brief(self, viewer_id: int, profile_id: int) -> CoachLinkBrief | None:
+        if viewer_id == profile_id:
+            return None
+        from app.repositories.coach import CoachRepository
+        link = await CoachRepository(self.repo.db).get_open_link_between(viewer_id, profile_id)
+        if not link:
+            return None
+        my_role = "coach" if link.coach_id == viewer_id else "athlete"
+        return CoachLinkBrief(
+            id=link.id, status=link.status, myRole=my_role,
+            initiatedByMe=(link.initiated_by == my_role),
         )
 
     async def get_user_activity(self, user_id: int) -> list[ActivityDayOut]:
@@ -144,6 +183,14 @@ class SocialService:
             raise HTTPException(status_code=404, detail="Тренировка не найдена")
         return w
 
+    async def _can_interact(self, user_id: int, owner_id: int) -> bool:
+        """Who may like and comment on a workout: its owner, their followers,
+        and their coach while the coaching link is active."""
+        if user_id == owner_id or await self.repo.is_following(user_id, owner_id):
+            return True
+        from app.repositories.coach import CoachRepository
+        return await CoachRepository(self.repo.db).get_active_link(user_id, owner_id) is not None
+
     async def get_followers(self, user_id: int) -> list[UserSearchOut]:
         users = await self.repo.get_followers(user_id)
         return [UserSearchOut(
@@ -229,7 +276,7 @@ class SocialService:
 
     async def toggle_like(self, current_user_id: int, workout_id: str) -> LikeStatusOut:
         w = await self._get_workout_model(workout_id)
-        if w.user_id != current_user_id and not await self.repo.is_following(current_user_id, w.user_id):
+        if not await self._can_interact(current_user_id, w.user_id):
             raise HTTPException(status_code=403, detail="Нет доступа")
         is_liked = await self.repo.toggle_like(current_user_id, workout_id)
         likes_count = await self.repo.get_likes_count(workout_id)
@@ -240,7 +287,7 @@ class SocialService:
 
     async def get_comments(self, workout_id: str, current_user_id: int) -> list[WorkoutCommentOut]:
         w = await self._get_workout_model(workout_id)
-        if w.user_id != current_user_id and not await self.repo.is_following(current_user_id, w.user_id):
+        if not await self._can_interact(current_user_id, w.user_id):
             raise HTTPException(status_code=403, detail="Нет доступа")
         rows = await self.repo.get_comments(workout_id)
         return [
@@ -257,7 +304,7 @@ class SocialService:
         if not text:
             raise HTTPException(status_code=422, detail="Комментарий не может быть пустым")
         w = await self._get_workout_model(workout_id)
-        if w.user_id != current_user_id and not await self.repo.is_following(current_user_id, w.user_id):
+        if not await self._can_interact(current_user_id, w.user_id):
             raise HTTPException(status_code=403, detail="Нет доступа")
         user = await self.repo.get_user_by_id(current_user_id)
         comment = await self.repo.add_comment(current_user_id, workout_id, text)
