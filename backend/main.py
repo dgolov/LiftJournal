@@ -15,7 +15,8 @@ from app.api.routers import (
     social, 
     notifications,
     templates,
-    admin
+    admin,
+    coach,
 )
 from app.config import settings
 from app.core.database import async_session
@@ -44,6 +45,7 @@ app.include_router(social.router, prefix="/api/social", tags=["social"])
 app.include_router(notifications.router, prefix="/api/notifications", tags=["notifications"])
 app.include_router(templates.router, prefix="/api/templates", tags=["templates"])
 app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
+app.include_router(coach.router, prefix="/api/coach", tags=["coach"])
 
 
 @app.websocket("/api/ws")
