@@ -51,6 +51,7 @@ class CycleRepository:
         author_name: str,
         is_public: bool,
         workouts_data,
+        main_exercises: list | None = None,
     ) -> TrainingCycle:
         cycle = TrainingCycle(
             created_by=created_by,
@@ -60,6 +61,7 @@ class CycleRepository:
             is_public=is_public,
             # A brand-new public cycle always starts pending moderation.
             is_approved=not is_public,
+            main_exercises=main_exercises or [],
             created_at=datetime.utcnow(),
         )
         cycle.workouts = self._build_workouts(workouts_data)
@@ -76,6 +78,7 @@ class CycleRepository:
         author_name: str | None = None,
         is_public: bool | None = None,
         workouts_data=None,
+        main_exercises: list | None = None,
     ) -> TrainingCycle:
         if title is not None:
             cycle.title = title
@@ -92,6 +95,8 @@ class CycleRepository:
             cycle.is_public = is_public
         if workouts_data is not None:
             cycle.workouts = self._build_workouts(workouts_data)
+        if main_exercises is not None:
+            cycle.main_exercises = main_exercises
         await self.db.commit()
         return await self.get_by_id(cycle.id)  # type: ignore[return-value]
 

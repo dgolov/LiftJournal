@@ -3,10 +3,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas import (
     CycleCreate, CycleUpdate, CycleListOut, CycleDetailOut,
-    CycleWorkoutOut, CycleExerciseOut, CycleSetOut,
+    CycleWorkoutOut, CycleExerciseOut, CycleSetOut, CycleMainExercise,
 )
 from app.repositories.cycle import CycleRepository
 from app.domain.models import TrainingCycle
+
+
+def main_exercises_of(c: TrainingCycle) -> list[CycleMainExercise]:
+    return [CycleMainExercise(**m) for m in (c.main_exercises or [])]
+
+
+def can_see_cycle(c: TrainingCycle, user_id: int) -> bool:
+    return (c.is_public and c.is_approved) or c.created_by == user_id
 
 
 class CycleService:
@@ -23,6 +31,7 @@ class CycleService:
             is_public=c.is_public,
             is_approved=c.is_approved,
             created_at=c.created_at,
+            main_exercises=main_exercises_of(c),
             workouts=[
                 CycleWorkoutOut(
                     id=w.id,
@@ -59,6 +68,7 @@ class CycleService:
                 is_approved=c.is_approved,
                 created_at=c.created_at,
                 workout_count=counts.get(c.id, 0),
+                main_exercises=main_exercises_of(c),
             )
             for c in cycles
         ]
@@ -67,7 +77,7 @@ class CycleService:
         c = await self.repo.get_by_id(cycle_id)
         if not c:
             raise HTTPException(status_code=404, detail="Цикл не найден")
-        if not (c.is_public and c.is_approved) and c.created_by != user_id:
+        if not can_see_cycle(c, user_id):
             raise HTTPException(status_code=403, detail="Нет доступа")
         return self._to_detail(c)
 
@@ -79,6 +89,7 @@ class CycleService:
             author_name=data.author_name,
             is_public=data.is_public,
             workouts_data=data.workouts,
+            main_exercises=[m.model_dump() for m in data.main_exercises],
         )
         return self._to_detail(c)
 
@@ -95,6 +106,7 @@ class CycleService:
             author_name=data.author_name,
             is_public=data.is_public,
             workouts_data=data.workouts,
+            main_exercises=None if data.main_exercises is None else [m.model_dump() for m in data.main_exercises],
         )
         return self._to_detail(c)
 
