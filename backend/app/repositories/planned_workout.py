@@ -12,7 +12,11 @@ class PlannedWorkoutRepository:
         self.db = db
 
     def _eager(self):
-        return selectinload(PlannedWorkout.exercises).selectinload(PlannedExercise.sets)
+        return (
+            selectinload(PlannedWorkout.exercises).selectinload(PlannedExercise.sets),
+            selectinload(PlannedWorkout.creator),
+            selectinload(PlannedWorkout.cycle),
+        )
 
     async def expire_overdue(self, user_id: int) -> None:
         """A 'planned' entry whose date has passed without being completed
@@ -34,21 +38,39 @@ class PlannedWorkoutRepository:
         await self.expire_overdue(user_id)
         result = await self.db.execute(
             select(PlannedWorkout)
-            .options(self._eager())
+            .options(*self._eager())
             .where(PlannedWorkout.user_id == user_id)
             .order_by(PlannedWorkout.scheduled_date.asc())
         )
         return list(result.scalars().all())
 
+    async def get_by_user_range(
+        self, user_id: int, *, date_from: date | None = None, date_to: date | None = None,
+    ) -> list[PlannedWorkout]:
+        await self.expire_overdue(user_id)
+        query = select(PlannedWorkout).options(*self._eager()).where(PlannedWorkout.user_id == user_id)
+        if date_from is not None:
+            query = query.where(PlannedWorkout.scheduled_date >= date_from)
+        if date_to is not None:
+            query = query.where(PlannedWorkout.scheduled_date <= date_to)
+        result = await self.db.execute(query.order_by(PlannedWorkout.scheduled_date.asc()))
+        return list(result.scalars().all())
+
     async def get_by_id(self, plan_id: str) -> PlannedWorkout | None:
         result = await self.db.execute(
-            select(PlannedWorkout).options(self._eager()).where(PlannedWorkout.id == plan_id)
+            select(PlannedWorkout).options(*self._eager()).where(PlannedWorkout.id == plan_id)
         )
         return result.scalar_one_or_none()
 
-    async def create(self, *, user_id: int, title: str, type: str, scheduled_date, notes: str, exercises_data: list) -> PlannedWorkout:
+    async def create(
+        self, *, user_id: int, title: str, type: str, scheduled_date, notes: str, exercises_data: list,
+        created_by: int | None = None, cycle_id: str | None = None, cycle_schedule_id: str | None = None,
+    ) -> PlannedWorkout:
         plan = PlannedWorkout(
             user_id=user_id,
+            created_by=created_by if created_by is not None else user_id,
+            cycle_id=cycle_id,
+            cycle_schedule_id=cycle_schedule_id if cycle_id else None,
             title=title,
             type=type,
             scheduled_date=scheduled_date,
