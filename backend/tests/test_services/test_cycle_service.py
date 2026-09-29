@@ -160,6 +160,7 @@ async def test_create_cycle(mock_db):
         author_name="",
         is_public=True,
         workouts_data=[],
+        main_exercises=[],
     )
 
 
