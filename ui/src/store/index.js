@@ -10,9 +10,10 @@ import achievements from './modules/achievements.js'
 import social from './modules/social.js'
 import notifications from './modules/notifications.js'
 import templates from './modules/templates.js'
+import coach from './modules/coach.js'
 
 const store = createStore({
-  modules: { workouts, exercises, user, ui, auth, cycles, planned, achievements, social, notifications, templates }
+  modules: { workouts, exercises, user, ui, auth, cycles, planned, achievements, social, notifications, templates, coach }
 })
 
 // Sync activeWorkout draft to localStorage whenever exercises/sets change during an active session
