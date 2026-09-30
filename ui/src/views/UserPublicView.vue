@@ -38,7 +38,26 @@
             <span class="whitespace-nowrap"><strong class="text-gray-900 dark:text-white">{{ profile.workoutsCount }}</strong> тренировок</span>
             <span class="whitespace-nowrap"><strong class="text-gray-900 dark:text-white">{{ profile.followersCount }}</strong> подписчиков</span>
             <span class="whitespace-nowrap"><strong class="text-gray-900 dark:text-white">{{ profile.followingCount }}</strong> подписок</span>
+            <span v-if="profile.athletesCount != null" class="whitespace-nowrap"><strong class="text-gray-900 dark:text-white">{{ profile.athletesCount }}</strong> {{ athletesWord }}</span>
           </div>
+          <div v-if="profile.coaches?.length || profile.currentWeight" class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-steel-700 dark:text-steel-300">
+            <span v-if="profile.coaches?.length">
+              {{ profile.coaches.length > 1 ? 'Тренеры' : 'Тренер' }}:
+              <template v-for="(c, i) in profile.coaches" :key="c.id">
+                <RouterLink :to="`/users/${c.id}`" class="font-medium text-ink dark:text-white hover:text-primary">{{ c.name }}</RouterLink><template v-if="i < profile.coaches.length - 1">, </template>
+              </template>
+            </span>
+            <span
+              v-if="profile.currentWeight"
+              class="inline-flex items-center gap-1"
+              :title="isSelf ? '' : 'Видно только вам как тренеру'"
+            >
+              <Lock v-if="!isSelf" class="w-3.5 h-3.5" />
+              Вес <strong class="text-ink dark:text-white">{{ profile.currentWeight.kg }} кг</strong>
+              <span class="text-xs">на {{ formatShortDate(profile.currentWeight.date) }}</span>
+            </span>
+          </div>
+          <PublicProfileCoachBar v-if="!isSelf" :profile="profile" @changed="reloadProfile" />
         </div>
       </div>
 
@@ -142,158 +161,130 @@
         </div>
       </div>
 
-      <!-- TAB: Workouts -->
+      <!-- TAB: Workouts — same look as the history screen -->
       <div v-else-if="activeTab === 'workouts'">
-        <!-- View toggle -->
-        <div class="flex items-center justify-end mb-4">
-          <div class="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 gap-0.5">
+        <div class="flex items-center justify-between gap-3 mb-5 flex-wrap">
+          <div v-if="!selectedDate" class="inline-flex rounded-xl bg-steel-100/70 dark:bg-steel-950 p-0.5">
             <button
-              :class="['p-2 rounded-md transition-colors', workoutsView === 'calendar'
-                ? 'bg-white dark:bg-gray-700 shadow-sm text-primary'
-                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300']"
+              v-for="g in granularityOptions" :key="g.value"
+              :class="['px-3 py-1.5 rounded-lg text-sm font-medium transition-colors', segClass(granularity === g.value)]"
+              @click="setGranularity(g.value)"
+            >{{ g.label }}</button>
+          </div>
+          <div class="inline-flex rounded-xl bg-steel-100/70 dark:bg-steel-950 p-0.5 ml-auto">
+            <button
+              :class="['p-2 rounded-lg transition-colors', segClass(workoutsView === 'calendar')]"
               title="Календарь"
               @click="switchWorkoutsView('calendar')"
             ><CalendarDays class="w-4 h-4" /></button>
             <button
-              :class="['p-2 rounded-md transition-colors', workoutsView === 'list'
-                ? 'bg-white dark:bg-gray-700 shadow-sm text-primary'
-                : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300']"
+              :class="['p-2 rounded-lg transition-colors', segClass(workoutsView === 'list')]"
               title="Список"
               @click="switchWorkoutsView('list')"
             ><List class="w-4 h-4" /></button>
           </div>
         </div>
 
-        <!-- Granularity toggle -->
-        <div v-if="!selectedDate" class="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 mb-5 w-fit">
-          <button
-            v-for="g in granularityOptions" :key="g.value"
-            :class="['px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
-              granularity === g.value ? 'bg-white dark:bg-gray-700 shadow-sm text-primary' : 'text-gray-500']"
-            @click="setGranularity(g.value)"
-          >{{ g.label }}</button>
-        </div>
-
         <!-- Period stats -->
         <div v-if="!selectedDate" class="grid grid-cols-3 gap-3 mb-5">
           <div class="card p-3 text-center">
-            <div class="text-xl font-bold text-primary">{{ periodWorkouts.length }}</div>
-            <div class="text-xs text-gray-400 mt-0.5">тренировок</div>
+            <div class="text-xl font-display font-bold text-primary">{{ periodWorkouts.length }}</div>
+            <div class="text-xs text-steel-700 dark:text-steel-300 mt-0.5">тренировок</div>
           </div>
           <div class="card p-3 text-center">
-            <div class="text-xl font-bold text-gray-900 dark:text-white">{{ periodTotalVolume }}</div>
-            <div class="text-xs text-gray-400 mt-0.5">тоннаж</div>
+            <div class="text-xl font-display font-bold text-ink dark:text-white">{{ periodTotalVolume }}</div>
+            <div class="text-xs text-steel-700 dark:text-steel-300 mt-0.5">тоннаж</div>
           </div>
           <div class="card p-3 text-center">
-            <div class="text-xl font-bold text-gray-900 dark:text-white">{{ periodTotalDuration }}</div>
-            <div class="text-xs text-gray-400 mt-0.5">часов</div>
+            <div class="text-xl font-display font-bold text-ink dark:text-white">{{ periodTotalDuration }}</div>
+            <div class="text-xs text-steel-700 dark:text-steel-300 mt-0.5">часов</div>
           </div>
         </div>
 
         <!-- Period navigation -->
         <div v-if="!selectedDate" class="flex items-center gap-2 mb-5">
-          <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400" @click="prevPeriod">
+          <button class="p-2 hover:bg-steel-100 dark:hover:bg-steel-700 transition-colors text-steel-700 dark:text-steel-300" @click="prevPeriod">
             <ChevronLeft class="w-4 h-4" />
           </button>
           <div class="flex-1 text-center">
-            <span class="text-base font-semibold text-gray-900 dark:text-white capitalize">{{ periodLabel }}</span>
-            <span v-if="periodLoading" class="text-xs text-gray-400 ml-2">загрузка…</span>
+            <span class="text-base font-semibold text-ink dark:text-white capitalize">{{ periodLabel }}</span>
+            <span v-if="periodLoading" class="text-xs text-steel-700 dark:text-steel-300 ml-2">загрузка…</span>
           </div>
-          <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400" @click="nextPeriod">
+          <button class="p-2 hover:bg-steel-100 dark:hover:bg-steel-700 transition-colors text-steel-700 dark:text-steel-300" @click="nextPeriod">
             <ChevronRight class="w-4 h-4" />
           </button>
         </div>
 
         <!-- CALENDAR VIEW -->
         <template v-if="workoutsView === 'calendar' && !selectedDate">
-          <!-- Month grid -->
-          <template v-if="granularity === 'month'">
-            <div class="grid grid-cols-7 mb-1.5">
-              <div v-for="d in weekDays" :key="d" class="text-center text-xs font-medium text-gray-400 dark:text-gray-500 py-1">{{ d }}</div>
-            </div>
-            <div class="grid grid-cols-7 gap-px bg-gray-200 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
-              <button
-                v-for="day in calendarDays"
-                :key="day.dateStr"
-                :class="cellClass(day)"
-                class="min-h-[74px] sm:min-h-[92px] p-1 sm:p-1.5 flex flex-col items-stretch text-left"
-                @click="selectDay(day)"
-              >
-                <span :class="dayNumberClass(day)">{{ day.date.getDate() }}</span>
-                <div class="flex-1 flex flex-col gap-0.5 mt-1 overflow-hidden">
-                  <span
-                    v-for="(w, i) in (workoutsByDate[day.dateStr] || []).slice(0, 2)" :key="i"
-                    :class="['text-[9px] leading-tight px-1 py-0.5 rounded truncate', chipClass(w)]"
-                  >{{ w.title || w.type }}</span>
-                  <span v-if="(workoutsByDate[day.dateStr] || []).length > 2" class="text-[9px] text-gray-400 dark:text-gray-500 px-1">
-                    +{{ workoutsByDate[day.dateStr].length - 2 }} ещё
-                  </span>
-                </div>
-              </button>
-            </div>
-          </template>
+          <MonthCalendar
+            v-if="granularity === 'month'"
+            :year="currentYear"
+            :month="currentMonth"
+            :items-for="dayItems"
+            :selected="selectedDate"
+            @select="selectDay"
+          />
 
           <!-- Week columns -->
           <template v-else-if="granularity === 'week'">
             <div class="grid grid-cols-7 mb-1.5">
               <div v-for="day in weekDaysArr" :key="day.dateStr" class="text-center py-1">
-                <div class="text-xs font-medium text-gray-400 dark:text-gray-500">{{ weekDayShort(day.date) }}</div>
+                <div class="text-xs font-medium text-steel-700 dark:text-steel-300">{{ weekDayShort(day.date) }}</div>
               </div>
             </div>
-            <div class="grid grid-cols-7 gap-px bg-gray-200 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800">
+            <div class="grid grid-cols-7 gap-px rounded-2xl overflow-hidden bg-steel-100 dark:bg-steel-700 border border-steel-100 dark:border-steel-700">
               <button
                 v-for="day in weekDaysArr"
                 :key="day.dateStr"
-                :class="cellClass(day)"
+                :class="cellClass(day, selectedDate)"
                 class="min-h-[220px] p-1.5 flex flex-col items-stretch text-left"
                 @click="selectDay(day)"
               >
-                <span :class="dayNumberClass(day)">{{ day.date.getDate() }}</span>
+                <span :class="dayNumberClass(day, todayStr)">{{ day.date.getDate() }}</span>
                 <div class="flex-1 flex flex-col gap-1 mt-1.5 overflow-y-auto">
                   <span
-                    v-for="(w, i) in (workoutsByDate[day.dateStr] || [])" :key="i"
-                    :class="['text-[10px] leading-snug px-1.5 py-1 rounded', chipClass(w)]"
-                  >{{ w.title || w.type }}</span>
+                    v-for="(item, i) in dayItems(day.dateStr)" :key="i"
+                    :class="['text-[10px] leading-snug px-1.5 py-1 rounded', chipClass(item)]"
+                  >{{ item.label }}</span>
                 </div>
               </button>
             </div>
           </template>
 
           <!-- Year: mini-months -->
-          <template v-else>
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <div v-for="m in 12" :key="m" class="card p-2.5">
-                <p class="text-xs font-semibold text-center text-gray-700 dark:text-gray-200 mb-1.5 capitalize">{{ miniMonthLabel(m - 1) }}</p>
-                <div class="grid grid-cols-7 gap-[3px] mb-1">
-                  <span v-for="d in weekDaysNarrow" :key="d" class="text-[8px] text-center text-gray-300 dark:text-gray-600">{{ d }}</span>
-                </div>
-                <div class="grid grid-cols-7 gap-[3px]">
-                  <button
-                    v-for="(day, i) in miniMonthDays(m - 1)" :key="i"
-                    :class="['aspect-square rounded-sm text-[9px] flex items-center justify-center transition-colors',
-                      !day.inMonth ? 'invisible' : miniDayClass(day.dateStr)]"
-                    :disabled="!day.inMonth"
-                    @click="day.inMonth && selectDay(day)"
-                  >{{ day.inMonth ? day.date.getDate() : '' }}</button>
-                </div>
+          <div v-else class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div v-for="m in 12" :key="m" class="card p-2.5">
+              <p class="text-xs font-display font-semibold text-center text-ink dark:text-steel-100 mb-1.5 capitalize">{{ miniMonthLabel(m - 1) }}</p>
+              <div class="grid grid-cols-7 gap-[3px] mb-1">
+                <span v-for="(d, i) in weekDaysNarrow" :key="i" class="text-[8px] text-center text-steel-300 dark:text-steel-700">{{ d }}</span>
+              </div>
+              <div class="grid grid-cols-7 gap-[3px]">
+                <button
+                  v-for="(day, i) in miniMonthDays(m - 1)" :key="i"
+                  :class="['aspect-square rounded-sm text-[9px] flex items-center justify-center transition-colors',
+                    !day.inMonth ? 'invisible' : miniDayClass(day.dateStr)]"
+                  :disabled="!day.inMonth"
+                  @click="day.inMonth && selectDay(day)"
+                >{{ day.inMonth ? day.date.getDate() : '' }}</button>
               </div>
             </div>
-          </template>
+          </div>
         </template>
 
         <!-- DAY DRILL-DOWN -->
         <template v-else-if="workoutsView === 'calendar' && selectedDate">
           <button
-            class="flex items-center gap-1 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors -ml-1 mb-3"
+            class="flex items-center gap-1 text-sm font-medium text-steel-700 dark:text-steel-300 hover:text-primary transition-colors -ml-1 mb-3"
             @click="selectedDate = null"
           >
             <ChevronLeft class="w-4 h-4" /> Назад к календарю
           </button>
-          <h3 class="text-lg font-bold text-gray-900 dark:text-white capitalize mb-3">{{ selectedDateLabel }}</h3>
+          <h3 class="text-lg font-bold text-ink dark:text-white capitalize mb-3">{{ selectedDateLabel }}</h3>
           <div v-if="(workoutsByDate[selectedDate] || []).length" class="space-y-3">
             <PublicWorkoutCard v-for="w in workoutsByDate[selectedDate]" :key="w.id" :workout="w" />
           </div>
-          <BaseEmptyState v-else title="В этот день ничего нет" description="У пользователя нет тренировок в этот день">
+          <BaseEmptyState v-else title="В этот день ничего нет" description="В этот день тренировок не было">
             <template #icon><CalendarDays class="w-12 h-12" /></template>
           </BaseEmptyState>
         </template>
@@ -302,8 +293,8 @@
         <template v-else>
           <div v-if="periodLoading && !periodWorkouts.length" class="space-y-3">
             <div v-for="i in 4" :key="i" class="card p-4 animate-pulse">
-              <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2" />
-              <div class="h-3 bg-gray-100 dark:bg-gray-800 rounded w-1/2" />
+              <div class="h-4 bg-steel-100 dark:bg-steel-700 rounded w-3/4 mb-2" />
+              <div class="h-3 bg-steel-50 dark:bg-steel-700/60 rounded w-1/2" />
             </div>
           </div>
           <BaseEmptyState
@@ -326,12 +317,15 @@
 
 <script setup>
 import { ref, reactive, computed, watch } from 'vue'
+import PublicProfileCoachBar from '@/components/coach/PublicProfileCoachBar.vue'
+import MonthCalendar from '@/components/calendar/MonthCalendar.vue'
+import { cellClass, dayNumberClass, chipClass, toDateStr } from '@/components/calendar/calendarStyles.js'
 import { useStore } from 'vuex'
 import { useRoute } from 'vue-router'
-import { ChevronLeft, ChevronRight, CalendarDays, List, Dumbbell, Flame, Medal, Target } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, CalendarDays, List, Dumbbell, Flame, Medal, Target, Lock } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
-import ActivityHeatmap from '@/components/social/ActivityHeatmap.vue'
+import ActivityHeatmap from '@/components/profile/ActivityHeatmap.vue'
 import PublicWorkoutCard from '@/components/social/PublicWorkoutCard.vue'
 import workoutService from '@/services/workoutService.js'
 
@@ -382,6 +376,20 @@ async function loadProfile(uid) {
     workoutService.fetchUserGoals(uid).then(d => { goals.value = d }).finally(() => { goalsLoading.value = false }),
     workoutService.fetchUserAchievements(uid).then(d => { achievements.value = d }).finally(() => { achievementsLoading.value = false }),
   ])
+}
+
+// A noun-like adjective: "1 подопечный", but "2 / 5 подопечных".
+const athletesWord = computed(() => {
+  const n = profile.value?.athletesCount ?? 0
+  return n % 10 === 1 && n % 100 !== 11 ? 'подопечный' : 'подопечных'
+})
+
+function formatShortDate(d) {
+  return new Date(d + 'T00:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+}
+
+function reloadProfile() {
+  return store.dispatch('social/getProfile', userId.value)
 }
 
 async function toggleFollow() {
@@ -466,9 +474,6 @@ const periodLabel = computed(() => {
   return monthLabel.value
 })
 
-function toDateStr(d) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
 const todayStr = toDateStr(new Date())
 
 function monthKey(year, monthIndex) {
@@ -586,32 +591,17 @@ const periodTotalDuration = computed(() => {
   return (mins / 60).toFixed(1)
 })
 
-// --- Month grid (granularity === 'month') ---
-const weekDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
+// Calendar chips: this profile only shows done workouts, tinted by type.
+function dayItems(dateStr) {
+  return (workoutsByDate.value[dateStr] || []).map(w => ({ label: w.title || w.type, kind: 'workout', type: w.type }))
+}
 
-const calendarDays = computed(() => {
-  const year = currentYear.value
-  const month = currentMonth.value
-  const firstDay = new Date(year, month, 1)
-  const lastDay = new Date(year, month + 1, 0)
-  const startOffset = (firstDay.getDay() + 6) % 7
-
-  const days = []
-  for (let i = 0; i < startOffset; i++) {
-    const d = new Date(year, month, 1 - startOffset + i)
-    days.push({ date: d, isCurrentMonth: false, dateStr: toDateStr(d) })
-  }
-  for (let n = 1; n <= lastDay.getDate(); n++) {
-    const d = new Date(year, month, n)
-    days.push({ date: d, isCurrentMonth: true, dateStr: toDateStr(d) })
-  }
-  const tail = (7 - days.length % 7) % 7
-  for (let i = 1; i <= tail; i++) {
-    const d = new Date(year, month + 1, i)
-    days.push({ date: d, isCurrentMonth: false, dateStr: toDateStr(d) })
-  }
-  return days
-})
+// Segmented control, same as everywhere else in the app.
+function segClass(active) {
+  return active
+    ? 'bg-card text-primary shadow-soft dark:bg-steel-700'
+    : 'text-steel-700 dark:text-steel-300 hover:text-ink dark:hover:text-white'
+}
 
 // --- Year: mini-months (granularity === 'year') ---
 const weekDaysNarrow = ['П', 'В', 'С', 'Ч', 'П', 'С', 'В']
@@ -641,35 +631,9 @@ function miniDayClass(dateStr) {
   const isToday = dateStr === todayStr
   if (isSelected) return 'bg-primary text-white font-bold'
   const hasWorkout = (workoutsByDate.value[dateStr] || []).length > 0
-  const tone = hasWorkout ? 'bg-primary/15 dark:bg-primary/25 text-primary font-semibold' : 'text-gray-500 dark:text-gray-400'
+  const tone = hasWorkout ? 'bg-primary/15 dark:bg-primary/25 text-primary font-semibold' : 'text-steel-700 dark:text-steel-300'
   if (isToday) return `${tone} ring-1 ring-primary`
   return tone
-}
-
-// --- Shared cell chips/styling (month + week grids) ---
-const workoutChipClasses = {
-  'Силовая': 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
-  'Кардио': 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
-  'Растяжка': 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
-  'HIIT': 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
-  'Другое': 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300',
-}
-function chipClass(w) { return workoutChipClasses[w.type] || workoutChipClasses['Другое'] }
-
-function cellClass(day) {
-  const isSelected = day.dateStr === selectedDate.value
-  const isOtherMonth = !day.isCurrentMonth
-  if (isSelected) return 'bg-primary/10 dark:bg-primary/15'
-  if (isOtherMonth) return 'bg-gray-50 dark:bg-gray-900/40'
-  return 'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors'
-}
-function dayNumberClass(day) {
-  const isToday = day.dateStr === todayStr
-  const isOtherMonth = !day.isCurrentMonth
-  const base = 'w-5 h-5 flex items-center justify-center rounded-full text-xs flex-shrink-0'
-  if (isToday) return `${base} bg-primary text-white font-bold`
-  if (isOtherMonth) return `${base} text-gray-300 dark:text-gray-700`
-  return `${base} text-gray-600 dark:text-gray-300`
 }
 
 function selectDay(day) {
