@@ -83,6 +83,7 @@ import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { X, Bell } from 'lucide-vue-next'
 import NotificationItem from './NotificationItem.vue'
+import { notificationTarget } from './notificationTarget.js'
 
 const store = useStore()
 const router = useRouter()
@@ -120,10 +121,7 @@ async function loadMore() {
 async function onItemClick(n) {
   if (!n.isRead) await store.dispatch('notifications/markRead', n.id)
   close()
-  if (n.workoutId) {
-    router.push(`/workouts/${n.workoutId}`)
-  } else if (n.type === 'follow') {
-    router.push(`/users/${n.actorId}`)
-  }
+  const target = notificationTarget(n, { coachLinks: store.state.coach.links, myId: store.state.auth.userId })
+  if (target) router.push(target)
 }
 </script>

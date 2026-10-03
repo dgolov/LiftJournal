@@ -40,6 +40,11 @@ export default {
       state.unread = [n, ...state.unread]
       if (state.all.length) state.all = [n, ...state.all]
     },
+    SET_COACH_LINK_STATUS(state, { linkId, status }) {
+      const fix = (list) => list.map(n => n.coachLinkId === linkId ? { ...n, coachLinkStatus: status } : n)
+      state.unread = fix(state.unread)
+      state.all = fix(state.all)
+    },
     SET_PANEL(state, v) { state.panelOpen = v },
     RESET(state) {
       state.unreadCount = 0; state.unread = []; state.all = []
@@ -93,9 +98,20 @@ export default {
       commit('SET_PANEL', false)
     },
 
-    startWs({ commit }) {
-      wsClient.onNotification((n) => commit('PUSH_NOTIFICATION', n))
+    startWs({ commit, dispatch }) {
+      wsClient.onNotification((n) => {
+        commit('PUSH_NOTIFICATION', n)
+        // Invites/requests/acceptances change who I coach or who coaches me.
+        if (n.type?.startsWith('coach_')) {
+          dispatch('coach/fetchLinks', null, { root: true }).catch(() => {})
+          if (n.type === 'coach_accepted') dispatch('coach/fetchAthletes', null, { root: true }).catch(() => {})
+        }
+      })
       wsClient.connect()
+    },
+
+    setCoachLinkStatus({ commit }, payload) {
+      commit('SET_COACH_LINK_STATUS', payload)
     },
 
     stopWs() {

@@ -22,16 +22,27 @@
         >{{ notification.actorName }}</RouterLink>
         {{ actionText }}
         <RouterLink
-          v-if="notification.workoutId && notification.workoutTitle"
-          :to="`/workouts/${notification.workoutId}`"
+          v-if="notification.workoutTitle && target"
+          :to="target"
           class="font-medium hover:underline text-primary"
           @click.stop
         >«{{ notification.workoutTitle }}»</RouterLink>
       </p>
       <p
-        v-if="notification.type === 'comment' && notification.commentText"
+        v-if="['comment', 'coach_invite', 'coach_request'].includes(notification.type) && notification.commentText"
         class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate italic"
       >{{ notification.commentText }}</p>
+
+      <!-- Answer an invite/request right here -->
+      <div v-if="isCoachAsk" class="mt-2" @click.stop>
+        <div v-if="notification.coachLinkStatus === 'pending'" class="flex gap-2">
+          <button class="btn btn-primary text-xs px-3 py-1 min-h-0" :disabled="busy" @click="respond('accept')">Принять</button>
+          <button class="btn btn-ghost text-xs px-3 py-1 min-h-0" :disabled="busy" @click="respond('decline')">Отклонить</button>
+        </div>
+        <p v-else-if="notification.coachLinkStatus" class="text-xs text-steel-700 dark:text-steel-300">
+          {{ { active: 'Принято', declined: 'Отклонено', ended: 'Сотрудничество завершено' }[notification.coachLinkStatus] }}
+        </p>
+      </div>
       <p class="text-xs text-gray-400 mt-0.5">{{ timeAgo }}</p>
     </div>
 
@@ -41,7 +52,10 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import { useStore } from 'vuex'
+import { notificationTarget } from './notificationTarget.js'
+import { apiErrorMessage } from '@/services/workoutService.js'
 
 const props = defineProps({
   notification: { type: Object, required: true },
@@ -49,11 +63,38 @@ const props = defineProps({
 
 defineEmits(['click'])
 
+const store = useStore()
+const target = computed(() => notificationTarget(props.notification, {
+  coachLinks: store.state.coach.links, myId: store.state.auth.userId,
+}))
+
+const isCoachAsk = computed(() => ['coach_invite', 'coach_request'].includes(props.notification.type))
+const busy = ref(false)
+async function respond(action) {
+  busy.value = true
+  try {
+    await store.dispatch(`coach/${action}`, props.notification.coachLinkId)
+    if (!props.notification.isRead) store.dispatch('notifications/markRead', props.notification.id)
+    if (action === 'accept' && props.notification.type === 'coach_request') {
+      store.dispatch('coach/fetchAthletes').catch(() => {})
+    }
+  } catch (e) {
+    store.dispatch('ui/showToast', { message: apiErrorMessage(e), type: 'error' })
+  } finally {
+    busy.value = false
+  }
+}
+
 const actionText = computed(() => {
   switch (props.notification.type) {
     case 'follow': return ' подписался на вас'
     case 'like':   return ' поставил лайк тренировке '
     case 'comment': return ' прокомментировал тренировку '
+    case 'coach_invite': return ' приглашает вас в подопечные'
+    case 'coach_request': return ' хочет у вас тренироваться'
+    case 'coach_accepted': return ' принял(а) ваше предложение о тренировках'
+    case 'plan_assigned': return ' запланировал(а) вам тренировку '
+    case 'athlete_completed': return ' выполнил(а) тренировку '
     default: return ''
   }
 })

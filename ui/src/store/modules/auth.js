@@ -57,6 +57,7 @@ export default {
       dispatch('workouts/reset', null, { root: true })
       dispatch('user/reset', null, { root: true })
       dispatch('social/reset', null, { root: true })
+      dispatch('coach/reset', null, { root: true })
     },
   },
 }

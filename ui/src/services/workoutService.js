@@ -34,6 +34,20 @@ function serializeExercises(exercises) {
 }
 const TOKEN_KEY = 'gym_auth_token'
 
+// The backend's human-readable `detail` when it sent one (validation errors
+// send a list instead), else the raw error text.
+export function apiErrorMessage(e) {
+  return typeof e?.detail === 'string' ? e.detail : (e?.message || 'Неизвестная ошибка')
+}
+
+function withRange(path, { from, to } = {}) {
+  const params = new URLSearchParams()
+  if (from) params.set('from', from)
+  if (to) params.set('to', to)
+  const qs = params.toString()
+  return qs ? `${path}?${qs}` : path
+}
+
 async function request(method, path, body, requiresAuth = true) {
   const headers = {}
   if (body) headers['Content-Type'] = 'application/json'
@@ -67,7 +81,10 @@ async function request(method, path, body, requiresAuth = true) {
     if (!res.ok) {
       const text = await res.text()
       console.error(`API error ${method} ${path} → ${res.status}:`, text)
-      throw new Error(`${method} ${path} → ${res.status}: ${text}`)
+      const err = new Error(`${method} ${path} → ${res.status}: ${text}`)
+      err.status = res.status
+      try { err.detail = JSON.parse(text).detail } catch { /* not JSON */ }
+      throw err
     }
     if (res.status === 204) return undefined
     return res.json()
@@ -83,6 +100,66 @@ const workoutService = {
   },
   register(data) {
     return request('POST', '/auth/register', data, false)
+  },
+
+  // Coaching
+  updateCoachSettings(data) {
+    return request('PATCH', '/user/coach', data)
+  },
+  fetchCoachLinks({ role, status = [] } = {}) {
+    const params = new URLSearchParams()
+    if (role) params.set('role', role)
+    status.forEach(s => params.append('status', s))
+    const qs = params.toString()
+    return request('GET', qs ? `/coach/links?${qs}` : '/coach/links')
+  },
+  inviteAthlete(athleteId, message = '') {
+    return request('POST', '/coach/invites', { athleteId, message })
+  },
+  requestCoach(coachId, message = '') {
+    return request('POST', '/coach/requests', { coachId, message })
+  },
+  acceptCoachLink(id) {
+    return request('POST', `/coach/links/${id}/accept`)
+  },
+  declineCoachLink(id) {
+    return request('POST', `/coach/links/${id}/decline`)
+  },
+  endCoachLink(id) {
+    return request('POST', `/coach/links/${id}/end`)
+  },
+  cancelCoachLink(id) {
+    return request('DELETE', `/coach/links/${id}`)
+  },
+  updateCoachLinkPermissions(id, data) {
+    return request('PATCH', `/coach/links/${id}`, data)
+  },
+  fetchAthletes() {
+    return request('GET', '/coach/athletes')
+  },
+  fetchAthlete(athleteId) {
+    return request('GET', `/coach/athletes/${athleteId}`)
+  },
+  fetchAthleteWorkouts(athleteId, range) {
+    return request('GET', withRange(`/coach/athletes/${athleteId}/workouts`, range))
+  },
+  fetchAthletePlanned(athleteId, range) {
+    return request('GET', withRange(`/coach/athletes/${athleteId}/planned`, range))
+  },
+  fetchAthleteMaxes(athleteId) {
+    return request('GET', `/coach/athletes/${athleteId}/maxes`)
+  },
+  fetchAthleteWeight(athleteId) {
+    return request('GET', `/coach/athletes/${athleteId}/weight`)
+  },
+  createAthletePlan(athleteId, data) {
+    return request('POST', `/coach/athletes/${athleteId}/planned`, data)
+  },
+  updateAthletePlan(athleteId, planId, data) {
+    return request('PATCH', `/coach/athletes/${athleteId}/planned/${planId}`, data)
+  },
+  deleteAthletePlan(athleteId, planId) {
+    return request('DELETE', `/coach/athletes/${athleteId}/planned/${planId}`)
   },
 
   // Workouts

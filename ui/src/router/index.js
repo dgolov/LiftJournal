@@ -86,6 +86,11 @@ const routes = [
     component: () => import('@/views/PlanWorkoutView.vue')
   },
   {
+    path: '/planning/cycles/:scheduleId',
+    name: 'cycle-progress',
+    component: () => import('@/views/CycleProgressView.vue')
+  },
+  {
     path: '/planning/:id/edit',
     name: 'plan-edit',
     component: () => import('@/views/PlanWorkoutView.vue')
@@ -124,6 +129,41 @@ const routes = [
     path: '/users/:id',
     name: 'user-public',
     component: () => import('@/views/UserPublicView.vue')
+  },
+  {
+    path: '/coach',
+    name: 'coach',
+    component: () => import('@/views/CoachView.vue')
+  },
+  {
+    path: '/coach/athletes/:athleteId',
+    name: 'coach-athlete',
+    component: () => import('@/views/CoachAthleteView.vue')
+  },
+  {
+    path: '/coach/athletes/:athleteId/cycles/:scheduleId',
+    name: 'coach-athlete-cycle',
+    component: () => import('@/views/CycleProgressView.vue')
+  },
+  {
+    path: '/coach/athletes/:athleteId/workouts/:workoutId',
+    name: 'coach-athlete-workout',
+    component: () => import('@/views/CoachWorkoutView.vue')
+  },
+  {
+    path: '/coach/athletes/:athleteId/exercises/:id',
+    name: 'coach-athlete-exercise',
+    component: () => import('@/views/ExerciseDetailView.vue')
+  },
+  {
+    path: '/coach/athletes/:athleteId/plan/new',
+    name: 'coach-athlete-plan-new',
+    component: () => import('@/views/PlanWorkoutView.vue')
+  },
+  {
+    path: '/coach/athletes/:athleteId/plan/:id/edit',
+    name: 'coach-athlete-plan-edit',
+    component: () => import('@/views/PlanWorkoutView.vue')
   }
 ]
 
