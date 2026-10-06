@@ -6,8 +6,11 @@
         <ChevronLeft class="w-5 h-5" />
       </button>
       <div>
+        <RouterLink v-if="athleteId" :to="`/coach/athletes/${athleteId}`" class="text-sm text-primary hover:underline">
+          {{ athleteData?.summary?.name || 'Подопечный' }}
+        </RouterLink>
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ exercise.name }}</h2>
-        <div class="flex flex-wrap gap-1.5 mt-2">
+        <div v-if="exercise.muscleGroup" class="flex flex-wrap gap-1.5 mt-2">
           <BaseBadge color="indigo">{{ exercise.muscleGroup }}</BaseBadge>
           <BaseBadge color="gray">{{ exercise.equipment }}</BaseBadge>
           <BaseBadge v-for="m in exercise.secondaryMuscles" :key="m" color="gray">{{ m }}</BaseBadge>
@@ -163,8 +166,8 @@
             <tbody class="divide-y divide-gray-50 dark:divide-gray-800/60">
               <tr
                 v-for="session in paginatedSessions" :key="session.date + session.workoutId"
-                class="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-                @click="$router.push(session.link)"
+                :class="session.link ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors' : ''"
+                @click="session.link && $router.push(session.link)"
               >
                 <td class="pl-4 pr-2 py-2.5 text-gray-500 text-xs whitespace-nowrap">{{ formatDate(session.date) }}</td>
                 <td class="px-2 py-2.5 text-gray-600 dark:text-gray-400 text-xs truncate max-w-[140px] hidden sm:table-cell">{{ session.workoutTitle }}</td>
@@ -208,8 +211,8 @@
             <tbody class="divide-y divide-gray-50 dark:divide-gray-800/60">
               <tr
                 v-for="session in paginatedSessions" :key="session.date + session.workoutId"
-                class="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-                @click="$router.push(session.link)"
+                :class="session.link ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors' : ''"
+                @click="session.link && $router.push(session.link)"
               >
                 <td class="pl-4 pr-2 py-2.5 text-gray-500 text-xs whitespace-nowrap">{{ formatDate(session.date) }}</td>
                 <td class="px-2 py-2.5 text-gray-600 dark:text-gray-400 text-xs truncate max-w-[140px] hidden sm:table-cell">{{ session.workoutTitle }}</td>
@@ -266,22 +269,40 @@
     </div>
   </div>
 
+  <div v-else-if="athleteId && !athleteData" class="text-center py-16 text-gray-400">Загрузка…</div>
   <div v-else class="text-center py-16 text-gray-400">Упражнение не найдено</div>
 </template>
 
 <script setup>
 import { computed, ref, watch, h, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { ChevronLeft, ChevronRight, Trophy, BarChart3, Filter, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-vue-next'
 import BaseBadge from '@/components/ui/BaseBadge.vue'
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
 import ProgressChart from '@/components/exercises/ProgressChart.vue'
+import { computeProgress, computePersonalRecord } from '@/utils/progress.js'
 
 const route = useRoute()
+const router = useRouter()
 const store = useStore()
 
-const exercise = computed(() => store.getters['exercises/exerciseById'](route.params.id))
+// Coach mode: /coach/athletes/:athleteId/exercises/:id shows the same page
+// over the athlete's data instead of the current user's store.
+const athleteId = computed(() => route.params.athleteId ? Number(route.params.athleteId) : null)
+const athleteData = computed(() => athleteId.value ? store.getters['coach/athleteById'](athleteId.value) : null)
+
+// An athlete's custom exercise isn't in the coach's library — fall back to
+// the name it was logged under.
+const exercise = computed(() => {
+  const own = store.getters['exercises/exerciseById'](route.params.id)
+  if (own || !athleteData.value) return own
+  for (const w of athleteData.value.workouts) {
+    const ex = w.exercises.find(e => e.exerciseId === route.params.id)
+    if (ex) return { id: ex.exerciseId, name: ex.exerciseName }
+  }
+  return null
+})
 const isCardio = computed(() => exercise.value?.muscleGroup === 'Кардио')
 
 // ── Period selector (month / year / all-time / custom range) ──────────────────
@@ -301,7 +322,11 @@ const source = ref('fact')
 const isPlan = computed(() => source.value === 'plan')
 
 onMounted(() => {
-  if (!store.state.planned.plannedWorkouts.length) store.dispatch('planned/fetchPlannedWorkouts')
+  if (athleteId.value) {
+    store.dispatch('coach/loadAthlete', { id: athleteId.value }).catch(() => router.replace('/coach'))
+  } else if (!store.state.planned.plannedWorkouts.length) {
+    store.dispatch('planned/fetchPlannedWorkouts')
+  }
 })
 
 const period = ref('all')
@@ -343,9 +368,34 @@ const periodLabel = computed(() => {
   return 'всё время'
 })
 
-const progress = computed(() => store.getters['exercises/progressForExercise'](route.params.id, periodRange.value, { source: source.value }))
-const pr = computed(() => store.getters['exercises/personalRecord'](route.params.id, periodRange.value))
-const hasAnyHistory = computed(() => store.getters['exercises/progressForExercise'](route.params.id, {}, { source: source.value }).length > 0)
+function progressFor(range) {
+  if (!athleteId.value) {
+    return store.getters['exercises/progressForExercise'](route.params.id, range, { source: source.value })
+  }
+  if (!athleteData.value) return []
+  return computeProgress({
+    exercise: exercise.value,
+    exerciseId: route.params.id,
+    workouts: athleteData.value.workouts,
+    planned: athleteData.value.planned,
+    maxes: athleteData.value.maxes,
+    range,
+    source: source.value,
+    // Done workouts open the coach's read-only workout page; planned ones
+    // that are still open can be edited.
+    linkFor: (kind, id) => {
+      if (kind !== 'plan') return `/coach/athletes/${athleteId.value}/workouts/${id}`
+      const plan = athleteData.value.planned.find(p => p.id === id)
+      return plan?.status === 'planned' ? `/coach/athletes/${athleteId.value}/plan/${id}/edit` : null
+    },
+  })
+}
+
+const progress = computed(() => progressFor(periodRange.value))
+const pr = computed(() => athleteId.value
+  ? computePersonalRecord(progressFor(periodRange.value), isCardio.value)
+  : store.getters['exercises/personalRecord'](route.params.id, periodRange.value))
+const hasAnyHistory = computed(() => progressFor({}).length > 0)
 
 // ── Sort-able column header component ─────────────────────────────────────────
 const SortTh = {

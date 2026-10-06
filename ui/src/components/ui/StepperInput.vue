@@ -5,16 +5,25 @@
       class="w-7 flex-shrink-0 flex items-center justify-center text-base font-display font-bold text-steel-700 dark:text-steel-300 hover:text-primary bg-steel-50 dark:bg-steel-700 border border-steel-100 dark:border-steel-700 border-r-0 rounded-l-xl active:bg-steel-300 dark:active:bg-steel-950 transition-colors select-none"
       @click="adjust(-step)"
     >−</button>
-    <input
-      type="text"
-      inputmode="decimal"
-      :value="displayValue"
-      :placeholder="placeholder"
-      class="w-full min-w-0 border border-steel-100 dark:border-steel-700 bg-white dark:bg-steel-900 text-ink dark:text-white font-mono px-0.5 py-2.5 text-sm text-center placeholder-steel-300 focus:border-primary focus:outline-none focus:z-10 min-h-[44px]"
-      @focus="onFocus"
-      @blur="onBlur"
-      @input="onInput"
-    />
+    <div class="relative flex-1 min-w-0 flex">
+      <input
+        type="text"
+        inputmode="decimal"
+        :value="displayValue"
+        :placeholder="placeholder"
+        :class="['w-full min-w-0 border border-steel-100 dark:border-steel-700 bg-white dark:bg-steel-900 text-ink dark:text-white font-mono py-2.5 text-sm text-center placeholder-steel-300 focus:border-primary focus:outline-none focus:z-10 min-h-[44px]',
+          suffix ? 'pl-0.5 pr-4' : 'px-0.5']"
+        @focus="onFocus"
+        @blur="onBlur"
+        @input="onInput"
+      />
+      <!-- Unit shown inside the field so the number can't be mistaken (e.g. % vs kg) -->
+      <span
+        v-if="suffix"
+        class="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 z-10 text-xs text-steel-300 dark:text-steel-700 font-mono"
+        aria-hidden="true"
+      >{{ suffix }}</span>
+    </div>
     <button
       type="button"
       class="w-7 flex-shrink-0 flex items-center justify-center text-base font-display font-bold text-steel-700 dark:text-steel-300 hover:text-primary bg-steel-50 dark:bg-steel-700 border border-steel-100 dark:border-steel-700 border-l-0 rounded-r-xl active:bg-steel-300 dark:active:bg-steel-950 transition-colors select-none"
@@ -32,7 +41,8 @@ const props = defineProps({
   min: { type: Number, default: 0 },
   max: { type: Number, default: Infinity },
   placeholder: { type: String, default: '' },
-  decimals: { type: Number, default: 0 }
+  decimals: { type: Number, default: 0 },
+  suffix: { type: String, default: '' }
 })
 const emit = defineEmits(['update:modelValue'])
 

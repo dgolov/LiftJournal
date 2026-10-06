@@ -28,6 +28,7 @@ async function loadInitialData() {
     store.dispatch('workouts/initWorkouts'),
     store.dispatch('exercises/initExercises'),
     store.dispatch('user/initUser'),
+    store.dispatch('coach/fetchLinks'),
   ])
   const failed = results.filter(r => r.status === 'rejected')
   if (failed.length) failed.forEach(r => console.error('Failed to load initial data:', r.reason))

@@ -20,12 +20,13 @@
         @click="closeSidebar"
       >
         <component :is="item.icon" class="w-5 h-5 flex-shrink-0" />
-        {{ item.label }}
+        <span class="flex-1">{{ item.label }}</span>
+        <span v-if="item.badge" class="min-w-[1.25rem] h-5 px-1 rounded-full bg-primary text-white text-xs flex items-center justify-center">{{ item.badge }}</span>
       </RouterLink>
     </nav>
 
     <!-- New workout button -->
-    <div class="p-3 border-t-2 border-steel-100 dark:border-steel-700">
+    <div class="p-3 border-t border-steel-100 dark:border-steel-700">
       <RouterLink to="/workouts/new" @click="closeSidebar"
         class="btn btn-primary w-full">
         <Plus class="w-4 h-4" />
@@ -48,7 +49,7 @@
 import { computed, markRaw } from 'vue'
 import { APP_VERSION } from '@/version.js'
 import { useStore } from 'vuex'
-import { Dumbbell, ClipboardList, BarChart3, User, Plus, CalendarDays, BookOpen, LayoutDashboard, Users, LayoutTemplate } from 'lucide-vue-next'
+import { Dumbbell, ClipboardList, BarChart3, User, Plus, CalendarDays, BookOpen, LayoutDashboard, Users, LayoutTemplate, Megaphone } from 'lucide-vue-next'
 
 const store = useStore()
 const isOpen = computed(() => store.state.ui.sidebarOpen)
@@ -58,7 +59,12 @@ function closeSidebar() {
   store.commit('ui/SET_SIDEBAR', false)
 }
 
-const navItems = [
+const isCoach = computed(() => store.state.user.coach.isCoach)
+const myId = computed(() => store.state.auth.userId)
+const coachRequests = computed(() =>
+  store.getters['coach/incomingRequests'].filter(l => l.coachId === myId.value).length)
+
+const baseNavItems = [
   { to: '/dashboard', icon: markRaw(LayoutDashboard), label: 'Дашборд' },
   { to: '/feed', icon: markRaw(Users), label: 'Лента' },
   { to: '/history', icon: markRaw(ClipboardList), label: 'История тренировок' },
@@ -69,4 +75,11 @@ const navItems = [
   { to: '/profile', icon: markRaw(User), label: 'Профиль' },
   { to: '/about', icon: markRaw(BookOpen), label: 'Справка' },
 ]
+
+const navItems = computed(() => {
+  if (!isCoach.value) return baseNavItems
+  const items = [...baseNavItems]
+  items.splice(2, 0, { to: '/coach', icon: markRaw(Megaphone), label: 'Подопечные', badge: coachRequests.value })
+  return items
+})
 </script>

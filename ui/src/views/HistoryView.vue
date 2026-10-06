@@ -11,18 +11,18 @@
           :disabled="exportLoading"
           @click="openExport"
         ><Download class="w-4 h-4" /></button>
-        <div class="flex bg-steel-100 dark:bg-steel-950 p-0.5 gap-0.5">
+        <div class="inline-flex rounded-xl bg-steel-100/70 dark:bg-steel-950 p-0.5">
         <button
-          :class="['p-2 transition-colors', viewMode === 'calendar'
-            ? 'bg-card dark:bg-steel-700 text-primary'
-            : 'text-steel-700 dark:text-steel-300 hover:text-primary']"
+          :class="['p-2 rounded-lg transition-colors', viewMode === 'calendar'
+            ? 'bg-card dark:bg-steel-700 text-primary shadow-soft'
+            : 'text-steel-700 dark:text-steel-300 hover:text-ink dark:hover:text-white']"
           title="Календарь"
           @click="switchView('calendar')"
         ><CalendarDays class="w-4 h-4" /></button>
         <button
-          :class="['p-2 transition-colors', viewMode === 'list'
-            ? 'bg-card dark:bg-steel-700 text-primary'
-            : 'text-steel-700 dark:text-steel-300 hover:text-primary']"
+          :class="['p-2 rounded-lg transition-colors', viewMode === 'list'
+            ? 'bg-card dark:bg-steel-700 text-primary shadow-soft'
+            : 'text-steel-700 dark:text-steel-300 hover:text-ink dark:hover:text-white']"
           title="Список"
           @click="switchView('list')"
         ><List class="w-4 h-4" /></button>
@@ -31,11 +31,11 @@
     </div>
 
     <!-- Granularity toggle -->
-    <div v-if="!selectedDate" class="flex gap-1 bg-steel-100 dark:bg-steel-950 p-0.5 mb-5 w-fit">
+    <div v-if="!selectedDate" class="flex rounded-xl bg-steel-100/70 dark:bg-steel-950 p-0.5 mb-5 w-fit">
       <button
         v-for="g in granularityOptions" :key="g.value"
-        :class="['px-3 py-1.5 text-sm font-medium transition-colors',
-          granularity === g.value ? 'bg-card dark:bg-steel-700 text-primary' : 'text-steel-700 dark:text-steel-300']"
+        :class="['px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+          granularity === g.value ? 'bg-card dark:bg-steel-700 text-primary shadow-soft' : 'text-steel-700 dark:text-steel-300 hover:text-ink dark:hover:text-white']"
         @click="setGranularity(g.value)"
       >{{ g.label }}</button>
     </div>
@@ -74,30 +74,13 @@
     <template v-if="viewMode === 'calendar' && !selectedDate">
       <!-- Month grid -->
       <template v-if="granularity === 'month'">
-        <div class="grid grid-cols-7 mb-1.5">
-          <div v-for="d in weekDays" :key="d" class="text-center text-xs font-medium text-steel-700 dark:text-steel-300 py-1">{{ d }}</div>
-        </div>
-
-        <div class="grid grid-cols-7 gap-px rounded-2xl overflow-hidden bg-steel-100 dark:bg-steel-700 border border-steel-100 dark:border-steel-700">
-          <button
-            v-for="day in calendarDays"
-            :key="day.dateStr"
-            :class="cellClass(day)"
-            class="min-h-[74px] sm:min-h-[92px] p-1 sm:p-1.5 flex flex-col items-stretch text-left"
-            @click="selectDay(day)"
-          >
-            <span :class="dayNumberClass(day)">{{ day.date.getDate() }}</span>
-            <div class="flex-1 flex flex-col gap-0.5 mt-1 overflow-hidden">
-              <span
-                v-for="(item, i) in dayItems(day.dateStr).slice(0, 2)" :key="i"
-                :class="['text-[9px] leading-tight px-1 py-0.5 truncate', chipClass(item)]"
-              >{{ item.label }}</span>
-              <span v-if="dayItems(day.dateStr).length > 2" class="text-[9px] text-steel-700 dark:text-steel-300 px-1">
-                +{{ dayItems(day.dateStr).length - 2 }} ещё
-              </span>
-            </div>
-          </button>
-        </div>
+        <MonthCalendar
+          :year="currentYear"
+          :month="currentMonth"
+          :items-for="dayItems"
+          :selected="selectedDate"
+          @select="selectDay"
+        />
       </template>
 
       <!-- Week columns -->
@@ -112,15 +95,15 @@
           <button
             v-for="day in weekDaysArr"
             :key="day.dateStr"
-            :class="cellClass(day)"
+            :class="cellClass(day, selectedDate)"
             class="min-h-[220px] p-1.5 flex flex-col items-stretch text-left"
             @click="selectDay(day)"
           >
-            <span :class="dayNumberClass(day)">{{ day.date.getDate() }}</span>
+            <span :class="dayNumberClass(day, todayStr)">{{ day.date.getDate() }}</span>
             <div class="flex-1 flex flex-col gap-1 mt-1.5 overflow-y-auto">
               <span
                 v-for="(item, i) in dayItems(day.dateStr)" :key="i"
-                :class="['text-[10px] leading-snug px-1.5 py-1', chipClass(item)]"
+                :class="['text-[10px] leading-snug px-1.5 py-1 rounded', chipClass(item)]"
               >{{ item.label }}</span>
             </div>
             <span
@@ -240,6 +223,8 @@
 
 <script setup>
 import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
+import MonthCalendar from '@/components/calendar/MonthCalendar.vue'
+import { cellClass, dayNumberClass, chipClass, toDateStr } from '@/components/calendar/calendarStyles.js'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { CalendarDays, List, ChevronLeft, ChevronRight, Activity, Plus, Download } from 'lucide-vue-next'
@@ -406,37 +391,8 @@ const monthPlanned = computed(() => {
 })
 
 // --- Calendar grid ---
-const weekDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
-
-function toDateStr(d) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
 
 const todayStr = toDateStr(today)
-
-const calendarDays = computed(() => {
-  const year = currentYear.value
-  const month = currentMonth.value
-  const firstDay = new Date(year, month, 1)
-  const lastDay = new Date(year, month + 1, 0)
-  const startOffset = (firstDay.getDay() + 6) % 7
-
-  const days = []
-  for (let i = 0; i < startOffset; i++) {
-    const d = new Date(year, month, 1 - startOffset + i)
-    days.push({ date: d, isCurrentMonth: false, dateStr: toDateStr(d) })
-  }
-  for (let n = 1; n <= lastDay.getDate(); n++) {
-    const d = new Date(year, month, n)
-    days.push({ date: d, isCurrentMonth: true, dateStr: toDateStr(d) })
-  }
-  const tail = (7 - days.length % 7) % 7
-  for (let i = 1; i <= tail; i++) {
-    const d = new Date(year, month + 1, i)
-    days.push({ date: d, isCurrentMonth: false, dateStr: toDateStr(d) })
-  }
-  return days
-})
 
 // --- Week row (granularity === 'week') ---
 const weekDaysArr = computed(() => {
@@ -597,21 +553,6 @@ function miniDayClass(dateStr) {
 }
 
 // --- Shared cell chips (month + week grids) ---
-const workoutChipClasses = {
-  'Силовая': 'bg-primary/15 text-primary dark:bg-primary/25',
-  'Кардио': 'bg-success/15 text-success dark:bg-success/25',
-  'Растяжка': 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
-  'HIIT': 'bg-hazard/20 text-hazard dark:bg-hazard/25',
-  'Другое': 'bg-steel-100 text-steel-700 dark:bg-steel-700 dark:text-steel-300',
-}
-// Same status-based logic as everywhere else in the app — a skipped plan
-// must not read the same as an upcoming one.
-const planChipClasses = {
-  planned: 'bg-hazard/20 text-hazard dark:bg-hazard/25',
-  completed: 'bg-success/15 text-success dark:bg-success/25',
-  skipped: 'bg-steel-100 text-steel-300 dark:bg-steel-700',
-}
-
 function dayItems(dateStr) {
   const items = []
   for (const w of (workoutsByDate.value[dateStr] || [])) {
@@ -621,29 +562,6 @@ function dayItems(dateStr) {
     items.push({ label: p.title, kind: 'plan', status: p.status })
   }
   return items
-}
-
-function chipClass(item) {
-  if (item.kind === 'workout') return workoutChipClasses[item.type] || workoutChipClasses['Другое']
-  return planChipClasses[item.status] || planChipClasses.planned
-}
-
-// --- Shared cell styling (month + week grids) ---
-function cellClass(day) {
-  const isSelected = day.dateStr === selectedDate.value
-  const isOtherMonth = !day.isCurrentMonth
-  if (isSelected) return 'bg-primary/10 dark:bg-primary/15'
-  if (isOtherMonth) return 'bg-steel-50 dark:bg-steel-950/60'
-  return 'bg-card dark:bg-steel-900 hover:bg-steel-50 dark:hover:bg-steel-700/60 transition-colors'
-}
-
-function dayNumberClass(day) {
-  const isToday = day.dateStr === todayStr
-  const isOtherMonth = !day.isCurrentMonth
-  const base = 'w-5 h-5 flex items-center justify-center rounded-full text-xs font-mono flex-shrink-0'
-  if (isToday) return `${base} bg-primary text-white font-bold`
-  if (isOtherMonth) return `${base} text-steel-300 dark:text-steel-700`
-  return `${base} text-steel-700 dark:text-steel-300`
 }
 
 function selectDay(day) {

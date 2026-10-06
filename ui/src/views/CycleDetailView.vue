@@ -31,7 +31,7 @@
           >Таблица</button>
         </div>
         <button class="btn btn-outline text-sm flex items-center gap-1.5" @click="showScheduleModal = true">
-          <CalendarPlus class="w-4 h-4" /> Запланировать
+          <CalendarPlus class="w-4 h-4" /> {{ isCoach ? 'Запланировать или назначить' : 'Запланировать' }}
         </button>
         <RouterLink v-if="isOwner" :to="`/cycles/${cycle.id}/edit`" class="btn btn-outline text-sm">
           Редактировать
@@ -100,6 +100,8 @@
       </div>
     </div>
 
+    <CyclePlanCharts class="mb-4" :workouts="cycle.workouts" :main-exercises="cycle.main_exercises || []" />
+
     <!-- List view -->
     <div v-if="viewMode === 'list'" class="space-y-3">
       <div
@@ -108,7 +110,9 @@
         class="card p-4"
       >
         <div class="flex items-center justify-between mb-2">
-          <p class="text-xs font-bold text-gray-400">Тренировка {{ workout.workout_number }}</p>
+          <p class="text-xs font-bold text-gray-400">
+            Тренировка {{ workout.workout_number }}<template v-if="workout.title"> · <span class="text-ink dark:text-white">{{ workout.title }}</span></template>
+          </p>
           <span v-if="currentRun && completedIds.has(workout.id)" class="text-xs text-green-600 font-semibold">✓ Выполнена</span>
           <BaseButton
             v-else-if="currentRun"
@@ -182,6 +186,7 @@
             >
               <td class="border border-gray-200 dark:border-gray-700 px-3 py-2.5 font-bold text-gray-400 dark:text-gray-500 text-xs text-center">
                 {{ workout.workout_number }}
+                <div v-if="workout.title" class="mt-0.5 font-normal text-ink dark:text-white text-left leading-tight">{{ workout.title }}</div>
                 <div v-if="currentRun" class="mt-1">
                   <span v-if="completedIds.has(workout.id)" class="text-green-500 text-base">✓</span>
                   <button
@@ -236,7 +241,7 @@
     </template>
   </BaseModal>
 
-  <ScheduleCycleModal v-model="showScheduleModal" :cycle="cycle" />
+  <ScheduleCycleModal v-model="showScheduleModal" :cycle="cycle" :allow-athletes="isCoach" />
   </div>
 </template>
 
@@ -248,6 +253,7 @@ import { ChevronLeft, AlertTriangle, Play, CalendarPlus } from 'lucide-vue-next'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import ScheduleCycleModal from '@/components/workout/ScheduleCycleModal.vue'
+import CyclePlanCharts from '@/components/exercises/CyclePlanCharts.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -267,6 +273,8 @@ const workoutNotes = ref('')
 const showScheduleModal = ref(false)
 
 const cycle = computed(() => store.state.cycles.currentCycle)
+// A coach can lay the cycle out for an athlete, not just for themself.
+const isCoach = computed(() => store.state.user.coach.isCoach)
 const currentRun = computed(() => store.state.cycles.currentRun)
 const currentUserId = computed(() => store.state.auth.userId)
 const isOwner = computed(() => cycle.value?.created_by === currentUserId.value)

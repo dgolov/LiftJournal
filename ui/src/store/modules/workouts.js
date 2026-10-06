@@ -1,4 +1,5 @@
 import workoutService from '@/services/workoutService.js'
+import { exerciseHistoryOptions } from '@/utils/progress.js'
 
 // ── Session persistence ───────────────────────────────────────────────────────
 const SESSION_KEY = 'gym_workout_session'
@@ -125,19 +126,7 @@ export default {
     // Up to the last 5 workouts that logged this exercise with valid (non-failed) sets,
     // most recent first — lets the user cycle prefill through recent sessions instead of
     // always landing on the very last one (which may have been a warm-up-only session).
-    exerciseHistoryOptions: state => exerciseId => {
-      const sorted = [...state.workouts].sort((a, b) => b.date.localeCompare(a.date))
-      const options = []
-      for (const w of sorted) {
-        const ex = w.exercises.find(e => e.exerciseId === exerciseId)
-        const validSets = ex?.sets?.filter(s => !s.failed)
-        if (validSets?.length) {
-          options.push({ date: w.date, sets: validSets })
-          if (options.length >= 5) break
-        }
-      }
-      return options
-    }
+    exerciseHistoryOptions: state => exerciseId => exerciseHistoryOptions(state.workouts, exerciseId)
   },
 
   mutations: {

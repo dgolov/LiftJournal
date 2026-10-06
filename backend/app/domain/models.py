@@ -100,6 +100,10 @@ class User(Base):
     avatar_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     theme: Mapped[str] = mapped_column(String(10), default="light")
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_coach: Mapped[bool] = mapped_column(Boolean, default=False)
+    coach_bio: Mapped[str] = mapped_column(Text, default="")
+    # "Набор открыт" — only then can athletes send a coaching request.
+    coach_accepting: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     weight_log: Mapped[list["WeightEntry"]] = relationship(
@@ -152,6 +156,9 @@ class TrainingCycle(Base):
     author_name: Mapped[str] = mapped_column(String(200), default="")
     is_public: Mapped[bool] = mapped_column(Boolean, default=False)
     is_approved: Mapped[bool] = mapped_column(Boolean, default=True)
+    # The lifts the cycle is built around — [{exerciseId, exerciseName}];
+    # the cycle's progress charts are drawn for these.
+    main_exercises: Mapped[list] = mapped_column(JSON, default=list)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     workouts: Mapped[list["CycleWorkout"]] = relationship(
@@ -247,11 +254,23 @@ class PlannedWorkout(Base):
     scheduled_date: Mapped[date] = mapped_column(Date, nullable=False)
     notes: Mapped[str] = mapped_column(Text, default="")
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="planned")
+    # Who wrote the plan: the athlete themself, or their coach.
+    created_by: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
     completed_workout_id: Mapped[Optional[str]] = mapped_column(
         String, ForeignKey("workouts.id", ondelete="SET NULL"), nullable=True
     )
+    # Set when the plan was laid out from a training cycle; every plan from one
+    # layout of that cycle shares cycle_schedule_id.
+    cycle_id: Mapped[Optional[str]] = mapped_column(
+        String, ForeignKey("training_cycles.id", ondelete="SET NULL"), nullable=True
+    )
+    cycle_schedule_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
+    cycle: Mapped[Optional["TrainingCycle"]] = relationship("TrainingCycle")
+    creator: Mapped[Optional["User"]] = relationship("User", foreign_keys=[created_by])
     exercises: Mapped[list["PlannedExercise"]] = relationship(
         "PlannedExercise",
         back_populates="planned_workout",
@@ -329,6 +348,25 @@ class UserFollow(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
+class CoachAthlete(Base):
+    """A coaching relationship. Access to an athlete's data and plan is granted
+    only by an *active* link (and its permission flags) — following alone never
+    grants anything. Both sides must agree: whoever didn't initiate accepts."""
+    __tablename__ = "coach_athletes"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=gen_uuid)
+    coach_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    athlete_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending")  # pending | active | declined | ended
+    initiated_by: Mapped[str] = mapped_column(String(10), nullable=False)  # coach | athlete
+    can_see_private: Mapped[bool] = mapped_column(Boolean, default=True)
+    can_edit_plan: Mapped[bool] = mapped_column(Boolean, default=True)
+    message: Mapped[str] = mapped_column(String(500), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    responded_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    ended_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+
 class Notification(Base):
     __tablename__ = "notifications"
 
@@ -338,6 +376,12 @@ class Notification(Base):
     actor_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     workout_id: Mapped[Optional[str]] = mapped_column(String, ForeignKey("workouts.id", ondelete="CASCADE"), nullable=True)
     comment_text: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    coach_link_id: Mapped[Optional[str]] = mapped_column(
+        String(36), ForeignKey("coach_athletes.id", ondelete="CASCADE"), nullable=True
+    )
+    planned_workout_id: Mapped[Optional[str]] = mapped_column(
+        String, ForeignKey("planned_workouts.id", ondelete="CASCADE"), nullable=True
+    )
     is_read: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
 

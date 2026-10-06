@@ -320,3 +320,45 @@ def test_to_dto_maps_maxes():
     dto = svc._to_dto(user)
     assert len(dto.maxes) == 1
     assert dto.maxes[0].exercise_name == "Bench Press"
+
+
+# ---------------------------------------------------------------------------
+# update_coach_settings
+# ---------------------------------------------------------------------------
+
+async def test_enable_coach_role(mock_db):
+    from app.api.schemas import CoachSettingsUpdate
+    user = make_user(id=1, is_coach=True, coach_bio="КМС, жим", coach_accepting=True)
+
+    with patch("app.services.user.UserRepository") as MockRepo:
+        repo = AsyncMock()
+        MockRepo.return_value = repo
+        repo.update_coach_settings.return_value = user
+
+        result = await UserService(mock_db).update_coach_settings(
+            1, CoachSettingsUpdate(isCoach=True, coachBio="КМС, жим", coachAccepting=True),
+        )
+
+    assert result.isCoach is True
+    assert result.coachAccepting is True
+    repo.update_coach_settings.assert_called_once_with(
+        1, is_coach=True, coach_bio="КМС, жим", coach_accepting=True,
+    )
+
+
+async def test_disable_coach_role_with_active_athletes_conflict(mock_db):
+    from app.api.schemas import CoachSettingsUpdate
+
+    with patch("app.services.user.UserRepository") as MockRepo, \
+            patch("app.repositories.coach.CoachRepository") as MockCoachRepo:
+        repo = AsyncMock()
+        MockRepo.return_value = repo
+        coach_repo = AsyncMock()
+        MockCoachRepo.return_value = coach_repo
+        coach_repo.count_active_athletes.return_value = 2
+
+        with pytest.raises(HTTPException) as exc_info:
+            await UserService(mock_db).update_coach_settings(1, CoachSettingsUpdate(isCoach=False))
+
+    assert exc_info.value.status_code == 409
+    repo.update_coach_settings.assert_not_called()
