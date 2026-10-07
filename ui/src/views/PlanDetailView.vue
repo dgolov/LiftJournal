@@ -55,7 +55,13 @@
         <div class="flex items-center gap-2 mb-1 flex-wrap">
           <BaseBadge :color="typeColor">{{ plan.type }}</BaseBadge>
           <span :class="['text-xs px-2 py-0.5 font-medium', badge.class]">{{ badge.label }}</span>
+          <span v-if="plan.createdByName" class="text-xs rounded-full bg-primary/10 text-primary px-2 py-0.5 font-medium">от тренера {{ plan.createdByName }}</span>
         </div>
+        <RouterLink
+          v-if="plan.cycleScheduleId"
+          :to="`/planning/cycles/${plan.cycleScheduleId}`"
+          class="inline-block text-sm text-primary hover:underline mb-1"
+        >Цикл «{{ plan.cycleTitle || 'без названия' }}» — прогресс по циклу</RouterLink>
         <h2 class="text-2xl font-bold text-ink dark:text-white">{{ plan.title }}</h2>
         <p class="text-sm text-steel-700 dark:text-steel-300 mt-1">
           {{ formattedDate }} · {{ plan.exercises.length }} упр. · {{ totalSets }} подходов

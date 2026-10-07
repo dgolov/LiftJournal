@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.schemas import (
     UserOut, WeightEntryOut, GoalOut, UserMaxOut,
     ProfileUpdate, WeightEntryIn, GoalCreate, UserMaxIn, ThemeUpdate, PasswordChange,
+    CoachSettingsUpdate,
 )
 from app.core.security import hash_password, verify_password
 from app.repositories.user import UserRepository
@@ -23,6 +24,9 @@ class UserService:
             avatarUrl=u.avatar_url,
             theme=u.theme if u.theme else "light",
             isAdmin=u.is_admin,
+            isCoach=bool(u.is_coach),
+            coachBio=u.coach_bio or "",
+            coachAccepting=bool(u.coach_accepting),
             weightLog=sorted(
                 [WeightEntryOut(date=e.date, kg=e.kg) for e in u.weight_log],
                 key=lambda x: x.date,
@@ -97,6 +101,21 @@ class UserService:
 
     async def update_theme(self, user_id: int, data: ThemeUpdate) -> UserOut:
         u = await self.repo.update_theme(user_id, data.theme)
+        if not u:
+            raise HTTPException(status_code=404, detail="User not found")
+        return self._to_dto(u)
+
+    async def update_coach_settings(self, user_id: int, data: CoachSettingsUpdate) -> UserOut:
+        if data.isCoach is False:
+            from app.repositories.coach import CoachRepository
+            if await CoachRepository(self.repo.db).count_active_athletes(user_id):
+                raise HTTPException(
+                    status_code=409,
+                    detail="Нельзя выключить роль тренера, пока есть активные подопечные — сначала завершите сотрудничество",
+                )
+        u = await self.repo.update_coach_settings(
+            user_id, is_coach=data.isCoach, coach_bio=data.coachBio, coach_accepting=data.coachAccepting,
+        )
         if not u:
             raise HTTPException(status_code=404, detail="User not found")
         return self._to_dto(u)

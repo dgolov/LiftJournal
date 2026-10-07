@@ -58,6 +58,24 @@ class UserRepository:
             user.hashed_password = hashed_password
             await self.db.commit()
 
+    async def update_coach_settings(
+        self, user_id: int, *, is_coach: bool | None, coach_bio: str | None, coach_accepting: bool | None,
+    ) -> User | None:
+        result = await self.db.execute(select(User).where(User.id == user_id))
+        user = result.scalar_one_or_none()
+        if not user:
+            return None
+        if is_coach is not None:
+            user.is_coach = is_coach
+            if not is_coach:
+                user.coach_accepting = False
+        if coach_bio is not None:
+            user.coach_bio = coach_bio.strip()
+        if coach_accepting is not None:
+            user.coach_accepting = coach_accepting and user.is_coach
+        await self.db.commit()
+        return await self.get_with_relations(user_id)
+
     async def update_theme(self, user_id: int, theme: str) -> User:
         result = await self.db.execute(select(User).where(User.id == user_id))
         user = result.scalar_one_or_none()

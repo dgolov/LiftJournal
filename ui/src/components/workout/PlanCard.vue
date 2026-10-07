@@ -10,6 +10,7 @@
             <span :class="`text-xs px-2 py-0.5 font-medium ${status.cls}`">{{ status.label }}</span>
             <span class="text-xs text-steel-700 dark:text-steel-300">{{ plan.type }}</span>
             <span class="text-xs text-steel-700 dark:text-steel-300">{{ dateLabel }}</span>
+            <span v-if="plan.createdByName" class="text-xs rounded-full bg-primary/10 text-primary px-2 py-0.5 font-medium">от тренера {{ plan.createdByName }}</span>
           </div>
           <p class="font-display font-semibold text-ink dark:text-white text-sm line-clamp-2">{{ plan.title }}</p>
           <p v-if="exCount" class="text-xs text-steel-700 dark:text-steel-300 mt-0.5 whitespace-nowrap">

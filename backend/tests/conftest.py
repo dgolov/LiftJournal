@@ -53,6 +53,7 @@ def make_user(
     age=25, avatar_url=None,
     weight_log=None, goals=None, maxes=None,
     birth_date=None, theme="light", is_admin=False,
+    is_coach=False, coach_bio="", coach_accepting=False,
 ):
     u = MagicMock()
     u.id = id
@@ -62,6 +63,9 @@ def make_user(
     u.age = age
     u.avatar_url = avatar_url
     u.is_admin = is_admin
+    u.is_coach = is_coach
+    u.coach_bio = coach_bio
+    u.coach_accepting = coach_accepting
     u.weight_log = weight_log if weight_log is not None else []
     u.goals = goals if goals is not None else []
     u.maxes = maxes if maxes is not None else []
@@ -212,6 +216,7 @@ def make_cycle(
     c.author_name = author_name
     c.is_public = is_public
     c.is_approved = is_approved
+    c.main_exercises = []
     c.created_at = created_at or datetime(2026, 1, 1)
     c.workouts = workouts if workouts is not None else []
     return c

@@ -192,6 +192,9 @@ class UserOut(BaseModel):
     avatarUrl: Optional[str]
     theme: str = "light"
     isAdmin: bool = False
+    isCoach: bool = False
+    coachBio: str = ""
+    coachAccepting: bool = False
     weightLog: list[WeightEntryOut]
     goals: list[GoalOut]
     maxes: list[UserMaxOut] = []
@@ -241,11 +244,17 @@ class CycleWorkoutOut(BaseModel):
     exercises: list[CycleExerciseOut]
 
 
+class CycleMainExercise(BaseModel):
+    exerciseId: Optional[str] = None
+    exerciseName: str
+
+
 class CycleCreate(BaseModel):
     title: str
     description: str = ""
     author_name: str = ""
     is_public: bool = False
+    main_exercises: list[CycleMainExercise] = []
     workouts: list[CycleWorkoutIn] = []
 
 
@@ -254,6 +263,7 @@ class CycleUpdate(BaseModel):
     description: Optional[str] = None
     author_name: Optional[str] = None
     is_public: Optional[bool] = None
+    main_exercises: Optional[list[CycleMainExercise]] = None
     workouts: Optional[list[CycleWorkoutIn]] = None
 
 
@@ -267,6 +277,7 @@ class CycleListOut(BaseModel):
     is_approved: bool = True
     created_at: datetime
     workout_count: int
+    main_exercises: list[CycleMainExercise] = []
 
 
 class CycleDetailOut(BaseModel):
@@ -278,6 +289,7 @@ class CycleDetailOut(BaseModel):
     is_public: bool
     is_approved: bool = True
     created_at: datetime
+    main_exercises: list[CycleMainExercise] = []
     workouts: list[CycleWorkoutOut]
 
 
@@ -341,6 +353,10 @@ class PlannedWorkoutCreate(BaseModel):
     scheduledDate: date
     notes: str = ""
     exercises: list[PlannedExerciseIn] = []
+    # When laid out from a training cycle: the cycle, and one id shared by
+    # every plan of that layout.
+    cycleId: Optional[str] = None
+    cycleScheduleId: Optional[str] = Field(None, max_length=36)
 
 
 class PlannedWorkoutUpdate(BaseModel):
@@ -363,6 +379,13 @@ class PlannedWorkoutOut(BaseModel):
     completedWorkoutId: Optional[str]
     createdAt: datetime
     exercises: list[PlannedExerciseOut]
+    # Set when someone other than the athlete (their coach) wrote the plan.
+    createdById: Optional[int] = None
+    createdByName: Optional[str] = None
+    cycleId: Optional[str] = None
+    cycleScheduleId: Optional[str] = None
+    cycleTitle: Optional[str] = None
+    cycleMainExercises: list[CycleMainExercise] = []
 
 
 # ---------------------------------------------------------------------------
@@ -416,6 +439,20 @@ class WorkoutTemplateOut(BaseModel):
 # Social
 # ---------------------------------------------------------------------------
 
+class CoachLinkBrief(BaseModel):
+    """The open (pending/active) coaching link between the viewer and a profile."""
+    id: str
+    status: str
+    myRole: str            # coach | athlete — the viewer's side of the link
+    initiatedByMe: bool
+
+
+class PublicPersonOut(BaseModel):
+    id: int
+    name: str
+    avatarUrl: Optional[str] = None
+
+
 class UserPublicOut(BaseModel):
     id: int
     name: str
@@ -425,6 +462,15 @@ class UserPublicOut(BaseModel):
     followingCount: int
     workoutsCount: int
     isFollowing: bool
+    followsMe: bool = False
+    isCoach: bool = False
+    coachBio: str = ""
+    coachAccepting: bool = False
+    coachLink: Optional[CoachLinkBrief] = None
+    coaches: list[PublicPersonOut] = []          # who coaches this user (active links)
+    athletesCount: Optional[int] = None          # for coaches only
+    # Only for the user themself and their active coach allowed to see private data.
+    currentWeight: Optional[WeightEntryOut] = None
 
 
 class ActivityDayOut(BaseModel):
@@ -503,6 +549,9 @@ class NotificationOut(BaseModel):
     workoutId: Optional[str] = None
     workoutTitle: Optional[str] = None
     commentText: Optional[str] = None
+    coachLinkId: Optional[str] = None
+    coachLinkStatus: Optional[str] = None
+    plannedWorkoutId: Optional[str] = None
     isRead: bool
     createdAt: datetime
 
@@ -610,3 +659,59 @@ class AdminStatsOut(BaseModel):
     pendingCycles: int
     dailyWorkouts: list[DailyCountOut]
     topUsers: list[TopUserOut]
+
+
+# ---------------------------------------------------------------------------
+# Coaching
+# ---------------------------------------------------------------------------
+
+class CoachSettingsUpdate(BaseModel):
+    isCoach: Optional[bool] = None
+    coachBio: Optional[str] = Field(None, max_length=2000)
+    coachAccepting: Optional[bool] = None
+
+
+class CoachInviteIn(BaseModel):
+    athleteId: int
+    message: str = Field("", max_length=500)
+
+
+class CoachRequestIn(BaseModel):
+    coachId: int
+    message: str = Field("", max_length=500)
+
+
+class CoachLinkPermissionsUpdate(BaseModel):
+    canSeePrivate: Optional[bool] = None
+    canEditPlan: Optional[bool] = None
+
+
+class CoachLinkOut(BaseModel):
+    id: str
+    coachId: int
+    coachName: str
+    coachAvatarUrl: Optional[str] = None
+    athleteId: int
+    athleteName: str
+    athleteAvatarUrl: Optional[str] = None
+    status: str
+    initiatedBy: str
+    canSeePrivate: bool
+    canEditPlan: bool
+    message: str = ""
+    createdAt: datetime
+    respondedAt: Optional[datetime] = None
+    endedAt: Optional[datetime] = None
+
+
+class AthleteSummaryOut(BaseModel):
+    linkId: str
+    id: int
+    name: str
+    avatarUrl: Optional[str] = None
+    canSeePrivate: bool
+    canEditPlan: bool
+    since: Optional[datetime] = None
+    lastWorkoutDate: Optional[date] = None
+    weekPlanned: int = 0
+    weekCompleted: int = 0

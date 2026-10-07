@@ -7,9 +7,14 @@
       >
         <ChevronLeft class="w-5 h-5" />
       </button>
-      <h2 class="text-xl font-bold text-ink dark:text-white">
-        {{ isEdit ? 'Редактировать план' : 'Новый план тренировки' }}
-      </h2>
+      <div>
+        <p v-if="athleteId" class="text-sm text-primary">
+          План для {{ athleteData?.summary?.name || 'подопечного' }}
+        </p>
+        <h2 class="text-xl font-bold text-ink dark:text-white">
+          {{ isEdit ? 'Редактировать план' : 'Новый план тренировки' }}
+        </h2>
+      </div>
     </div>
 
     <!-- Basic info -->
@@ -251,6 +256,8 @@ import ExerciseCompactCard from '@/components/workout/ExerciseCompactCard.vue'
 import ExerciseViewModeToggle from '@/components/workout/ExerciseViewModeToggle.vue'
 import { useExerciseViewMode } from '@/composables/useExerciseViewMode.js'
 import { WORKOUT_TYPES } from '@/services/mockData.js'
+import { apiErrorMessage } from '@/services/workoutService.js'
+import { exerciseHistoryOptions } from '@/utils/progress.js'
 
 const store = useStore()
 const router = useRouter()
@@ -258,6 +265,17 @@ const route = useRoute()
 const viewMode = useExerciseViewMode()
 
 const isEdit = computed(() => !!route.params.id)
+// Coach mode: /coach/athletes/:athleteId/plan/... writes into the athlete's
+// plan, and weight hints come from the athlete's history, not the coach's.
+const athleteId = computed(() => route.params.athleteId ? Number(route.params.athleteId) : null)
+const athleteData = computed(() => athleteId.value ? store.getters['coach/athleteById'](athleteId.value) : null)
+const doneUrl = computed(() => athleteId.value ? `/coach/athletes/${athleteId.value}` : '/planning')
+
+function historyOptions(exerciseId) {
+  return athleteId.value
+    ? exerciseHistoryOptions(athleteData.value?.workouts || [], exerciseId)
+    : store.getters['workouts/exerciseHistoryOptions'](exerciseId)
+}
 const showPicker = ref(false)
 const saving = ref(false)
 const showTemplatePicker = ref(false)
@@ -297,7 +315,7 @@ const canSave = computed(() => form.value.title.trim().length > 0)
 const addedExerciseIds = computed(() => new Set(form.value.exercises.map(e => e.exerciseId)))
 
 function addExercise(exercise) {
-  const history = store.getters['workouts/exerciseHistoryOptions'](exercise.id)
+  const history = historyOptions(exercise.id)
   const sets = history.length
     ? history[0].sets.map(s => ({ id: uid(), weight: s.weight, reps: s.reps }))
     : [{ id: uid(), weight: 0, reps: 0 }]
@@ -322,7 +340,7 @@ function onApplyTemplate(template, source = 'history') {
   form.value.title = template.title
   form.value.type = template.type
   form.value.exercises = template.exercises.map(ex => {
-    const history = store.getters['workouts/exerciseHistoryOptions'](ex.exerciseId)
+    const history = historyOptions(ex.exerciseId)
     const mapTemplateSets = () => ex.sets.map(s => ({ id: uid(), weight: s.weight, reps: s.reps }))
     let sets
     if (source === 'template' && ex.sets.length) {
@@ -406,7 +424,9 @@ async function save() {
       })),
       status: 'planned',
     }
-    if (isEdit.value) {
+    if (athleteId.value) {
+      await saveForAthlete(payload)
+    } else if (isEdit.value) {
       await store.dispatch('planned/updatePlannedWorkout', { id: route.params.id, ...payload })
       store.dispatch('ui/showToast', { message: 'План обновлён', type: 'success' })
     } else if (form.value.recurring) {
@@ -416,22 +436,51 @@ async function save() {
       await store.dispatch('planned/createPlannedWorkout', payload)
       store.dispatch('ui/showToast', { message: 'Тренировка запланирована!', type: 'success' })
     }
-    router.push('/planning')
+    router.push(doneUrl.value)
   } catch (e) {
-    store.dispatch('ui/showToast', { message: 'Ошибка: ' + e.message, type: 'error' })
+    store.dispatch('ui/showToast', { message: 'Ошибка: ' + apiErrorMessage(e), type: 'error' })
   } finally {
     saving.value = false
   }
 }
 
+async function saveForAthlete(payload) {
+  const { status: _status, ...data } = payload
+  const name = athleteData.value?.summary?.name || 'подопечного'
+  if (isEdit.value) {
+    await store.dispatch('coach/updatePlan', { athleteId: athleteId.value, planId: route.params.id, payload: data })
+    store.dispatch('ui/showToast', { message: 'План обновлён', type: 'success' })
+  } else if (form.value.recurring) {
+    await store.dispatch('coach/createRecurringPlan', { athleteId: athleteId.value, payload: data, weeks: form.value.recurrenceWeeks })
+    store.dispatch('ui/showToast', { message: `Запланировано ${form.value.recurrenceWeeks} тренировок для ${name}`, type: 'success' })
+  } else {
+    await store.dispatch('coach/createPlan', { athleteId: athleteId.value, payload: data })
+    store.dispatch('ui/showToast', { message: `Тренировка запланирована для ${name}`, type: 'success' })
+  }
+}
+
 onMounted(async () => {
   await store.dispatch('exercises/initExercises')
-  if (!store.state.workouts.workouts.length) await store.dispatch('workouts/initWorkouts')
+  if (athleteId.value) {
+    try {
+      await store.dispatch('coach/loadAthlete', { id: athleteId.value })
+    } catch {
+      router.replace('/coach')
+      return
+    }
+  } else if (!store.state.workouts.workouts.length) {
+    await store.dispatch('workouts/initWorkouts')
+  }
   if (isEdit.value) {
-    let plan = store.getters['planned/byId'](route.params.id)
-    if (!plan) {
-      await store.dispatch('planned/fetchPlannedWorkouts')
+    let plan
+    if (athleteId.value) {
+      plan = athleteData.value?.planned.find(p => p.id === route.params.id)
+    } else {
       plan = store.getters['planned/byId'](route.params.id)
+      if (!plan) {
+        await store.dispatch('planned/fetchPlannedWorkouts')
+        plan = store.getters['planned/byId'](route.params.id)
+      }
     }
     if (plan) {
       form.value = {

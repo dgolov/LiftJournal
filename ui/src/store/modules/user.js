@@ -7,6 +7,7 @@ export default {
 
   state: () => ({
     profile: { name: '', birthDate: null, avatarUrl: null },
+    coach: { isCoach: false, bio: '', accepting: false },
     theme: localStorage.getItem(THEME_KEY) || 'light',
     weightLog: [],
     goals: [],
@@ -30,6 +31,7 @@ export default {
       state.weightLog = user.weightLog
       state.goals = user.goals
       state.maxes = user.maxes || []
+      state.coach = { isCoach: !!user.isCoach, bio: user.coachBio || '', accepting: !!user.coachAccepting }
       localStorage.setItem(THEME_KEY, state.theme)
     },
     SET_THEME(state, theme) {
@@ -114,6 +116,14 @@ export default {
     async deleteGoal({ commit }, id) {
       await workoutService.deleteGoal(id)
       commit('DELETE_GOAL', id)
+    },
+
+    async updateCoachSettings({ commit }, { isCoach, bio, accepting }) {
+      const user = await workoutService.updateCoachSettings({
+        isCoach, coachBio: bio, coachAccepting: accepting,
+      })
+      commit('SET_USER', user)
+      return user
     },
 
     async saveUserMax({ commit }, data) {

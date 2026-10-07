@@ -1,7 +1,7 @@
 from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.models import Notification, User, Workout
+from app.domain.models import Notification, User, Workout, CoachAthlete, PlannedWorkout
 
 
 
@@ -14,14 +14,17 @@ class NotificationRepository:
     async def create(
         self, user_id: int, type: str, actor_id: int,
         workout_id: str | None = None, comment_text: str | None = None,
+        coach_link_id: str | None = None, planned_workout_id: str | None = None,
     ) -> Notification:
-        # Deduplicate: remove existing unread notification of same type/actor/workout
+        # Deduplicate: remove existing unread notification of same type/actor/target
         existing = await self.db.execute(
             select(Notification).where(
                 Notification.user_id == user_id,
                 Notification.type == type,
                 Notification.actor_id == actor_id,
                 Notification.workout_id == workout_id,
+                Notification.coach_link_id == coach_link_id,
+                Notification.planned_workout_id == planned_workout_id,
                 Notification.is_read == False,
             )
         )
@@ -30,7 +33,8 @@ class NotificationRepository:
             await self.db.delete(old)
 
         n = Notification(user_id=user_id, type=type, actor_id=actor_id,
-                         workout_id=workout_id, comment_text=comment_text)
+                         workout_id=workout_id, comment_text=comment_text,
+                         coach_link_id=coach_link_id, planned_workout_id=planned_workout_id)
         self.db.add(n)
         await self.db.commit()
         await self.db.refresh(n)
@@ -46,12 +50,14 @@ class NotificationRepository:
     async def get_page(
         self, user_id: int, unread_only: bool, page: int, per_page: int
     ) -> tuple[list, int]:
-        q = select(Notification, User, Workout).where(Notification.user_id == user_id)
+        q = select(Notification, User, Workout, CoachAthlete, PlannedWorkout).where(Notification.user_id == user_id)
         if unread_only:
             q = q.where(Notification.is_read == False)
         q = (q
              .join(User, User.id == Notification.actor_id)
              .outerjoin(Workout, Workout.id == Notification.workout_id)
+             .outerjoin(CoachAthlete, CoachAthlete.id == Notification.coach_link_id)
+             .outerjoin(PlannedWorkout, PlannedWorkout.id == Notification.planned_workout_id)
              .order_by(desc(Notification.created_at)))
 
         total_result = await self.db.execute(

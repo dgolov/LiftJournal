@@ -53,7 +53,7 @@
     <!-- Activity heatmap -->
     <div class="card p-4">
       <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Активность за год</h3>
-      <ActivityHeatmap />
+      <ActivityHeatmap :activity="ownActivity" />
     </div>
 
     <div class="grid lg:grid-cols-2 gap-6">
@@ -133,6 +133,9 @@
         <template #icon><Dumbbell class="w-12 h-12" /></template>
       </BaseEmptyState>
     </div>
+
+    <!-- Coaching: my coach, coach role -->
+    <ProfileCoachSection />
 
     <!-- Achievements -->
     <div class="card p-4">
@@ -270,8 +273,16 @@ import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseEmptyState from '@/components/ui/BaseEmptyState.vue'
 import StepperInput from '@/components/ui/StepperInput.vue'
+import ProfileCoachSection from '@/components/coach/ProfileCoachSection.vue'
 
 const store = useStore()
+
+// Same shape the public profile gets from the API: one entry per training day.
+const ownActivity = computed(() => {
+  const map = {}
+  store.getters['workouts/allWorkouts'].forEach(w => { map[w.date] = (map[w.date] || 0) + 1 })
+  return Object.entries(map).map(([date, count]) => ({ date, count }))
+})
 const router = useRouter()
 
 const userName = computed(() => store.getters['auth/userName'])

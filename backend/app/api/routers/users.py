@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.schemas import (
     ProfileUpdate, WeightEntryIn, WeightEntryOut,
     GoalCreate, GoalOut, UserOut, UserMaxIn, UserMaxOut, ThemeUpdate, PasswordChange,
+    CoachSettingsUpdate,
 )
 from app.core.database import get_db
 from app.core.security import get_current_user
@@ -110,3 +111,12 @@ async def update_theme(
     db: AsyncSession = Depends(get_db),
 ):
     return await UserService(db).update_theme(current_user.id, payload)
+
+
+@router.patch("/coach", response_model=UserOut)
+async def update_coach_settings(
+    payload: CoachSettingsUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await UserService(db).update_coach_settings(current_user.id, payload)
